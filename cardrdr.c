@@ -91,7 +91,7 @@ int     attn = 0;
     if(dev->devtype)
         attn = 1;
 
-    /* For re-initialisarion close the existing file */
+    /* For re-initialisation close the existing file */
     if (dev->fd >= 0)
         (dev->hnd->close)(dev);
 
@@ -990,7 +990,7 @@ static DEVHND cardrdr_device_hndinfo =
         NULL                           /* Hercules resume            */
 };
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

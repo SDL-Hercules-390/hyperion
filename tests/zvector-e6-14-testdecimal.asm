@@ -1,4 +1,4 @@
- TITLE 'zvector-e6-13-converttodecimal  (Zvector E6 VRR-g)'
+ TITLE 'zvector-e6-14-testdecimal'
 ***********************************************************************
 *
 *        Zvector E6 instruction tests for VRR-g encoded:
@@ -6,6 +6,7 @@
 *        E65F VTP     - VECTOR TEST DECIMAL
 *
 *        James Wekel June 2024
+*                   April 2025 - packed-decimal-enhancements facility 3
 ***********************************************************************
 
 ***********************************************************************
@@ -22,28 +23,34 @@
 *
 ***********************************************************************
 *
-*    *Testcase zvector-e6-14-testdecimal: VECTOR E6 VRR-g instruction
-*    *
-*    *   Zvector E6 tests for VRR-g encoded instruction:
-*    *
-*    *   E65F VTP     - VECTOR TEST DECIMAL
-*    *
-*    *   # -------------------------------------------------------
-*    *   #  This tests only the basic function of the instruction.
-*    *   #  Exceptions are NOT tested.
-*    *   # -------------------------------------------------------
-*    *
-*    mainsize    2
-*    numcpu      1
-*    sysclear
-*    archlvl     z/Arch
+*   *Testcase zvector-e6-14-testdecimal
+*   *
+*   *   Zvector E6 tests for VRR-g encoded instruction:
+*   *
+*   *   E65F VTP     - VECTOR TEST DECIMAL
+*   *
+*   *   # -------------------------------------------------------
+*   *   #  This tests only the basic function of the instruction.
+*   *   #  Exceptions are NOT tested.
+*   *   #
+*   *   # Note: errors may indicate VTPX as the instruction in
+*   *   #       error. This is the VTPX macro used to generate
+*   *   #       VTP instructions with a non-zero I3
+*   *   # -------------------------------------------------------
+*   *
+*   mainsize    2
+*   numcpu      1
+*   sysclear
+*   archlvl     z/Arch
 *
-*    diag8cmd    enable    # (needed for messages to Hercules console)
-*    loadcore    "$(testpath)/zvector-e6-14-testdecimal.core" 0x0
-*    diag8cmd    disable   # (reset back to default)
+*   loadcore    "$(testpath)/zvector-e6-14-testdecimal.core" 0x0
 *
-*    *Done
-
+*   diag8cmd    enable    # (needed for messages to Hercules console)
+*   runtest     2
+*   diag8cmd    disable   # (reset back to default)
+*
+*   *Done
+*
 ***********************************************************************
                                                                 EJECT
 ***********************************************************************
@@ -72,7 +79,7 @@
 
          B     X&SYSNDX
 *                                      Fcheck data area
-*                                      skip messgae
+*                                      skip message
 SKT&SYSNDX DC  C'          Skipping tests: '
          DC    C&NOTSETMSG
          DC    C' facility (bit &BITNO) is not installed.'
@@ -110,11 +117,11 @@ ZVE6TST  START 0
 
 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
                                                                 SPACE 2
-         ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+         ORG   ZVE6TST+X'1A0'        z/Architecture RESTART PSW
          DC    X'0000000180000000'
          DC    AD(BEGIN)
                                                                 SPACE 2
-         ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+         ORG   ZVE6TST+X'1D0'        z/Architecture PROGRAM CHECK PSW
          DC    X'0002000180000000'
          DC    AD(X'DEAD')
                                                                 SPACE 3
@@ -147,15 +154,15 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
          USING  BEGIN+4096,R9   SECOND Base Register
          USING  BEGIN+8192,R10  THIRD Base Register
 
-BEGIN    BALR  R8,0             Initalize FIRST base register
-         BCTR  R8,0             Initalize FIRST base register
-         BCTR  R8,0             Initalize FIRST base register
+BEGIN    BALR  R8,0             Initialize FIRST base register
+         BCTR  R8,0             Initialize FIRST base register
+         BCTR  R8,0             Initialize FIRST base register
 
-         LA    R9,2048(,R8)     Initalize SECOND base register
-         LA    R9,2048(,R9)     Initalize SECOND base register
+         LA    R9,2048(,R8)     Initialize SECOND base register
+         LA    R9,2048(,R9)     Initialize SECOND base register
 
-         LA    R10,2048(,R9)    Initalize THIRD base register
-         LA    R10,2048(,R10)   Initalize THIRD base register
+         LA    R10,2048(,R9)    Initialize THIRD base register
+         LA    R10,2048(,R10)   Initialize THIRD base register
 
          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
          OI    CTLR0+1,X'04'    Turn on AFP bit
@@ -167,6 +174,12 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
 ***********************************************************************
 
          FCHECK 134,'vector-packed-decimal'
+                                                                EJECT
+***********************************************************************
+* Is Vector packed-decimal enhancement 3 facility installed  (bit 199)
+***********************************************************************
+
+         FCHECK 199,'vector packed-decimal-enhancement 3'
                                                                 EJECT
 ***********************************************************************
 *              Do tests in the E6TESTS table
@@ -436,14 +449,39 @@ READDR   DC    A(0)           expected result address
 *        16-byte EXPECTED RESULT
 *        8-byte  byte source
                                                                 EJECT
+**********************************************************************
+* (pending VTP update in SATK ASAM for
+*        vector packed-decimal enhancement 3 facility)
+*
+*     VTPX Macro to help build VTP instruction
+*        VTP   V1,i3
+*
+*        Note: v1 is a fixed vector register
+*              i3 can be specified in hex eg. x'1F1F'
+***********************************************************************
+         MACRO
+         VTPX  &I3
+.*                                     &I3  - i3 for VTP instruction
+         LCLA  &RSI3
+&RSI3    SETA  +X'000000'+(16*&I3)
+                                                               SPACE 1
+         DS    0H                      E65F VTP - Vector Test Decimal
+         DC    X'E6'
+         DC    X'01'                   v1
+         DC    HL3'&RSI3'              0, I3, RXB
+         DC    X'5F'
+                                                               SPACE 1
+         MEND
+
 ***********************************************************************
 *     Macros to help build test tables
 *----------------------------------------------------------------------
 *     VRR_G Macro to help build test tables
 ***********************************************************************
          MACRO
-         VRR_G &INST,&CC
+         VRR_G &INST,&I3,&CC
 .*                               &INST  - instruction under test
+.*                               &I3    - i3 for VTP instruction
 .*                               &CC    - expected CC
 .*
          LCLA  &XCC(4)  &CC has mask values for FAILED condition codes
@@ -473,8 +511,21 @@ REA&TNUM DC    A(RE&TNUM)        result address
 X&TNUM   DS    0F
          VL    V1,RE&TNUM        get V1 source
 
-         &INST V1                test instruction
+.* Select based on &INST to build appropriate instruction sequence
+         AIF   ('&INST' EQ 'VTP').DOVTP
+         AIF   ('&INST' EQ 'VTPX').DOVTPX
+         MNOTE 1,'Instruction &INST not recognized; skipping test'
+         MEXIT
 
+.DOVTP   ANOP
+         &INST V1                      test instruction
+         AGO   .CONT
+
+.DOVTPX  ANOP
+.*       VTP   V1,&i3
+         &INST &I3                     test instruction
+
+.CONT    ANOP
          EPSW  R2,R0             exptract psw
          ST    R2,CCPSW              to save CC
 
@@ -517,42 +568,1254 @@ ZVE6TST  CSECT ,
          PRINT DATA
 *
 *        E65F VTP     - VECTOR TEST DECIMAL
-*        VRR_G instr, cc
+*             VTPX    - VECTOR TEST DECIMAL
+*                          packed-decimal-enhancements facility 3
+*        VRR_G instr, i3, cc
 *              followed by
 *              v1     - 16 byte source
-
 *---------------------------------------------------------------------
 * VTP     - VECTOR TEST DECIMAL
 *---------------------------------------------------------------------
 * VTP simple
 
 * digits valid,  sign valid
-         VRR_G VTP,0
+         VRR_G VTP,0,0
          DC    XL16'0000000000000000000000000000000C'   V1 source
 
-         VRR_G VTP,0
+         VRR_G VTP,0,0
          DC    XL16'0000000000000000001234500000000D'   V1 source
 
 * digits valid,  sign invalid
-         VRR_G VTP,1
+         VRR_G VTP,0,1
          DC    XL16'00000000000000000000000000000009'   V1 source
 
-         VRR_G VTP,1
+         VRR_G VTP,0,1
          DC    XL16'00000000000000000012345000000000'   V1 source
 
 * a digit invalid, sign valid
-         VRR_G VTP,2
+         VRR_G VTP,0,2
          DC    XL16'000000000FF00000000000000000000C'   V1 source
 
-         VRR_G VTP,2
+         VRR_G VTP,0,2
          DC    XL16'F0F0000000000000001234500000000F'   V1 source
 
 * a digit invalid,  sign invalid
-         VRR_G VTP,3
+         VRR_G VTP,0,3
          DC    XL16'000000000FF000000000000000000009'   V1 source
 
-         VRR_G VTP,3
+         VRR_G VTP,0,3
          DC    XL16'F0F00000000000000012345000000002'   V1 source
+
+*---------------------------------------------------------------------
+* VTPX    - VECTOR TEST DECIMAL packed-decimal-enhancements facility 3
+*---------------------------------------------------------------------
+* Enhanced Testing: ET=1
+*
+* VTP          Byte-Padding Test: BPT
+*              Sign-Test Control: STC
+*              Digits Count:      DC
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=0
+*---------------------------------------------------------------------
+* BTP=0, STC=0, DC=0                   only sign: A-F valid, no digits
+         VRR_G VTPX,X'8000',0
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'8000',0
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'8000',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'8000',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'8000',0
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'8000',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'8000',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'8000',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=0, DC>0 and odd           sign: A-F valid, n digits
+         VRR_G VTPX,X'8005',0
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8007',0
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8009',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'800B',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'800D',0
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'800F',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'800F',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'800F',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'800F',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=0, STC=0, DC>0 and even           sign: A-F valid,  n digits
+         VRR_G VTPX,X'8004',0
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8006',0
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8008',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'800A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'800C',0
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'800E',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'800E',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'800E',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'800E',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=1, STC=0, DC>0 and even           sign: A-F valid, N+1 digits
+         VRR_G VTPX,X'C004',0
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C006',0
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C008',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C00A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C00C',0
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C004',0
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C004',2
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C004',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C004',2
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C004',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=1
+*---------------------------------------------------------------------
+* BTP=0, STC=1, DC=0                   only sign: A-F valid, no digits
+         VRR_G VTPX,X'8020',0
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'8020',0
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'8020',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'8020',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'8020',0
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'8020',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'8020',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'8020',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=1, DC>0 and odd
+*                                      sign: A,C E,F valid, 0 digits
+         VRR_G VTPX,X'8027',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'802B',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'803F',2
+         DC    XL16'F000000000000000000000000000000C'   V1 source
+
+*                                      sign: A-F valid, non-0 digits
+         VRR_G VTPX,X'8025',0
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8027',0
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8029',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'802B',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'802D',0
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'802F',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'802F',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'802F',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'802F',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+         VRR_G VTPX,X'803F',0
+         DC    XL16'1100000000000000000000000000000B'   V1 source
+
+* BTP=0, STC=1, DC>0 and even
+*                                      sign: A,C E,F valid, 0 digits
+         VRR_G VTPX,X'8026',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'802A',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'803E',0
+         DC    XL16'F100000000000000000000000000000E'   V1 source
+
+*                                      sign: A-F valid, non-0 digits
+         VRR_G VTPX,X'8024',0
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8026',0
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8028',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'802A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'802C',0
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'802E',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'802E',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'802E',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'802E',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+         VRR_G VTPX,X'803E',1
+         DC    XL16'1000000000000000000000000000000B'   V1 source
+
+* BTP=1, STC=1, DC>0 and even
+*                                      sign: A,C E,F valid, 0 digits
+         VRR_G VTPX,X'C026',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C02A',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'C03E',2
+         DC    XL16'F000000000000000000000000000000C'   V1 source
+
+*                                      sign: A-F valid, non-0 digits
+         VRR_G VTPX,X'C024',0
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C026',0
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C028',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C02A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C02C',0
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C024',0
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C024',2
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C024',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C024',2
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C024',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+         VRR_G VTPX,X'C03E',2
+         DC    XL16'1000000000000000000000000000000C'   V1 source
+
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=2
+*---------------------------------------------------------------------
+* BTP=0, STC=2, DC=0                   only sign: C,D valid, no digits
+         VRR_G VTPX,X'8040',1
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'8040',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'8040',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'8040',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'8040',1
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'8040',1
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'8040',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'8040',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=2, DC>0 and odd
+*                                      sign: C, D  valid, 0 digits
+         VRR_G VTPX,X'8047',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'804B',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+*                                      sign: C, D valid, non-0 digits
+         VRR_G VTPX,X'8045',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8047',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8049',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'804B',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'804D',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'804F',1
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'804F',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'804F',3
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'804F',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=0, STC=2, DC>0 and even
+*                                      sign: C, D valid, 0 digits
+         VRR_G VTPX,X'8046',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'804A',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+*                                      sign: C, D valid, non-0 digits
+         VRR_G VTPX,X'8044',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8046',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8048',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'804A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'804C',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'804E',1
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'804E',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'804E',3
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'804E',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=1, STC=2, DC>0 and even
+*                                      sign: C, D  valid, 0 digits
+         VRR_G VTPX,X'C046',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C04A',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+*                                      sign: A-F valid, non-0 digits
+         VRR_G VTPX,X'C044',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C046',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C048',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C04A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C04C',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C044',1
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C044',3
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C044',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C044',3
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C044',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=3
+*---------------------------------------------------------------------
+* BTP=0, STC=3, DC=0                   only sign: C, D valid, no digits
+         VRR_G VTPX,X'8060',1
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'8060',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'8060',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'8060',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'8060',1
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'8060',1
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'8060',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'8060',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=3, DC>0 and odd
+*                                      sign: C  valid, 0 digits
+         VRR_G VTPX,X'8067',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'806B',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'807F',2
+         DC    XL16'F000000000000000000000000000000C'   V1 source
+
+*                                      sign: C, D valid, non-0 digits
+         VRR_G VTPX,X'8065',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8067',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8069',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'806B',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'806D',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'806F',1
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'806F',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'806F',3
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'806F',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+         VRR_G VTPX,X'807F',1
+         DC    XL16'1100000000000000000000000000000B'   V1 source
+
+* BTP=0, STC=3, DC>0 and even
+*                                      sign: C valid, 0 digits
+         VRR_G VTPX,X'8066',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'806A',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'806A',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+*                                      sign: C, D valid, non-0 digits
+         VRR_G VTPX,X'8064',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8066',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8068',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'806A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'806C',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'806E',1
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'806E',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'806E',3
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'806E',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+         VRR_G VTPX,X'807F',1
+         DC    XL16'1000000000000000000000000000000B'   V1 source
+
+* BTP=1, STC=3, DC>0 and even
+*                                      sign: C    valid, 0 digits
+         VRR_G VTPX,X'C066',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C06A',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'C06A',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+*                                      sign: C, D valid, non-0 digits
+         VRR_G VTPX,X'C064',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C066',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C068',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C06A',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C06C',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C064',1
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C064',3
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C064',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C064',3
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C064',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+         VRR_G VTPX,X'C07E',2
+         DC    XL16'1000000000000000000000000000000C'   V1 source
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=4
+*---------------------------------------------------------------------
+* BTP=0, STC=4, DC=0                   only sign: F valid, no digits
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'8080',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'8080',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=4, DC>0 and odd
+*                                      sign: F  valid, 0 digits
+         VRR_G VTPX,X'8087',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'808B',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'808B',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                      sign: F valid, non-0 digits
+         VRR_G VTPX,X'8085',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8087',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8089',1
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'808B',1
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'808D',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'808F',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'808F',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'808F',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'808F',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=0, STC=4, DC>0 and even
+*                                      sign: F valid, 0 digits
+         VRR_G VTPX,X'8086',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'808A',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'808A',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'808A',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                      sign: F valid, non-0 digits
+         VRR_G VTPX,X'8084',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'8086',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'8088',1
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'808A',1
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'808C',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'808E',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'808E',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'808E',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'808E',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=1, STC=4, DC>0 and even
+*                                      sign: F    valid, 0 digits
+         VRR_G VTPX,X'C086',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C08A',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'C08A',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'C08A',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                      sign: F  valid, non-0 digits
+         VRR_G VTPX,X'C084',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C086',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C088',1
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C08A',1
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C08C',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C084',0
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C084',2
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C084',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C084',2
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C084',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=5
+*---------------------------------------------------------------------
+* BTP=0, STC=5, DC=0                   only sign: F valid, no digits
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'80A0',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'80A0',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=5, DC>0 and odd
+*                                      sign: F  valid, 0 digits
+         VRR_G VTPX,X'80A7',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80AB',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80AB',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                      sign: F valid, non-0 digits
+         VRR_G VTPX,X'80A5',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'80A7',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'80A9',1
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'80AB',1
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'80AD',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'80AF',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'80AF',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'80AF',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'80AF',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=0, STC=5, DC>0 and even
+*                                      sign: F valid, 0 digits
+         VRR_G VTPX,X'80A6',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'80AA',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80AA',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80AA',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                      sign: F valid, non-0 digits
+         VRR_G VTPX,X'80A4',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'80A6',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'80A8',1
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'80AA',1
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'80AC',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'80AE',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'80AE',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'80AE',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'80AE',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=1, STC=5, DC>0 and even
+*                                      sign: F    valid, 0 digits
+         VRR_G VTPX,X'C0A6',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C0AA',1
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'C0AA',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'C0AA',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                      sign: F  valid, non-0 digits
+         VRR_G VTPX,X'C0A4',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C0A6',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C0A8',1
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C0AA',1
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C0AC',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C0A4',0
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C0A4',2
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C0A4',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C0A4',2
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C0A4',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=6
+*---------------------------------------------------------------------
+* BTP=0, STC=6, DC=0                   sign: C, D, F valid, no digits
+         VRR_G VTPX,X'80C0',1
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'80C0',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'80C0',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80C0',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80C0',1
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'80C0',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'80C0',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'80C0',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=6, DC>0 and odd
+*                                      sign: C, D, F valid, 0 digits
+         VRR_G VTPX,X'80C7',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80CB',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80CB',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                     sign: C, D, F valid, non-0 digits
+         VRR_G VTPX,X'80C5',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'80C7',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'80C9',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'80CB',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'80CD',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'80CF',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'80CF',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'80CF',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'80CF',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=0, STC=6, DC>0 and even
+*                                     sign: C, D, F valid, 0 digits
+         VRR_G VTPX,X'80C6',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'80CA',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80CA',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80CA',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                     sign: C, D, F valid, non-0 digits
+         VRR_G VTPX,X'80C4',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'80C6',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'80C8',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'80CA',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'80CC',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'80CE',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'80CE',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'80CE',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'80CE',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+* BTP=1, STC=6, DC>0 and even
+*                                     sign: C, D, F valid, 0 digits
+         VRR_G VTPX,X'C0C6',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C0CA',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'C0CA',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'C0CA',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                     sign: C, D, F valid, non-0 digits
+         VRR_G VTPX,X'C0C4',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C0C6',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C0C8',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C0CA',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C0CC',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C0C4',0
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C0C4',2
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C0C4',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C0C4',2
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C0C4',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+
+*---------------------------------------------------------------------
+*  Sign-Test Control: STC=7
+*---------------------------------------------------------------------
+* BTP=0, STC=7, DC=0                   sign: C, D, F valid, no digits
+         VRR_G VTPX,X'80E0',1
+         DC    XL16'0FF0000000000000000000000000000A'   V1 source
+
+         VRR_G VTPX,X'80E0',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'80E0',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80E0',0
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80E0',1
+         DC    XL16'0FF0000000000000000000000000000E'   V1 source
+
+         VRR_G VTPX,X'80E0',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'80E0',1
+         DC    XL16'0FF00000000000000000000000000000'   V1 source
+
+         VRR_G VTPX,X'80E0',1
+         DC    XL16'0FF00000000000000000000000000009'   V1 source
+
+* BTP=0, STC=7, DC>0 and odd
+*                                      sign: C, F valid, 0 digits
+         VRR_G VTPX,X'80E7',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80EB',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80EB',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'80FF',2
+         DC    XL16'F000000000000000000000000000000C'   V1 source
+
+*                                     sign: C, D, F valid, non-0 digits
+         VRR_G VTPX,X'80E5',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'80E7',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'80E9',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'80EB',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'80ED',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'80EF',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'80EF',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'80EF',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'80EF',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+         VRR_G VTPX,X'80FF',1
+         DC    XL16'1100000000000000000000000000000B'   V1 source
+
+* BTP=0, STC=7, DC>0 and even
+*                                     sign: C, F valid, 0 digits
+         VRR_G VTPX,X'80E6',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'80EA',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'80EA',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'80EA',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+         VRR_G VTPX,X'80FE',1
+         DC    XL16'0000000000000000000000000000000E'   V1 source
+
+*                                     sign: C, D, F valid, non-0 digits
+         VRR_G VTPX,X'80E4',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'80E6',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'80E8',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'80EA',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'80EC',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'80EE',0
+         DC    XL16'0FF0000000000000000000000000100F'   V1 source
+
+         VRR_G VTPX,X'80EE',1
+         DC    XL16'0FF00000000000000000000000001000'   V1 source
+
+         VRR_G VTPX,X'80EE',2
+         DC    XL16'0FF0000000000000000000000000F00F'   V1 source
+
+         VRR_G VTPX,X'80EE',3
+         DC    XL16'0FF0000000000000000000000000F009'   V1 source
+
+         VRR_G VTPX,X'80FE',1
+         DC    XL16'1000000000000000000000000000000B'   V1 source
+
+* BTP=1, STC=7, DC>0 and even
+*                                     sign: C, F valid, 0 digits
+         VRR_G VTPX,X'C0E6',1
+         DC    XL16'0FF0000000000000000000000000000B'   V1 source
+
+         VRR_G VTPX,X'C0EA',0
+         DC    XL16'0FF0000000000000000000000000000C'   V1 source
+
+         VRR_G VTPX,X'C0EA',1
+         DC    XL16'0FF0000000000000000000000000000D'   V1 source
+
+         VRR_G VTPX,X'C0EA',0
+         DC    XL16'0FF0000000000000000000000000000F'   V1 source
+
+*                                     sign: C, D, F valid, non-0 digits
+         VRR_G VTPX,X'C0E4',1
+         DC    XL16'0FF0000000000000000000000000100A'   V1 source
+
+         VRR_G VTPX,X'C0E6',1
+         DC    XL16'0FF0000000000000000000000000100B'   V1 source
+
+         VRR_G VTPX,X'C0E8',0
+         DC    XL16'0FF0000000000000000000000000100C'   V1 source
+
+         VRR_G VTPX,X'C0EA',0
+         DC    XL16'0FF0000000000000000000000000100D'   V1 source
+
+         VRR_G VTPX,X'C0EC',1
+         DC    XL16'0FF0000000000000000000000000100E'   V1 source
+
+         VRR_G VTPX,X'C0E4',0
+         DC    XL16'0FF0000000000000000000000001100F'   V1 source
+
+         VRR_G VTPX,X'C0E4',2
+         DC    XL16'0FF0000000000000000000000011100F'   V1 source
+
+         VRR_G VTPX,X'C0E4',1
+         DC    XL16'0FF00000000000000000000000011000'   V1 source
+
+         VRR_G VTPX,X'C0E4',2
+         DC    XL16'0FF0000000000000000000000001F00F'   V1 source
+
+         VRR_G VTPX,X'C0E4',3
+         DC    XL16'0FF00000000000000000000000111009'   V1 source
+
+         VRR_G VTPX,X'C0FE',2
+         DC    XL16'1000000000000000000000000000000C'   V1 source
+
+
+
+
 
          DC    F'0'     END OF TABLE
          DC    F'0'

@@ -196,7 +196,7 @@ char    *strtok_str = NULL;             /* last position             */
         }
     }
 
-    /* Set suported compression */
+    /* Set supported compression */
     dev->rmtcomps = 0;
 #if defined( HAVE_ZLIB )
     dev->rmtcomps |= SHRD_LIBZ;
@@ -518,7 +518,7 @@ char    *strtok_str = NULL;             /* last token                */
             return rc;
     }
 
-    /* Set suported compression */
+    /* Set supported compression */
     dev->rmtcomps = 0;
 #if defined( HAVE_ZLIB )
     dev->rmtcomps |= SHRD_LIBZ;
@@ -2088,7 +2088,7 @@ char     trcmsg[32];
             struct { U16 devt; BYTE model; } temp;
 
             // Correct for endianness difference between server and client, as devt is U16, and little-endian is needed.
-            // This is for the server side, the same correction was applied higher up on the client side. 
+            // This is for the server side, the same correction was applied higher up on the client side.
             temp.devt  = CSWAP16 (SWAP16 (dev->ckdcu->devt ));
 
             temp.model = dev->ckdcu->model;
@@ -2786,6 +2786,7 @@ static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
     va_start( vl, fmt );
     vsnprintf( (char*) tracemsg + strlen( tracemsg ),
         sizeof( tracemsg ) - strlen( tracemsg ), fmt, vl );
+    va_end( vl );
 
     /* Log the trace message directly to the panel (WITHOUT the
        timestamp prefix) if the device is being traced/stepped. */
@@ -2828,6 +2829,7 @@ static void shrdgentrc( const char* fmt, ... )
     va_start( vl, fmt );
     vsnprintf( (char*) tracemsg + strlen( tracemsg ),
         sizeof( tracemsg ) - strlen( tracemsg ), fmt, vl );
+    va_end( vl );
 
     /* Copy the trace message into the trace table (if it exists) */
     shrdtrclog_locked( tracemsg );

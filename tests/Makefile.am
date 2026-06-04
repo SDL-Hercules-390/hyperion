@@ -163,6 +163,11 @@ EXTRA_DIST =                    \
      CDSG.PDF                   \
      CDSG.tst                   \
      cdsg.txt                   \
+     cff-01-CompareAndLoad.asm  \
+     cff-01-CompareAndLoad.core \
+     cff-01-CompareAndLoad.list \
+     cff-01-CompareAndLoad.pdf  \
+     cff-01-CompareAndLoad.tst  \
      cgdr.txt                   \
      cgdtr.txt                  \
      cger.txt                   \
@@ -440,6 +445,21 @@ EXTRA_DIST =                    \
      mhi.core                   \
      mhi.list                   \
      mhi.tst                    \
+     mie4-01-BDXPG-BDEPG.asm    \
+     mie4-01-BDXPG-BDEPG.core   \
+     mie4-01-BDXPG-BDEPG.list   \
+     mie4-01-BDXPG-BDEPG.pdf    \
+     mie4-01-BDXPG-BDEPG.tst    \
+     mie4-02-CLZG-CTZG.asm      \
+     mie4-02-CLZG-CTZG.core     \
+     mie4-02-CLZG-CTZG.list     \
+     mie4-02-CLZG-CTZG.pdf      \
+     mie4-02-CLZG-CTZG.tst      \
+     mie4-03-IndexedAddress.asm \
+     mie4-03-IndexedAddress.core \
+     mie4-03-IndexedAddress.list \
+     mie4-03-IndexedAddress.pdf \
+     mie4-03-IndexedAddress.tst \
      mkcore.rexx                \
      mvcle.assemble             \
      mvcle.listing              \
@@ -732,6 +752,21 @@ EXTRA_DIST =                    \
      zvector-e6-21-VCRNF.list               \
      zvector-e6-21-VCRNF.pdf                \
      zvector-e6-21-VCRNF.tst                \
+     zvector-e6-22-VTZ.asm                  \
+     zvector-e6-22-VTZ.core                 \
+     zvector-e6-22-VTZ.list                 \
+     zvector-e6-22-VTZ.pdf                  \
+     zvector-e6-22-VTZ.tst                  \
+     zvector-e6-23-VCVBQ.asm                \
+     zvector-e6-23-VCVBQ.core               \
+     zvector-e6-23-VCVBQ.list               \
+     zvector-e6-23-VCVBQ.pdf                \
+     zvector-e6-23-VCVBQ.tst                \
+     zvector-e6-24-VCVDQ.asm                \
+     zvector-e6-24-VCVDQ.core               \
+     zvector-e6-24-VCVDQ.list               \
+     zvector-e6-24-VCVDQ.pdf                \
+     zvector-e6-24-VCVDQ.tst                \
      zvector-e7-01-MinMaxAvg.asm            \
      zvector-e7-01-MinMaxAvg.core           \
      zvector-e7-01-MinMaxAvg.list           \
@@ -877,6 +912,26 @@ EXTRA_DIST =                    \
      zvector-e7-29-ShiftDoubleByBit.list    \
      zvector-e7-29-ShiftDoubleByBit.pdf     \
      zvector-e7-29-ShiftDoubleByBit.tst     \
+     zvector-e7-30-DivideRem.asm            \
+     zvector-e7-30-DivideRem.core           \
+     zvector-e7-30-DivideRem.list           \
+     zvector-e7-30-DivideRem.pdf            \
+     zvector-e7-30-DivideRem.tst            \
+     zvector-e7-31-VBLEND.asm               \
+     zvector-e7-31-VBLEND.core              \
+     zvector-e7-31-VBLEND.list              \
+     zvector-e7-31-VBLEND.pdf               \
+     zvector-e7-31-VBLEND.tst               \
+     zvector-e7-32-VGEM.asm                 \
+     zvector-e7-32-VGEM.core                \
+     zvector-e7-32-VGEM.list                \
+     zvector-e7-32-VGEM.pdf                 \
+     zvector-e7-32-VGEM.tst                 \
+     zvector-e7-33-VEVAL.asm                \
+     zvector-e7-33-VEVAL.core               \
+     zvector-e7-33-VEVAL.list               \
+     zvector-e7-33-VEVAL.pdf                \
+     zvector-e7-33-VEVAL.tst                \
      zvector-e7-99-performance.asm          \
      zvector-e7-99-performance.core         \
      zvector-e7-99-performance.list         \

@@ -139,7 +139,7 @@ ATTRIBUTE_PACKED; typedef struct ND ND;
 
 // Node Qualifiers (NQ), not be confused with Node-Element
 // Qualifiers (NEQ), are returned to the program in response
-// to the the Read-Node-Identifier (RNI) CCW command.
+// to the Read-Node-Identifier (RNI) CCW command.
 
 // Byte 0: bits 0-2: Node qualifier contents
 // Byte 0: bits 3-7: Reserved
@@ -171,7 +171,7 @@ ATTRIBUTE_PACKED; typedef struct NQ NQ;
 
 // Node-Element Descriptors (NED), not be confused with Node
 // Descriptors (ND), are returned to the program in response
-// to the the Read-Configuration-Data (RCD) CCW command.
+// to the Read-Configuration-Data (RCD) CCW command.
 
 // Byte 0: bits 0-1: Field identifier
 
@@ -259,7 +259,7 @@ ATTRIBUTE_PACKED; typedef struct NED NED;
 
 // Node-Element Qualifiers (NEQ), not be confused with Node
 // Qualifiers (NQ), are returned to the program in response
-// to the the Read-Configuration-Data (RCD) CCW command.
+// to the Read-Configuration-Data (RCD) CCW command.
 
 // Byte 0: bits 0-1: Field identifier
 // Byte 0: bits 2-7: Reserved

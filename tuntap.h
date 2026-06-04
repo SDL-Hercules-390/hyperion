@@ -77,7 +77,8 @@
 extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
                                           int     iFlags,
                                           int*    pfd,
-                                          char*   pszNetDevName );
+                                          char*   pszNetDevName,
+                                          int*    pinternal );
 //
 // TUNTAP_CreateInterface flag: open as SOCKET (CTCI-WIN v3.3+ only)
 //
@@ -142,6 +143,11 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
                                           int     iFlags );
 #endif
 
+#if defined(__FreeBSD__)
+extern int      TUNTAP_Close            ( int     fd,
+                                          int     internal );
+#endif
+
 #if defined( OPTION_W32_CTCI )   // CTCI-WIN v3.7.0 or greater
   #if defined( TT32QIFDSTADDRS ) // CTCI-WIN v3.7.0 or greater
     extern int TT32_AddIPAddr ( int fd, BYTE* ipv4addr  );
@@ -178,7 +184,7 @@ extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev
 
 #if defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           tt32_open
-  #define TUNTAP_Close          tt32_close
+  #define TUNTAP_Close(f,n)     tt32_close(f) // The second parameter - creation status - is currently only used on FreeBSD.
   #define TUNTAP_Read           tt32_read
   #define TUNTAP_Write          tt32_write
   #define TUNTAP_BegMWrite(f,n) tt32_beg_write_multi(f,n)
@@ -186,12 +192,14 @@ extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev
   #define TUNTAP_IOCtl          tt32_ioctl
 #else // !defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           open
-  #define TUNTAP_Close          close
   #define TUNTAP_Read           read
   #define TUNTAP_Write          write
   #define TUNTAP_BegMWrite(f,n)
   #define TUNTAP_EndMWrite(f)
   #define TUNTAP_IOCtl          ioctl
+#if !defined(__FreeBSD__)
+  #define TUNTAP_Close(a, b)    close(a) // The second parameter - creation status - is currently only used on FreeBSD.
+#endif // !defined (__FreeBSD__)
 #endif // defined( OPTION_W32_CTCI )
 
 #endif // __TUNTAP_H_

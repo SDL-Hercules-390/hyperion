@@ -18,8 +18,7 @@
 #include "opcode.h"
 #include "herc_getopt.h"
 
-#define MAX_TRACE_LEN 128
-
+#define MAX_TRACE_LEN      128
 #define FROM_GUEST         '<'
 #define TO_GUEST           '>'
 #define NO_DIRECTION       ' '
@@ -237,9 +236,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     char        thread_name[32];        // Thread name
 
 
-    pDEVBLK->devtype = 0x3088;
-
-    pDEVBLK->excps   = 0;
+    pDEVBLK->devtype  = 0x3088;
+    pDEVBLK->numsense = 2;
+    pDEVBLK->excps    = 0;
 
     // Return when an existing group has been joined but is still incomplete
     if (!group_device( pDEVBLK, 0 ) && pDEVBLK->group)
@@ -417,7 +416,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // For SNA, the LCS_Startup command seems to be not used.
         pLCSDev->iMaxFrameBufferSize = sizeof(pLCSDev->bFrameBuffer);
 
-        // Indicate that the DEVBLK(s) have been create sucessfully
+        // Indicate that the DEVBLK(s) have been create successfully
         pLCSDev->fDevCreated = 1;
 
         // Initialize locking and event mechanisms
@@ -440,7 +439,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
                                          IFF_TAP | IFF_NO_PI,
                                          &pLCSPORT->fd,
-                                         pLCSPORT->szNetIfName );
+                                         pLCSPORT->szNetIfName,
+                                         &pLCSPORT->internal );
 
             if (rc < 0)
             {
@@ -753,9 +753,8 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         break;
 
     case 0x02:  // MMMMMM10  READ
-    case 0x0C:  // MMMM1100  RDBACK
         // -----------------------------------------------------------
-        // READ & READ BACKWARDS
+        // READ
         // -----------------------------------------------------------
 
         // Read data and set unit status and residual byte count
@@ -812,7 +811,8 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     case 0x43:  // 00XXX011  SBM
         // -----------------------------------------------------------
         // SET BASIC MODE
-        // Also called Enable Compatability Mode (ECM) by SNA,
+        // -----------------------------------------------------------
+        // Also called Enable Compatibility Mode (ECM) by SNA,
         // ECM is the last CCW issued after the XCA is inactivated.
         // -----------------------------------------------------------
 
@@ -836,7 +836,8 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     case 0xC3:  // 11000011  SEM
         // -----------------------------------------------------------
         // SET EXTENDED MODE
-        // Also called Disable Compatability Mode (DCM) by SNA.
+        // -----------------------------------------------------------
+        // Also called Disable Compatibility Mode (DCM) by SNA.
         // DCM is the first CCW issued after the XCA is activated.
         // -----------------------------------------------------------
 
@@ -937,8 +938,6 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         pDEVBLK->sense[0] = SENSE_CR;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
     }
-
-    return;
 }
 
 // ====================================================================
@@ -1418,6 +1417,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                 WRMSG( HHC00936, "E",
                         SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
+                *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
                 LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -1556,6 +1556,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
             WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
             ASSERT( FALSE );
+            *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
             LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -2699,7 +2700,7 @@ static void*  LCS_PortThread( void* arg)
 
     // We must do the close since we were the one doing the i/o...
 
-    VERIFY( pLCSPORT->fd == -1 || TUNTAP_Close( pLCSPORT->fd ) == 0 );
+    VERIFY( pLCSPORT->fd == -1 || TUNTAP_Close( pLCSPORT->fd, pLCSPORT->internal ) == 0 );
 
     // Housekeeping - Cleanup Port Block
 
@@ -2813,7 +2814,7 @@ static void LCS_EnqueueEthFrame( PLCSPORT pLCSPORT, PLCSDEV pLCSDEV, BYTE* pData
 // Places the provided ethernet frame in the next available frame
 // slot in the adapter buffer.
 //
-//   pData       points the the Ethernet packet just received
+//   pData       points the Ethernet packet just received
 //   iSize       is the size of the Ethernet packet
 //
 // Returns:
@@ -3271,7 +3272,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #endif
     char            *argn[MAX_ARGS];
     char            **argv = argn;
+#if !defined(OPTION_W32_CTCI)
     int             saw_if = 0;        /* -x (or --if) specified */
+#endif
     int             saw_conf = 0;      /* Other configuration flags present */
     BYTE            bMode = LCSDEV_MODE_IP;      /* Default mode is IP */
 
@@ -3378,6 +3381,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 return -1;
             }
 
+            if ( pLCSBLK->pszTUNDevice ) { free( pLCSBLK->pszTUNDevice ); }
             pLCSBLK->pszTUNDevice = strdup( optarg );
             break;
 
@@ -3417,6 +3421,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
         case 'o':
 
+            if ( pLCSBLK->pszOATFilename ) { free( pLCSBLK->pszOATFilename ); }
             pLCSBLK->pszOATFilename = strdup( optarg );
             saw_conf = 1;
             break;
@@ -3988,7 +3993,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             if (c == '\0' || c == '\r')
                 continue;
 
-            // Check that statement does not overflow bufffer
+            // Check that statement does not overflow buffer
             if (iLen >= OAT_STMT_BUFSZ)
             {
                 // "CTC: error in file %s: line %d is too long"
@@ -4494,6 +4499,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                     PTT_DEBUG(        "REL  InOutLock    ", 000, pDEVBLK->devnum, -1 );
                     release_lock( &pLCSDEV->InOutLock   );
                     ASSERT( FALSE );
+                    *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
                     pDEVBLK->sense[0] = SENSE_EC;
                     *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 //??                LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -4614,6 +4620,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                 // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
                 WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
                 ASSERT( FALSE );
+                *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 //??            LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
@@ -4642,6 +4649,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
         WRMSG( HHC00936, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                               pDEVBLK->filename, strerror( pLCSDEV->iTuntapErrno ) );
 
+        *pResidual = sCount - ((BYTE*)pLCSHDR - pIOBuf);
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
 
@@ -6106,8 +6114,6 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
     BYTE        frameout[64];
     char        llcmsg[256];
 
-    UNREFERENCED( iSize );
-
     pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];  /* SNA has only one device */
     pLCSBLK = pLCSDEV->pLCSBLK;
 
@@ -6126,6 +6132,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
 
     // Discard the frame if the 802.2 LLC appears to be questionable.
     if ( !illcsize ) goto msg970_return;
+    if ( !iSize ) goto msg970_return;
 
     //
     switch (llc.hwType)
@@ -6548,8 +6555,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // The Z bit indicates that the NR that the control field carries
         // indicated in bytes 0 and 1 does not refer to either the next I frame
         // or an I frame that has already been transmitted but not acknowledged.
-        //   Note: It is all right to receive the the same NR count multiple
-        //   times.
+        //   Note: It is all right to receive the same NR count multiple times.
         //   The NR count is only invalid if the count references an I frame
         //   that has already been acknowledged or if the count skips ahead to
         //   one that has not been transmitted yet. The former is the most
@@ -6789,9 +6795,29 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
             else  // Command. Respond to the TEST from the remote system.
             {
 
-                memset( frameout, 0, sizeof(frameout) );       // Clear area for ethernet fram
-                pEthFrameOut = (PETHFRM)&frameout[0];
-                iEthLenOut = 60;                               // Minimum ethernet frame length
+                // The ANSI/IEEE Std 802.2 in a section titled "Uses of the TEST
+                // command PDU and response PDU" says "Successful completion of the
+                // test consists of sending a TEST command PDU with a particular
+                // information field ... to the designated destination LLC address
+                // and receiving, in return, the identical information field in a
+                // TEST response PDU.". The information field seems to be anything
+                // that follows the Unnumbered Frame LLC.
+
+                // Allocate a buffer the same size as the frame containing the
+                // accepted TEST command PDU, and copy the TEST command PDU. The
+                // copied command PDU will be modified to become the response PDU.
+                pEthFrameOut = malloc( iSize );    // Allocate the buffer
+                if (!pEthFrameOut)                 // if the allocate failed...
+                {
+                    // Report the bad news.
+                    MSGBUF( llcmsg, "malloc(%d)", (int)iSize );
+                    // HHC00900 "%1d:%04X %s: error in function %s: %s"
+                    WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                         llcmsg, strerror(errno) );
+                    break;
+                }
+                memcpy( pEthFrameOut, pEthFrame, iSize );
+                iEthLenOut = iSize;
 
                 //
                 memset( &llcout, 0, sizeof(LLC) );
@@ -6806,7 +6832,6 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 memcpy( &pEthFrameOut->bDestMAC, &pEthFrame->bSrcMAC, IFHWADDRLEN );  // Copy destination MAC address
                 memcpy( &pEthFrameOut->bSrcMAC, &pEthFrame->bDestMAC, IFHWADDRLEN );  // Copy source MAC address
                 iLPDULenOut = BuildLLC( &llcout, pEthFrameOut->bData);                // Build LLC PDU
-                STORE_HW( pEthFrameOut->hwEthernetType, (U16)iLPDULenOut );           // Set data length
 
                 // Trace Ethernet frame before sending to TAP device
                 if (pLCSBLK->fDebug)
@@ -6822,7 +6847,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 {
                     if (pLCSPORT->pLCSBLK->fDebug)
                     {
-                        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
+                        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llcout.hwCR, "TEST" );
                         WRMSG(HHC03984, "D", llcmsg );
                     }
                 }
@@ -6832,6 +6857,9 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
     //??            pLCSDEV->fTuntapError = TRUE;
                     PTT_TIMING( "*WRITE ERR", 0, iEthLenOut, 1 );
                 }
+
+                // Free the buffer containing the TEST response PDU.
+                free( pEthFrameOut );
 
             }
 
@@ -6909,7 +6937,7 @@ msg970_return:
 // probably should if real LCS devices do (I was unable
 // to determine whether they do or not). -- Fish
 
-// FixMe: It would be much more efficent to skip the frame buffer entriely,
+// FixMe: It would be much more efficient to skip the frame buffer entirely,
 //        and move the data directly to the pIOBuf area.
 //        We could them dispose of the frame buffer, and only allocate it
 //        for IP devices.
@@ -7894,7 +7922,7 @@ DEVHND lcs_device_hndinfo =
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

@@ -1775,7 +1775,7 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
         // our thread is still waiting for a lock (as indicated
         // by "ht_ob_lock" being non-NULL in our COPIED threads
         // list) that in fact (in actuality) has already been
-        // successfully obtained! (as inciated by our COPIED
+        // successfully obtained! (as indicated by our COPIED
         // locks list entry indicating that it is in fact OUR
         // thread that currently owns the lock in question!)
         //

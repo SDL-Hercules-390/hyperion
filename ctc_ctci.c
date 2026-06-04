@@ -72,7 +72,7 @@
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -245,7 +245,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif // __HERCIFC_H_
                                  IFF_TUN | IFF_NO_PI,
                                  &pDevCTCBLK->fd,
-                                 pDevCTCBLK->szTUNIfName );
+                                 pDevCTCBLK->szTUNIfName,
+                                 &pDevCTCBLK->internal
+                                 );
 
     if( rc < 0 ) return -1;
 
@@ -1008,7 +1010,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
 // a block (CTCIHDR) specify the offset in the buffer of the next block.
 // The final block in indicated by a CTCIHDR offset value of 0x0000.
 //
-// Within each block, each IP frame is preceeded by a segment header
+// Within each block, each IP frame is preceded by a segment header
 // (CTCISEG). This segment header has a 2 byte length field that
 // specifies the length of the segment (including the segment header),
 // a 2 byte frame type field (always 0x0800 = IPv4), and a 2 byte
@@ -1098,7 +1100,7 @@ static void*  CTCI_ReadThread( void* arg )
 
     // We must do the close since we were the one doing the i/o...
 
-    VERIFY( pCTCBLK->fd == -1 || TUNTAP_Close( pCTCBLK->fd ) == 0 );
+    VERIFY( pCTCBLK->fd == -1 || TUNTAP_Close( pCTCBLK->fd, pCTCBLK->internal ) == 0 );
     pCTCBLK->fd = -1;
 
     return NULL;
@@ -1193,7 +1195,9 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
 static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                        int argc, char** argx )
 {
+#if !defined( OPTION_W32_CTCI )
     int             saw_if = 0;       /* -if specified               */
+#endif
     int             saw_conf = 0; /* Other configuration flags present */
     struct in_addr  addr;               // Work area for addresses
     int             iMTU;
@@ -1469,10 +1473,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         //    configured by CTCI.
         // b) One parameter when the -x option has not been specified.
         //    The single parameter specifies the name of a pre-configured
-        //    TUN inferface that CTCI will use.
+        //    TUN interface that CTCI will use.
         // c) Zero parameters when the -x option has been specified. The
         //    The -x option specified the name of a pre-configured TUN
-        //    inferface that CTCI will use..
+        //    interface that CTCI will use..
         // For Windows there can be:-
         // a) Two parameters (a pair of IPv4 addresses).
         if (argc == 2 ) /* Not pre-configured, but possibly pre-named */

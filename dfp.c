@@ -1319,7 +1319,7 @@ char            c;                      /* Character work area       */
 /*      dn      Pointer to decimal number structure                  */
 /*              representing original DFP value                      */
 /*      dc      Pointer to decimal number structure                  */
-/*              containing only coeffecient of DFP value             */
+/*              containing only coefficient of DFP value             */
 /*      zoned   zoned decimal output area                            */
 /*      len     length-1 of zoned decimal output area                */
 /*      mask    mask field: 0x8=signed, 0x4=ASCII,                   */
@@ -1505,7 +1505,7 @@ dfp_number_from_packed(decNumber* dn, char* packed, int len,
 /*      dn      Pointer to decimal number structure                  */
 /*              representing original DFP value                      */
 /*      dc      Pointer to decimal number structure                  */
-/*              containing only coeffecient of DFP value             */
+/*              containing only coefficient of DFP value             */
 /*      packed  packed decimal output area                           */
 /*      len     length-1 of packed decimal output area               */
 /*      mask    mask field: 0x8=signed, 0x4=reserved,                */
@@ -1552,7 +1552,7 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
     pDigits = 2 * (len + 1) - pSigned;
 
     /* Convert decimal number to string */
-    /* only sigificant digits, ignore exponent and sign */
+    /* only significant digits, ignore exponent and sign */
     if (decNumberIsNaN(dn) || (decNumberIsInfinite(dn)))
     {
         /* For NaN or Inf set cc=3 and use coefficient only */

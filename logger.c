@@ -46,7 +46,7 @@ static FILE *logger_syslog[2];          /* read/write ...            */
        int   logger_syslogfd[2] =       /* ... pipe pairs            */
                             { -1, -1 };
 static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
-static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
+static int   logger_hrdcpyfd;           /* Hardcopy fd or -1         */
 static char  logger_filename[MAX_PATH];
 
 /*********************************************************************/
@@ -115,8 +115,16 @@ int bytes_returned;
 
         if (*msgidx >= logger_currmsg)
         {
-            bytes_returned = logger_bufsize - *msgidx;
-            *msgidx = 0;
+            if (logger_wrapped)
+            {
+                bytes_returned = logger_bufsize - *msgidx;
+                *msgidx = 0;
+            }
+            else
+            {
+                bytes_returned = 0;
+                *msgidx = logger_currmsg;
+            }
         }
         else
         {
@@ -135,7 +143,7 @@ int bytes_returned;
 /*********************************************************************/
 /*             log_line  -  find index for given line                */
 /*********************************************************************/
-/* Find the buffer index for a specific line, with the the value 1   */
+/* Find the buffer index for a specific line, with the value 1       */
 /* indicating the last (most current) line, 2 meaning the last two   */
 /* lines, 3 meaning the three most current lines, ... etc.           */
 /*                                                                   */

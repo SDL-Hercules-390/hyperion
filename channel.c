@@ -43,6 +43,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "chsc.h"
 #include "inline.h"
+#include "hexdumpe.h"
 
 #ifdef FEATURE_S370_CHANNEL
 #include "commadpt.h"
@@ -78,6 +79,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
      && sysblk.noch9oflow                                           \
      && is_ch9oflow( dev, chanstat, unitstat )                      \
     )
+
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -335,31 +337,44 @@ typedef struct PREFETCH PREFETCH;
 /* IODELAY - kludge                                                   */
 /*--------------------------------------------------------------------*/
 #ifdef OPTION_IODELAY_KLUDGE
-#define IODELAY(_dev) \
-do { \
-  if (sysblk.iodelay > 0 && (_dev)->devchar[10] == 0x20) \
-    USLEEP(sysblk.iodelay); \
-} while(0)
+
+#define IODELAY( _dev )                                                \
+                                                                       \
+    do                                                                 \
+    {                                                                  \
+        if (1                                                          \
+            && (_dev)->devchar[10] == 0x20                             \
+            && sysblk.iodelay > 0                                      \
+        )                                                              \
+            USLEEP( sysblk.iodelay );                                  \
+    }                                                                  \
+    while(0)
+
 #else
-#define IODELAY(_dev)
+    #define IODELAY( _dev )     /* (do nothing) */
 #endif
 
 /*--------------------------------------------------------------------*/
 /* CHADDRCHK - validate guest channel i/o subsystem address           */
 /*--------------------------------------------------------------------*/
 #undef CHADDRCHK
-#if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
-#define CHADDRCHK(_addr,_dev)                   \
-  (   ((_addr) > (_dev)->mainlim)               \
-    || (((_dev)->orb.flag5 & ORB5_A)            \
-      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
-        && ((_addr) < sysblk.addrlimval))       \
-      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH)  \
-        && ((_addr) >= sysblk.addrlimval)) ) ))
-#else /* !defined(FEATURE_ADDRESS_LIMIT_CHECKING) */
-#define CHADDRCHK(_addr,_dev) \
+#if defined( FEATURE_ADDRESS_LIMIT_CHECKING )
+
+    #define CHADDRCHK( _addr, _dev )                                   \
+                                                                       \
+      (   ((_addr) > (_dev)->mainlim)                                  \
+        || (((_dev)->orb.flag5 & ORB5_A)                               \
+          && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)                     \
+            && ((_addr) < sysblk.addrlimval))                          \
+          || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH)                     \
+            && ((_addr) >= sysblk.addrlimval)) ) ))
+
+#else
+
+    #define CHADDRCHK( _addr, _dev )                                   \
+                                                                       \
         ((_addr) > (_dev)->mainlim)
-#endif /* defined(FEATURE_ADDRESS_LIMIT_CHECKING) */
+#endif
 
 /*--------------------------------------------------------------------*/
 /*              C H A N N E L   P R O C E S S I N G                   */
@@ -368,14 +383,25 @@ do { \
 #define _CHANNEL_C
 
 static INLINE U64
+
 BytesToEndOfStorage( const RADR addr, const DEVBLK* dev )
 {
-    if (dev) return ((addr <= dev->mainlim)   ? (dev->mainlim+1  - addr) : 0);
+    if (dev) return ((addr <= dev->mainlim)   ? (dev->mainlim +1 - addr) : 0);
     else     return ((addr < sysblk.mainsize) ? (sysblk.mainsize - addr) : 0);
 }
 
-#define CAPPED_BUFFLEN(_addr,_len,_dev) \
-    ((u_int)MIN((U64)(_len),(U64)BytesToEndOfStorage((_addr),(_dev))))
+#define CAPPED_BUFFLEN( _addr, _len, _dev)                             \
+                                                                       \
+    (                                                                  \
+        (u_int)                                                        \
+                                                                       \
+        MIN                                                            \
+        (                                                              \
+            (U64) (_len)                                               \
+            ,                                                          \
+            (U64) BytesToEndOfStorage( (_addr), (_dev) )               \
+        )                                                              \
+    )
 
 
 /*--------------------------------------------------------------------*/
@@ -489,7 +515,7 @@ AIPSX (const SCSW* scsw)
 /*    sysblk.iointqlk                                                 */
 /*--------------------------------------------------------------------*/
 static INLINE void
-queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
+queue_io_interrupt_and_update_status_locked( DEVBLK* dev, int clrbsy, BYTE qdioact )
 {
     OBTAIN_IOINTQLK();
     {
@@ -503,22 +529,24 @@ queue_io_interrupt_and_update_status_locked(DEVBLK* dev, int clrbsy)
         subchannel_interrupt_queue_cleanup( dev );
 
         /* Update interrupts */
-        UPDATE_IC_IOPENDING_QLOCKED();
+        if (!qdioact)
+            UPDATE_IC_IOPENDING_QLOCKED();
     }
     RELEASE_IOINTQLK();
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wake up any waiters if the device isn't active or reserved */
-    if (!(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC)) &&
-        !dev->reserved)
+    if (1
+        && !(dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC))
+        && !dev->reserved
+    )
     {
         dev->shioactive = DEV_SYS_NONE;
         if (dev->shiowaiters)
-            signal_condition (&dev->shiocond);
+            signal_condition( &dev->shiocond );
     }
 #endif // defined( OPTION_SHARED_DEVICES )
 }
-
 
 /*--------------------------------------------------------------------*/
 /*  Queue I/O interrupt and update status                             */
@@ -541,7 +569,7 @@ queue_io_interrupt_and_update_status(DEVBLK* dev, int clrbsy)
         {
             OBTAIN_DEVLOCK( dev );
             {
-                queue_io_interrupt_and_update_status_locked( dev, clrbsy );
+                queue_io_interrupt_and_update_status_locked( dev, clrbsy, FALSE );
             }
             RELEASE_DEVLOCK( dev );
         }
@@ -590,140 +618,44 @@ memcpy_backwards ( BYTE *to, BYTE *from, int length )
 /*-------------------------------------------------------------------*/
 /* FORMAT DATA                                                       */
 /*-------------------------------------------------------------------*/
-#if !defined(format_data)
-#   define format_data(_buffer,_buflen,_data,_datalen)                 \
-          _format_data((BYTE *)(_buffer),(u_int)(_buflen),             \
-                       (BYTE *)(_data),(u_int)(_datalen))
-#endif
 static INLINE void
-_format_data ( BYTE *buffer,  const u_int buflen,
-               const BYTE *a, const u_int len )
+
+format_data(       BYTE* buff, const u_int bufflen,
+             const BYTE* data, const u_int datalen, bool oneline )
 {
-u_int   i, k;                           /* Array subscripts          */
-int     j;
+    static const size_t  bpg = 4;       // (bytes per group)
+                 size_t  gpl = 4;       // (groups per line)
+    static const char*   pfx = "";      // (line prefix string)
+                 char*   dump = NULL;   // ("hexdump" results)
 
-    k = MIN(len, 16);
+    ASSERT( buff && bufflen );  // (sanity check)
+    ASSERT( data && datalen );  // (sanity check)
 
-    if (k)
+    // Determine number of groups-per-line: if we're formatting a
+    // storage or buffer dump, then we will be formatting a regular
+    // multi-line dump, with each line consisting of only 16 bytes
+    // of the dump per line (which is 4 groups of 4-bytes-per-group).
+    //
+    // If we're formatting only the first 'x' bytes of a CCW's
+    // I/O buffer for a CCW trace message however, then we want all
+    // of it formatted into one long line, so the number of 4-byte-
+    // groups-per-line will vary depending on how much data we will
+    // be tracing.
+
+    gpl = oneline ? ROUND_UP( datalen, bpg ) / bpg : 4;
+
+    hexdumpe16( pfx, &dump, data, 0, datalen, 0, 4, gpl );
+
+    if (dump)
     {
-        j = snprintf((char *)buffer, buflen,
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
-                a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
-                a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
-        if (j < 0)
-            *buffer = 0;
-        else
-        {
-            /* Blank out unused data */
-            if (k != 16)
-            {
-                i = (k << 1) + (k >> 2);
-                memset(buffer + i, ' ', j - i);
-            }
-
-            /* If space is available, add translation */
-            if ((u_int)j < buflen)
-            {
-                /* Insert blank separator */
-                buffer[j++] = ' ';
-
-                /* If space still available, complete translation */
-                if ((u_int)j < buflen)
-                {
-                    /* Adjust data display size if necessary */
-                    if ((j + k) > buflen)
-                        k = buflen - j;
-
-                    /* Append translation */
-                    prt_guest_to_host(a, buffer + j, k);
-                }
-            }
-        }
-
+        size_t  dumplen  = strlen( dump );
+        dump[ dumplen-1 ] = 0; // (remove newline)
+        // (Note: "dmp+6" to skip past cosmetic address of dumped data)
+        strlcpy( buff, dump+6, bufflen );
+        free( dump );
     }
     else
-        *buffer = 0;
-
-} /* end function format_data */
-
-
-/***************************************************************/
-/* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
-/***************************************************************/
-#if !defined(e7_format_data)
-#   define e7_format_data(_buffer,_buflen,_data,_datalen)                 \
-          _e7_format_data((BYTE *)(_buffer),(u_int)(_buflen),             \
-                       (BYTE *)(_data),(u_int)(_datalen))
-#endif
-static INLINE void
-_e7_format_data ( BYTE *buffer,  const u_int buflen,
-               const BYTE *a, const u_int len )
-{
-u_int   i, k;                           /* Array subscripts          */
-int     j;
-
-    k = MIN(len, 64);
-
-    if (k)
-    {
-        j = snprintf((char *)buffer, buflen,
-
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
-
-                ,a[ 0], a[ 1], a[ 2], a[ 3], a[ 4], a[ 5], a[ 6], a[ 7]
-                ,a[ 8], a[ 9], a[10], a[11], a[12], a[13], a[14], a[15]
-
-                ,a[16], a[17], a[18], a[19], a[20], a[21], a[22], a[23]
-                ,a[24], a[25], a[26], a[26], a[28], a[29], a[30], a[31]
-
-                ,a[32], a[33], a[34], a[35], a[36], a[37], a[38], a[39]
-                ,a[40], a[41], a[42], a[43], a[44], a[45], a[46], a[47]
-
-                ,a[48], a[49], a[50], a[51], a[52], a[53], a[54], a[55]
-                ,a[56], a[57], a[58], a[59], a[60], a[61], a[62], a[63]
-        );
-
-        if (j < 0)
-            *buffer = 0;
-        else
-        {
-            /* Blank out unused data */
-            if (k != 64)
-            {
-                i = (k << 1) + (k >> 2);
-                memset(buffer + i, ' ', j - i);
-            }
-
-            /* If space is available, add translation */
-            if ((u_int)j < buflen)
-            {
-                /* Insert blank separator */
-                buffer[j++] = ' ';
-
-                /* If space still available, complete translation */
-                if ((u_int)j < buflen)
-                {
-                    /* Adjust data display size if necessary */
-                    if ((j + k) > buflen)
-                        k = buflen - j;
-
-                    /* Append translation */
-                    prt_guest_to_host(a, buffer + j, k);
-                }
-            }
-        }
-
-    }
-    else
-        *buffer = 0;
+        *buff = 0;
 
 } /* end function format_data */
 
@@ -732,85 +664,127 @@ int     j;
 /* FORMAT I/O BUFFER DATA                                            */
 /*-------------------------------------------------------------------*/
 static INLINE void
-format_iobuf_data ( const RADR addr, BYTE *dest, const DEVBLK *dev,
-                    const u_int len )
+
+format_iobuf_data( const RADR addr, BYTE* dest, int dest_size,
+                   const DEVBLK* dev, BYTE count )
 {
-u_int   k;                              /* Array subscripts          */
-BYTE    workarea[17];                   /* Character string work     */
-
-    k = MIN(sizeof(workarea)-1,CAPPED_BUFFLEN(addr,len,dev));
-
-    if (k)
-    {
-        memcpy(workarea, dev->mainstor + addr, k);
-        memcpy(dest, "=>", 2);
-        format_data(dest + 2, 52, workarea,  k);
-    }
-    else
-        *dest = 0;
-
-} /* end function format_iobuf_data */
-
-/***************************************************************/
-/* SPECIAL HANDLING FOR E7 Prefix CCW TO TRACE ENTIRE 64 BYTES */
-/***************************************************************/
-static INLINE void
-e7_format_iobuf_data ( const RADR addr, BYTE *dest, const DEVBLK *dev,
-                    const u_int len )
-{
-u_int   k;                              /* Array subscripts          */
-BYTE    workarea[4*17];                 /* Character string work     */
-
-    k = MIN(sizeof(workarea)-1,CAPPED_BUFFLEN(addr,len,dev));
-
-    if (k)
-    {
-        memcpy(workarea, dev->mainstor + addr, k);
-        memcpy(dest, "=>", 2);
-        e7_format_data(dest + 2, (4*64)-2-1, workarea,  k);
-    }
-    else
-        *dest = 0;
-
-} /* end function format_iobuf_data */
+    ASSERT( dest_size >= 3 );
+    memcpy( dest, "=>", 2 );
+    format_data( dest + 2, dest_size-2, dev->mainstor + addr, count, true );
+}
 
 
 #if !DEBUG_DUMP
-#define DUMP( _desc, _addr, _len )
-#define DUMP_STORAGE( _desc, _addr, _len )
+  #define DUMP(         _desc, _addr, _len )
+  #define DUMP_STORAGE( _desc, _addr, _len )
 #else
+/*-------------------------------------------------------------------*/
+/* FORMAT DUMP DATA                                                  */
+/*-------------------------------------------------------------------*/
+#if !defined( format_dump_data )
+
+    #define   format_dump_data( _buffer, _buflen, _data, _datalen )    \
+                                                                       \
+             _format_dump_data( (BYTE*)(_buffer), (u_int)(_buflen),    \
+                                (BYTE*)(_data), (u_int)(_datalen) )
+#endif
+static INLINE void
+
+_format_dump_data ( BYTE* buffer,  const u_int buflen,
+                    const BYTE* a, const u_int len )
+{
+u_int   i, k;                           /* Array subscripts          */
+int     j;
+
+    k = MIN( len,  16 );
+
+    if (k)
+    {
+        j = snprintf( (char*)buffer, buflen,
+
+            "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+            "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
+
+            a[0], a[1], a[ 2], a[ 3], a[ 4], a[ 5], a[ 6], a[ 7],
+            a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15] );
+
+        if (j < 0)
+            *buffer = 0;
+        else
+        {
+            /* Blank out unused data */
+            if (k != 16)
+            {
+                i = (k << 1) + (k >> 2);
+                memset( buffer + i, ' ', j - i );
+            }
+
+            /* If space is available, add translation */
+            if ((u_int)j < buflen)
+            {
+                /* Insert blank separator */
+                buffer[j++] = ' ';
+
+                /* If space still available, complete translation */
+                if ((u_int)j < buflen)
+                {
+                    /* Adjust data display size if necessary */
+                    if ((j + k) > buflen)
+                        k = buflen - j;
+
+                    /* Append translation */
+                    prt_guest_to_host( a, buffer + j, k );
+                }
+            }
+        }
+
+    }
+    else
+        *buffer = 0;
+
+} /* end function _format_dump_data */
+
 /*-------------------------------------------------------------------*/
 /* Dump data block                                                   */
 /*-------------------------------------------------------------------*/
 
-#define DUMP( _desc, _addr, _len ) \
-       _dump( (char*)(_desc), (BYTE*)(_addr), (u_int)(_len), \
+#define DUMP( _desc, _addr, _len )                                     \
+                                                                       \
+       _dump( (char*)(_desc), (BYTE*)(_addr), (u_int)(_len),           \
                __FILE__, __LINE__, __FUNCTION__ )
 
-static void _dump ( const char *description, BYTE *addr, const u_int len,
+static void _dump ( const char* description, BYTE* addr, const u_int len,
                     const char* file, int line, const char* func )
 {
-int     i;
-int     k = MIN( len, IOBUF_MINSIZE );
-BYTE*   limit;
-char    msgbuf[133];
+    int k = MIN( len, IOBUF_MINSIZE );
 
     if (k)
     {
-        /* Set limit */
-        limit = addr + k;
+        int    i;
+        BYTE*  limit;
+        char   msgbuf[133];
+
+        limit = addr + k;   // (set limit)
+
+        // Print the dump description, if provided...
 
         if (description && description[0])
+        {
             fwritemsg
             (
                 file, line, func, WRMSG_NORMAL, stdout,
                 MSG( HHC01390, "D", description )
             );
+        }
+
+        // Format and print each line of the dump...
 
         for (i=0; addr < limit; addr += 16, i += 16, k -= 16)
         {
             MSGBUF( msgbuf, "%4.4X  => ", i );
-            format_data( msgbuf+9, sizeof( msgbuf ) - 9, addr,  k );
+
+            format_dump_data( msgbuf+9, sizeof( msgbuf ) - 9, addr, k );
+
             fwritemsg
             (
                 file, line, func, WRMSG_NORMAL, stdout,
@@ -825,40 +799,54 @@ char    msgbuf[133];
 /* Dump Storage                                                      */
 /*-------------------------------------------------------------------*/
 
-#define DUMP_STORAGE( _desc, _addr, _len ) \
-       _dump_storage( (char*)(_desc), (RADR)(_addr), (u_int)(_len), \
+#define DUMP_STORAGE( _desc, _addr, _len )                             \
+                                                                       \
+       _dump_storage( (char*)(_desc), (RADR)(_addr), (u_int)(_len),    \
                        __FILE__, __LINE__, __FUNCTION__ )
 
 static void _dump_storage( const char* description, RADR addr, const u_int len,
                            const char* file, int line, const char* func )
 {
-u_int   k;                              /* Amount of storage to dump */
-BYTE*   storage;                        /* Real storage address      */
-BYTE*   limit;                          /* Display limit             */
-char    msgbuf[133];                    /* Message buffer            */
+    u_int k;                            /* Amount of storage to dump */
 
-    /* Set length to fully reside within defined storage */
+    // Set length to fully reside within defined storage
+
     k = CAPPED_BUFFLEN( addr, len, NULL );
+    k = MIN( k, IOBUF_MINSIZE );
 
     if (k)
     {
-        k       = MIN( k, IOBUF_MINSIZE );
+        BYTE*  storage;                 /* Real storage address      */
+        BYTE*  limit;                   /* Display limit             */
+        char   msgbuf[133];             /* Message buffer            */
+
         storage = sysblk.mainstor + addr;
         limit   = storage + k;
 
+        // Print the dump description, if provided...
+
         if (description && description[0])
+        {
             fwritemsg
             (
                 file, line, func, WRMSG_NORMAL, stdout,
                 MSG( HHC01391, "D", description )
             );
+        }
+
+        // Format and print each line of the dump...
 
         if (sysblk.mainsize > (2 * ONE_GIGABYTE))
         {
+            // Width of each storage ADDRESS will be
+            // 16 hex digits wide. Thus "msgbuf+20"
+
             for (; storage < limit; addr += 16, storage += 16, k -= 16)
             {
                 MSGBUF( msgbuf, "%16.16"PRIX64" => ", addr );
-                format_data( msgbuf+20, sizeof( msgbuf ) - 20, storage, k );
+
+                format_dump_data( msgbuf+20, sizeof( msgbuf ) - 20, storage, k );
+
                 fwritemsg
                 (
                     file, line, func, WRMSG_NORMAL, stdout,
@@ -868,10 +856,15 @@ char    msgbuf[133];                    /* Message buffer            */
         }
         else
         {
+            // Width of each storage ADDRESS will be
+            // only 8 hex digits wide. Thus "msgbuf+12"
+
             for (; storage < limit; addr += 16, storage += 16, k -= 16)
             {
                 MSGBUF( msgbuf, "%8.8X => ", (u_int)addr );
-                format_data( msgbuf+12, sizeof( msgbuf ) - 12, storage, k );
+
+                format_dump_data( msgbuf+12, sizeof( msgbuf ) - 12, storage, k );
+
                 fwritemsg
                 (
                     file, line, func, WRMSG_NORMAL, stdout,
@@ -885,18 +878,20 @@ char    msgbuf[133];                    /* Message buffer            */
 
 
 /*-------------------------------------------------------------------*/
-/* Display channel command word and data                             */
+/*            Display channel command word and data                  */
+/*  (Don't call directly! Use "DISPLAY_CCW" macro in "hmacros.h")    */
 /*-------------------------------------------------------------------*/
-
-#define DISPLAY_CCW( _did, _dev, _ccw, _addr, _count, _flags ) \
-    _display_ccw( (_did), (_dev), (_ccw), (_addr), (_count), (_flags), \
-                  __FILE__, __LINE__, __FUNCTION__ )
-
-static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
-                          const BYTE ccw[], const U32 addr,
-                          const U32 count, const U8 flags,
-                          const char* file, int line, const char* func )
+void display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
+                  const BYTE ccw[], const U32 addr,
+                        U32 count, const U8 flags,
+                  const char* file, int line, const char* func )
 {
+    U32  capped_amt;
+    U32  desired_amt;
+    U32  trace_amt;
+
+    // (check for quick exit)
+
     if (*did_ccw_trace)         // (did we do this already?)
         return;                 // (then don't do it again!)
 
@@ -906,17 +901,20 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
     )
         return;                 // (no, then don't trace it!)
 
+    // Format/Display differing amounts depending on situation
+
+    desired_amt  =  dev->devtype == 0x3270 ? 80 : ccw[0] == 0xE7 ? 64 : 16;
+    capped_amt   =  CAPPED_BUFFLEN( addr, count, dev );
+    trace_amt    =  MIN( desired_amt, capped_amt );
+
+    /* Trace to File? (not to console? */
     if (dev->ccwtrace && sysblk.traceFILE)
     {
-        BYTE len, amt;
-
-        len = (BYTE) CAPPED_BUFFLEN( addr, count, dev );
-        amt = (ccw[0] == 0xE7) ? 64 : 16;
-        tf_1315( dev, ccw, addr, count, dev->mainstor + addr, MIN( amt, len ));
+        tf_1315( dev, ccw, addr, count, dev->mainstor + addr, trace_amt );
     }
-    else
+    else // (normal trace Hercules HMC console...)
     {
-        BYTE area[4*64];    // (4 x to trace all 64 bytes of E7 Prefix CCW)
+        BYTE iodata_print_buffer[ 512 ];
 
         /* No data to be formatted if CCW is a NOP or TIC
            or the CCW "Skip data transfer" flag is on. */
@@ -925,13 +923,14 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
             || IS_CCW_NOP( ccw[0] )
             || IS_CCW_TIC( ccw[0] )
         )
-            area[0] = 0;
+        {
+            /* Trace just the CCW itself, but not any CCW data */
+            iodata_print_buffer[0] = 0;
+        }
         else
         {
-            if (ccw[0] == 0xE7)
-                e7_format_iobuf_data( addr, area, dev, count );
-            else
-                format_iobuf_data( addr, area, dev, count );
+            /* Trace the CCW itself AND its data */
+            format_iobuf_data( addr, iodata_print_buffer, sizeof( iodata_print_buffer ), dev, trace_amt );
         }
 
         // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
@@ -942,7 +941,7 @@ static void _display_ccw( bool* did_ccw_trace, const DEVBLK* dev,
             (
                 HHC01315, "I", LCSS_DEVNUM,
                 ccw[0], ccw[1], ccw[2], ccw[3],
-                ccw[4], ccw[5], ccw[6], ccw[7], area
+                ccw[4], ccw[5], ccw[6], ccw[7], iodata_print_buffer
             )
         );
     }
@@ -983,7 +982,8 @@ DLL_EXPORT void default_sns( char* buf, size_t buflen, BYTE b0, BYTE b1 )
 /* Display interpretation of first two sense bytes                   */
 /*-------------------------------------------------------------------*/
 
-#define DISPLAY_SENSE( _dev ) \
+#define DISPLAY_SENSE( _dev )                                          \
+                                                                       \
     _display_sense( (_dev), __FILE__, __LINE__, __FUNCTION__ )
 
 static void _display_sense( const DEVBLK* dev,
@@ -1011,33 +1011,39 @@ static void _display_sense( const DEVBLK* dev,
 /* Display IDAW and Data                                             */
 /*-------------------------------------------------------------------*/
 
-#define DISPLAY_IDAW( _dev, _type, _flag, _addr, _count ) \
-    _display_idaw( (_dev), (_type), (_flag), (_addr), (_count), \
+#define DISPLAY_IDAW( _dev, _type, _flag, _addr, _count )              \
+                                                                       \
+    _display_idaw( (_dev), (_type), (_flag), (_addr), (_count),        \
                     __FILE__, __LINE__, __FUNCTION__ )
 
 static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
-                           const RADR addr, const U16 count,
+                           const RADR addr, U16 count,
                            const char* file, int line, const char* func )
 {
+    // (check for quick exit)
+
     if (1
         &&  dev->ccwopstrace            // (tracing ONLY specific CCWs?)
         && !dev->ccwops[ dev->code ]    // (and NOT interested in this one?)
     )
         return;                         // (no, then don't trace it!)
 
+    // Format/Display differing amounts depending on situation
+
+    count = dev->code == 0xE7 ? 64 : 16;
+    count = MIN( count, CAPPED_BUFFLEN( addr, count, dev ));
+
+    // Trace to File? (not to console?
+
     if (dev->ccwtrace && sysblk.traceFILE)
     {
-        BYTE len, amt;
-
-        len = (BYTE) CAPPED_BUFFLEN( addr, count, dev );
-        amt = (dev->code == 0xE7) ? 64 : 16;
-        tf_1301( dev, addr, count, dev->mainstor + addr, MIN( amt, len ), flag, type );
+        tf_1301( dev, addr, count, dev->mainstor + addr, count, flag, type );
     }
-    else
+    else // Trace to Hercules console (HMC)...
     {
-        BYTE area[64];
+        BYTE iodata_print_buffer[ 512 ];
 
-        format_iobuf_data( addr, area, dev, count );
+        format_iobuf_data( addr, iodata_print_buffer, sizeof( iodata_print_buffer ), dev, count );
 
         switch (type)
         {
@@ -1046,7 +1052,7 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
                 fwritemsg
                 (
                     file, line, func, WRMSG_NORMAL, stdout,
-                    MSG( HHC01302, "I", LCSS_DEVNUM, (U32)addr, count, area )
+                    MSG( HHC01302, "I", LCSS_DEVNUM, (U32)addr, count, iodata_print_buffer )
                 );
                 break;
 
@@ -1055,7 +1061,7 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
                 fwritemsg
                 (
                     file, line, func, WRMSG_NORMAL, stdout,
-                    MSG( HHC01303, "I", LCSS_DEVNUM, (U64)addr, count, area )
+                    MSG( HHC01303, "I", LCSS_DEVNUM, (U64)addr, count, iodata_print_buffer )
                 );
                 break;
 
@@ -1064,7 +1070,7 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
                 fwritemsg
                 (
                     file, line, func, WRMSG_NORMAL, stdout,
-                    MSG( HHC01301, "I", LCSS_DEVNUM, flag, count, (U64)addr, area )
+                    MSG( HHC01301, "I", LCSS_DEVNUM, flag, count, (U64)addr, iodata_print_buffer )
                 );
                 break;
         }
@@ -1076,7 +1082,8 @@ static void _display_idaw( const DEVBLK* dev, const BYTE type, const BYTE flag,
 /* DISPLAY CHANNEL STATUS WORD                                       */
 /*-------------------------------------------------------------------*/
 
-#define DISPLAY_CSW( _dev, _scsw ) \
+#define DISPLAY_CSW( _dev, _scsw )                                     \
+                                                                       \
     _display_csw( (_dev), (_scsw), __FILE__, __LINE__, __FUNCTION__ )
 
 static void _display_csw( const DEVBLK* dev, const BYTE csw[],
@@ -1106,7 +1113,8 @@ static void _display_csw( const DEVBLK* dev, const BYTE csw[],
 /* DISPLAY SUBCHANNEL STATUS WORD                                    */
 /*-------------------------------------------------------------------*/
 
-#define DISPLAY_SCSW( _dev, _scsw ) \
+#define DISPLAY_SCSW( _dev, _scsw )                                    \
+                                                                       \
     _display_scsw( (_dev), (_scsw), __FILE__, __LINE__, __FUNCTION__ )
 
 static void _display_scsw( const DEVBLK* dev, const SCSW scsw,
@@ -1147,10 +1155,11 @@ static void _display_scsw( const DEVBLK* dev, const SCSW scsw,
 /*  Display prefetch table                                           */
 /*-------------------------------------------------------------------*/
 #if !DEBUG_PREFETCH
-#define DISPLAY_PREFETCH( _prefetch, _ps, _count, _residual, _more )
+  #define DISPLAY_PREFETCH( _prefetch, _ps, _count, _residual, _more )
 #else
-#define DISPLAY_PREFETCH( _prefetch, _ps, _count, _residual, _more ) \
-    _display_prefetch( _prefetch, _ps, _count, _residual, _more, \
+  #define DISPLAY_PREFETCH( _prefetch, _ps, _count, _residual, _more ) \
+                                                                       \
+    _display_prefetch( _prefetch, _ps, _count, _residual, _more,       \
                        __FILE__, __LINE__, __FUNCTION__ )
 
 static void _display_prefetch( PREFETCH* prefetch, const u_int ps,
@@ -1950,6 +1959,8 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 void
 perform_clear_subchan (DEVBLK *dev)
 {
+    BYTE qdioact;   // QDIO active flag
+
     /* Dequeue pending interrupts */
     OBTAIN_IOINTQLK();
     {
@@ -1976,6 +1987,8 @@ perform_clear_subchan (DEVBLK *dev)
         dev->scsw.flag0 = 0;
         dev->scsw.flag1 = 0;
         dev->scsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
+        qdioact = dev->scsw.flag2 & SCSW2_Q;
+        dev->scsw.flag2 &= ~SCSW2_Q;
         dev->scsw.flag2 |= SCSW2_FC_CLEAR;
         /* Shortcut setting of flag3 due to clear and setting of just the
          * status pending flag:
@@ -1991,7 +2004,8 @@ perform_clear_subchan (DEVBLK *dev)
         /* Queue the pending interrupt and update status */
         QUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint, TRUE );
         subchannel_interrupt_queue_cleanup( dev );
-        UPDATE_IC_IOPENDING_QLOCKED();
+        if (!qdioact)
+            UPDATE_IC_IOPENDING_QLOCKED();
     }
     RELEASE_IOINTQLK();
 
@@ -2124,6 +2138,11 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 void
 perform_halt_and_release_lock (DEVBLK *dev)
 {
+    BYTE qdioact;   // QDIO active flag
+
+    qdioact = dev->scsw.flag2 & SCSW2_Q;
+    dev->scsw.flag2 &= ~SCSW2_Q;
+
     /* If status incomplete,
      * [15.4.2] Perform halt function signaling
      */
@@ -2191,7 +2210,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
     }
 
     /* Queue pending I/O interrupt and update status */
-    queue_io_interrupt_and_update_status_locked(dev,TRUE);
+    queue_io_interrupt_and_update_status_locked( dev, TRUE, qdioact );
 
     RELEASE_DEVLOCK( dev );
 }
@@ -2367,7 +2386,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     /* If the device is busy then signal the subchannel to halt,
        UNLESS it's suspended (in which case signal it to resume;
        the halt will occur when resumed). If it's startpending,
-       remove the I/O from the queue and then halt subhchannel.
+       remove the I/O from the queue and then halt subchannel.
        Otherwise (not busy/startpending/suspended) do nothing.
     */
     if (0
@@ -3534,46 +3553,62 @@ RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    to_iobuf;                       /* 1=READ, SENSE, or RDBACK  */
 BYTE    to_memory;                      /* 1=READ, SENSE, or RDBACK  */
 BYTE    readbackwards;                  /* 1=RDBACK                  */
-#if defined(FEATURE_MIDAW_FACILITY)
+
+#if defined( FEATURE_MIDAW_FACILITY )
 int     midawseq;                       /* MIDAW counter (0=1st)     */
 U32     midawptr;                       /* Real addr of MIDAW        */
 U16     midawrem;                       /* CCW bytes remaining       */
 U16     midawlen=0;                     /* MIDAW data length         */
 RADR    midawdat=0;                     /* MIDAW data area addr      */
 BYTE    midawflg;                       /* MIDAW flags               */
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
-
-#if !defined(set_chanstat)
-#define set_chanstat(_status)                                          \
-do {                                                                   \
-    if (prefetch->seq)                                                 \
-        prefetch->chanstat[ps] = (_status);                            \
-    else                                                               \
-        *chanstat = (_status);                                         \
-} while(0)
 #endif
 
-#if !defined(get_new_prefetch_entry)
-#define get_new_prefetch_entry(_idawtype,_idawaddr)                    \
-do {                                                                   \
-    if (prefetch->seq)                                                 \
+/*-------------------------------------------------------------------*/
+#if !defined( set_chanstat )
+
+    #define set_chanstat( _status )                                    \
+                                                                       \
+    do                                                                 \
     {                                                                  \
-        ps = prefetch->seq++;                                          \
-        if (prefetch->seq > PF_SIZE)                                   \
-        {                                                              \
-            *chanstat = CSW_CDC;                                       \
-            break;                                                     \
-        }                                                              \
-        prefetch->ccwaddr[ps] = prefetch->ccwaddr[ps-1];               \
-        if ((_idawtype) != PF_NO_IDAW)                                 \
-        {                                                              \
-            prefetch->idawtype[ps] = (_idawtype);                      \
-            prefetch->idawaddr[ps] = (_idawaddr);                      \
-        }                                                              \
+        if (prefetch->seq)                                             \
+            prefetch->chanstat[ps] = (_status);                        \
+        else                                                           \
+            *chanstat = (_status);                                     \
     }                                                                  \
-    *chanstat = 0;                                                     \
-} while(0)
+    while(0)
+
+
 #endif
+/*-------------------------------------------------------------------*/
+#if !defined( get_new_prefetch_entry )
+
+    #define get_new_prefetch_entry( _idawtype, _idawaddr )             \
+                                                                       \
+        do                                                             \
+        {                                                              \
+            if (prefetch->seq)                                         \
+            {                                                          \
+                ps = prefetch->seq++;                                  \
+                                                                       \
+                if (prefetch->seq > PF_SIZE)                           \
+                {                                                      \
+                    *chanstat = CSW_CDC;                               \
+                    break;                                             \
+                }                                                      \
+                                                                       \
+                prefetch->ccwaddr[ps] = prefetch->ccwaddr[ps-1];       \
+                                                                       \
+                if ((_idawtype) != PF_NO_IDAW)                         \
+                {                                                      \
+                    prefetch->idawtype[ps] = (_idawtype);              \
+                    prefetch->idawaddr[ps] = (_idawaddr);              \
+                }                                                      \
+            }                                                          \
+            *chanstat = 0;                                             \
+        }                                                              \
+        while(0)
+#endif
+/*-------------------------------------------------------------------*/
 
     /* Set current prefetch sequence */
     if (prefetch->seq)
@@ -3766,7 +3801,10 @@ do {                                                                   \
                        we're even called.)
                     */
                     if (to_memory)
+                    {
                         DISPLAY_CCW( did_ccw_trace, dev, ccw, addr, count, flags );
+                        *did_ccw_trace = false;
+                    }
                     DISPLAY_IDAW( dev, PF_MIDAW, midawflg, midawdat, midawlen );
                 }
 #if DEBUG_DUMP
@@ -3977,7 +4015,10 @@ do {                                                                   \
                    we're even called.)
                 */
                 if (to_memory)
+                {
                     DISPLAY_CCW( did_ccw_trace, dev, ccw, addr, count, flags );
+                    *did_ccw_trace = false;
+                }
                 DISPLAY_IDAW( dev, idawfmt, 0, idadata, idalen );
             }
 
@@ -4289,8 +4330,8 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
             {
                 /* Set SCSW for attention interrupt                              */
                 /* SA22-7201-05:                                                 */
-                /*  p. 16-3, Unsolicited Interuption Condition                   */
-                /*           Solicited Interuption Condition                     */
+                /*  p. 16-3, Unsolicited Interruption Condition                  */
+                /*           Solicited Interruption Condition                    */
                 /*           Figure 16-1, Interruption Condition for Status-     */
                 /*                        Control-Bit Combinations               */
                 /*  p. 16-4, Alert Interruption Condition                        */
@@ -5055,7 +5096,7 @@ execute_halt:
 
         /* Validate suppress length indication (SLI) flag            */
         /* SA22-7201-05:                                             */
-        /*  p. 15-24, Supress-Length-Indication (SLI) Flag           */
+        /*  p. 15-24, Suppress-Length-Indication (SLI) Flag          */
         /*-------------------------------------------------------------
         //
         // Note: With CD check first, this test will always be false.
@@ -5220,10 +5261,10 @@ execute_halt:
 
                         /* Present the interrupt and return */
                         if (dev->scsw.flag3 & SCSW3_SC_PEND)
-                            queue_io_interrupt_and_update_status_locked(dev,FALSE);
+                            queue_io_interrupt_and_update_status_locked( dev, FALSE, FALSE);
 
                         RELEASE_DEVLOCK( dev );
-                        RELEASE_INTLOCK(NULL);
+                        RELEASE_INTLOCK( NULL );
 
                         if (dev->scsw.flag2 & (SCSW2_AC_CLEAR | SCSW2_AC_HALT))
                         {
@@ -5678,6 +5719,17 @@ prefetch:
                 /* If error during copy, skip remaining CD CCWs */
                 if (chanstat && (flags & CCW_FLAGS_CD))
                     skip_ccws = 1;
+
+                /* NOW that the data that was read from the device has
+                   been copied from the channel I/O buffer back into
+                   main storage, we can NOW trace the READ CCW so that
+                   we can actually see the data that was read.
+                */
+                if (dev->ccwtrace)
+                {
+                    did_ccw_trace = false;
+                    DISPLAY_CCW( &did_ccw_trace, dev, ccw, addr, count, flags );
+                }
             }
         }
 
@@ -5743,7 +5795,7 @@ prefetch:
                     /* Immediate operation. If Format-1 WITHOUT the
                        ORB 'L' flag, then Incorrect Length. Otherwise
                        if Format-0, or Format-1 WITH Incorrect Length
-                       Suppresion enabled, then IL is NOT indicated
+                       Suppression enabled, then IL is NOT indicated
                        (i.e. is SUPPRESSED).
                     */
                     || (1
@@ -6050,7 +6102,7 @@ breakchain:
             }
 
             /* Present the interrupt and return */
-            queue_io_interrupt_and_update_status_locked( dev, TRUE );
+            queue_io_interrupt_and_update_status_locked( dev, TRUE, FALSE );
         }
         RELEASE_DEVLOCK( dev );
     }
@@ -6067,7 +6119,7 @@ breakchain:
 /* the channel masks in control register 2 determine whether the     */
 /* device is enabled.  When configured for the XA or ESA channel     */
 /* subsystem, the interrupt subclass masks in control register 6     */
-/* determine eligability; the PSW system mask is not tested, because */
+/* determine eligibility; the PSW system mask is not tested, because */
 /* the TPI instruction can operate with I/O interrupts masked off.   */
 /* Returns non-zero if interrupts enabled, 0 if interrupts disabled. */
 /*-------------------------------------------------------------------*/

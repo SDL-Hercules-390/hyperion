@@ -1,4 +1,4 @@
- TITLE 'zvector-e6-20-NNPconvert (Zvector E6 VRR-c)'
+ TITLE 'zvector-e6-21-VCRNF'
 ***********************************************************************
 *
 *        EXPERIMENTAL pending further PoP definition
@@ -131,11 +131,11 @@ ZVE6TST  START 0
 
 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
                                                                 SPACE 2
-         ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+         ORG   ZVE6TST+X'1A0'        z/Architecture RESTART PSW
          DC    X'0000000180000000'
          DC    AD(BEGIN)
                                                                 SPACE 2
-         ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+         ORG   ZVE6TST+X'1D0'        z/Architecture PROGRAM CHECK PSW
          DC    X'0002000180000000'
          DC    AD(X'DEAD')
                                                                 SPACE 3
@@ -152,7 +152,8 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
 *   R0       (work)
 *   R1-4     (work)
 *   R5       Testing control table - current test base
-*   R6-R7    (work)
+*   R6       (work)
+*   R7       msg return
 *   R8       First base register
 *   R9       Second base register
 *   R10      Third base register
@@ -168,15 +169,15 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
          USING  BEGIN+4096,R9          SECOND Base Register
          USING  BEGIN+8192,R10         THIRD Base Register
 
-BEGIN    BALR  R8,0                    Initalize FIRST base register
-         BCTR  R8,0                    Initalize FIRST base register
-         BCTR  R8,0                    Initalize FIRST base register
+BEGIN    BALR  R8,0                    Initialize FIRST base register
+         BCTR  R8,0                    Initialize FIRST base register
+         BCTR  R8,0                    Initialize FIRST base register
 
-         LA    R9,2048(,R8)            Initalize SECOND base register
-         LA    R9,2048(,R9)            Initalize SECOND base register
+         LA    R9,2048(,R8)            Initialize SECOND base register
+         LA    R9,2048(,R9)            Initialize SECOND base register
 
-         LA    R10,2048(,R9)           Initalize THIRD base register
-         LA    R10,2048(,R10)          Initalize THIRD base register
+         LA    R10,2048(,R9)           Initialize THIRD base register
+         LA    R10,2048(,R10)          Initialize THIRD base register
 
          STCTL R0,R0,CTLR0             Store CR0 to enable AFP
          OI    CTLR0+1,X'04'           Turn on AFP bit
@@ -212,10 +213,16 @@ NEXTE6   EQU   *
 *
 * validate FPC first
 *
-         CLC   FLG(1),FPC_R+1         expected FPC flags?
-         BNE   FAILMSG                no, issue failed message
-         CLC   VXC(1),FPC_R+2         expected VXC?
-         BNE   FAILMSG                no, issue failed message
+         CLC   FLG(1),FPC_R+1          expected FPC flags?
+         BE    CHECKVXC
+         BAL   R7,FPCMSG               no, issue failed message
+
+CHECKVXC EQU   *
+         CLC   VXC(1),FPC_R+2          expected VXC?
+         BE    CHECKRES
+         BAL   R7,VXCMSG               no, issue failed message
+
+CHECKRES EQU   *
 
 * then validate results, if not inexact
 
@@ -240,9 +247,9 @@ DONEXT   EQU   *
 XCHECK   EQU   *
          MVC   SKIPXC,=CL8'SKIP XC '
          CLC   XCSKIP,=CL1'S'         skip xcheck requested
-         BE    0(R15)                 skip = S, so exit
-         CLI   FPC_R+2,0             Only Xcheck no VXC error
-         BNZ   0(R15)                 some VXC error , so exit
+         BE    0(R15)                   skip = S, so exit
+         CLI   FPC_R+2,0              Only Xcheck no VXC error
+         BNZ   0(R15)                   some VXC error , so exit
 *
 *        cross check depends on the instruction
 *
@@ -252,76 +259,151 @@ XCHECK   EQU   *
 
 
          MVC   SKIPXC,=CL8'SKIP XC '
-         BR    R15                  return from xcheck
+         BR    R15                    return from xcheck
 
 * cross check: VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
 *
 XCVCRNF  DS    0F
-         LFPC  FPCINIT              initialize FPC
+         LFPC  FPCMOFF                initialize FPC
 
          VL    V16,V1OUTPUT
          VCLFNH V15,V16,2,0
-         STFPC FPC_XC1              save 1st FPC
+         STFPC FPC_XC1                save 1st FPC
          VST   V15,XCOUTPUT
 
-         LFPC  FPCINIT              initialize FPC
+         LFPC  FPCMOFF                initialize FPC
 
          VL    V16,V1OUTPUT
          VCLFNL V15,V16,2,0
-         STFPC FPC_XC2              save 2nd FPC
+         STFPC FPC_XC2                save 2nd FPC
          VST   V15,XCOUTPUT+16
 
-         CLI   FPC_XC1+2,0          1st FPC
-         BNZ   0(R15)               some VXC error , so exit
+         CLI   FPC_XC1+2,0            1st FPC
+         BNZ   0(R15)                 some VXC error , so exit
 
-         CLI   FPC_XC2+2,0          2nd FPC
-         BNZ   0(R15)               some VXC error , so exit
+         CLI   FPC_XC2+2,0            2nd FPC
+         BNZ   0(R15)                 some VXC error , so exit
 
-         LGF   R1,V2ADDR            expected source address
+         LGF   R1,V2ADDR              expected source address
          CLC   XCOUTPUT(32),0(R1)
          BNE   XCFAILMSG
-         BR    R15                  return from xcheck
+         BR    R15                    return from xcheck
 
 
 * xcheck failed message
 XCFAILMSG DS   0H
-         LH    R2,TNUM              get test number and convert
+         L     R0,=F'1'               set failed test indicator
+         ST    R0,FAILED
+
+         LH    R2,TNUM                get test number and convert
          CVD   R2,DECNUM
          MVC   PRT3,EDIT
          ED    PRT3,DECNUM
-         MVC   XCPTNUM(3),PRT3+13   fill in message with test #
+         MVC   XCPTNUM(3),PRT3+13     fill in message with test #
 
-         MVC   XCPNAME,OPNAME       fill in message with instruction
+         MVC   XCPNAME,OPNAME         fill in message with instruction
 
          XGR   R2,R2
-         IC    R2,M4                get m3 and convert
+         IC    R2,M4                  get m3 and convert
          CVD   R2,DECNUM
          MVC   PRT3,EDIT
          ED    PRT3,DECNUM
-         MVC   XCPM4(2),PRT3+14     fill in message with m3 field
+         MVC   XCPM4(2),PRT3+14       fill in message with m3 field
 *
          XGR   R2,R2
-         IC    R2,M5                get m4 and convert
+         IC    R2,M5                  get m4 and convert
          CVD   R2,DECNUM
          MVC   PRT3,EDIT
          ED    PRT3,DECNUM
-         MVC   XCPM5(2),PRT3+14     fill in message with m4 field
+         MVC   XCPM5(2),PRT3+14       fill in message with m4 field
 
-         ST    R15,XCR15            save r15
-         LA    R0,XCPLNG            message length
-         LA    R1,XCPLINE           messagfe address
+         ST    R15,XCR15              save r15
+         LA    R0,XCPLNG              message length
+         LA    R1,XCPLINE             message address
          BAL   R15,RPTERROR
          L     R15,XCR15
 
-         L     R0,=F'1'             set failed test indicator
+         L     R0,=F'1'               set failed test indicator
          ST    R0,FAILED
-         BR    R15                  return from xcheck
+         BR    R15                    return from xcheck
 
          DS    0FD
 XCRESULT DS    XL16
 XCV1     DS    XL16
 XCV2     DS    XL16
 XCR15    DS    FD
+                                                                 EJECT
+***********************************************************************
+* FPC not as expected:
+*        issue message with test number, instruction under test,
+*              expected FPC and received FPC
+***********************************************************************
+FPCMSG   EQU   *
+         L     R0,=F'1'                set failed test indicator
+         ST    R0,FAILED
+
+         LH    R2,TNUM                 get test number and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   FPCPNUM(3),PRT3+13      fill in message with test #
+
+         MVC   FPCPNAME,OPNAME         fill in message with instruction
+*
+         XGR   R2,R2
+         IC    R2,FLG                  get expected flags and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   FPCPEXP(3),PRT3+13      fill in message with m3 field
+*
+         XGR   R2,R2
+         IC    R2,FPC_R+1              get received flags and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   FPCPGOT(3),PRT3+13      fill in message with FPC got
+*
+         LA    R0,FPCPLNG              message length
+         LA    R1,FPCPLINE             message address
+         BAL   R15,RPTERROR
+         BR    R7
+                                                                 EJECT
+***********************************************************************
+* VXC not as expected:
+*        issue message with test number, instruction under test,
+*              expected FPC and received FPC
+***********************************************************************
+VXCMSG   EQU   *
+         L     R0,=F'1'                set failed test indicator
+         ST    R0,FAILED
+
+         LH    R2,TNUM                 get test number and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   VXCPNUM(3),PRT3+13      fill in message with test #
+
+         MVC   VXCPNAME,OPNAME         fill in message with instruction
+*
+         XGR   R2,R2
+         IC    R2,VXC                  get expected flags and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   VXCPEXP(3),PRT3+13      fill in message with m3 field
+*
+         XGR   R2,R2
+         IC    R2,FPC_R+2              get received flags and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   VXCPGOT(3),PRT3+13      fill in message with FPC got
+*
+         LA    R0,VXCPLNG              message length
+         LA    R1,VXCPLINE             message address
+         BAL   R15,RPTERROR
+         BR    R7
 
                                                                  EJECT
 ***********************************************************************
@@ -330,50 +412,53 @@ XCR15    DS    FD
 *              and instruction m4
 ***********************************************************************
 FAILMSG  EQU   *
-         LH    R2,TNUM              get test number and convert
-         CVD   R2,DECNUM
-         MVC   PRT3,EDIT
-         ED    PRT3,DECNUM
-         MVC   PRTNUM(3),PRT3+13    fill in message with test #
+         L     R0,=F'1'               set failed test indicator
+         ST    R0,FAILED
 
-         MVC   PRTNAME,OPNAME       fill in message with instruction
-*
-         XGR   R2,R2
-         IC    R2,M4                get m3 and convert
+         LH    R2,TNUM                get test number and convert
          CVD   R2,DECNUM
          MVC   PRT3,EDIT
          ED    PRT3,DECNUM
-         MVC   PRTM4(2),PRT3+14     fill in message with m3 field
+         MVC   PRTNUM(3),PRT3+13      fill in message with test #
+
+         MVC   PRTNAME,OPNAME         fill in message with instruction
 *
          XGR   R2,R2
-         IC    R2,M5                get m4 and convert
+         IC    R2,M4                  get m3 and convert
          CVD   R2,DECNUM
          MVC   PRT3,EDIT
          ED    PRT3,DECNUM
-         MVC   PRTM5(2),PRT3+14     fill in message with m4 field
+         MVC   PRTM4(2),PRT3+14       fill in message with m3 field
 *
-         LA    R0,PRTLNG            message length
-         LA    R1,PRTLINE           messagfe address
+         XGR   R2,R2
+         IC    R2,M5                  get m4 and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   PRTM5(2),PRT3+14       fill in message with m4 field
+*
+         LA    R0,PRTLNG              message length
+         LA    R1,PRTLINE             message address
          BAL   R15,RPTERROR
                                                                 SPACE 2
 ***********************************************************************
 * continue after a failed test
 ***********************************************************************
 FAILCONT EQU   *
-         L     R0,=F'1'          set failed test indicator
+         L     R0,=F'1'               set failed test indicator
          ST    R0,FAILED
 
-         LA    R12,4(0,R12)      next test address
+         LA    R12,4(0,R12)           next test address
          B     NEXTE6
                                                                 SPACE 2
 ***********************************************************************
 * end of testing; set ending psw
 ***********************************************************************
 ENDTEST  EQU   *
-         L     R1,FAILED         did a test fail?
+         L     R1,FAILED              did a test fail?
          LTR   R1,R1
-         BZ    EOJ                  No, exit
-         B     FAILTEST             Yes, exit with BAD PSW
+         BZ    EOJ                     No, exit
+         B     FAILTEST                Yes, exit with BAD PSW
 
                                                                 EJECT
 ***********************************************************************
@@ -382,23 +467,23 @@ ENDTEST  EQU   *
 *                             R1 = ADDRESS OF MESSAGE
 ***********************************************************************
                                                                SPACE
-RPTERROR ST    R15,RPTSAVE          Save return address
-         ST    R5,RPTSVR5           Save R5
+RPTERROR ST    R15,RPTSAVE            Save return address
+         ST    R5,RPTSVR5             Save R5
 *
 *        Use Hercules Diagnose for Message to console
 *
-         STM   R0,R2,RPTDWSAV       save regs used by MSG
-         BAL   R2,MSG               call Hercules console MSG display
-         LM    R0,R2,RPTDWSAV       restore regs
+         STM   R0,R2,RPTDWSAV         save regs used by MSG
+         BAL   R2,MSG                 call Hercules console MSG display
+         LM    R0,R2,RPTDWSAV         restore regs
                                                                SPACE 2
-         L     R5,RPTSVR5           Restore R5
-         L     R15,RPTSAVE          Restore return address
-         BR    R15                  Return to caller
+         L     R5,RPTSVR5             Restore R5
+         L     R15,RPTSAVE            Restore return address
+         BR    R15                    Return to caller
                                                                SPACE
-RPTSAVE  DC    F'0'                 R15 save area
-RPTSVR5  DC    F'0'                 R5 save area
+RPTSAVE  DC    F'0'                   R15 save area
+RPTSVR5  DC    F'0'                   R5 save area
                                                                SPACE
-RPTDWSAV DC    2D'0'                R0-R2 save area for MSG call
+RPTDWSAV DC    2D'0'                  R0-R2 save area for MSG call
                                                                EJECT
 ***********************************************************************
 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
@@ -436,7 +521,7 @@ MSGSAVE  DC    3F'0'                  Registers save area
 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
                                                                 SPACE 2
 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
-MSGMSG   DC    CL95' '                The message text to be displayed
+MSGMSG   DC    CL100' '                The message text to be displayed
 
                                                                 EJECT
 ***********************************************************************
@@ -445,19 +530,24 @@ MSGMSG   DC    CL95' '                The message text to be displayed
                                                                 SPACE 5
 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
                                                                 SPACE
-EOJ      LPSWE EOJPSW               Normal completion
+EOJ      LPSWE EOJPSW                 Normal completion
                                                                 SPACE 5
 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
                                                                 SPACE
-FAILTEST LPSWE FAILPSW              Abnormal termination
+FAILTEST LPSWE FAILPSW                Abnormal termination
                                                                 SPACE 7
 ***********************************************************************
 *        Working Storage
 ***********************************************************************
                                                                 SPACE 2
-CTLR0    DS    F                CR0
+CTLR0    DS    F                      CR0
          DS    F
-FPCINIT  DC    XL4'00000000'    FPC before test
+FPCMOFF  DC    XL4'00000000'          FPC masks off
+FPCMON   DC    XL4'F8000000'          FPC masks on
+FPCMIO   DC    XL4'80000000'          FPC mask invalid operation
+FPCMOV   DC    XL4'20000000'          FPC mask overflow
+FPCMUN   DC    XL4'10000000'          FPC mask underflow
+FPCMIE   DC    XL4'08000000'          FPC mask inexact
                                                                SPACE 2
 
          LTORG ,                Literals pool
@@ -481,9 +571,48 @@ REG2LOW  EQU         X'DD'    (last byte above)
 *======================================================================
 
          ORG   ZVE6TST+X'1000'
-FAILED   DC    F'0'                     some test failed?
-TESTING  DC    F'0'                     current test #
+FAILED   DC    F'0'                   some test failed?
+TESTING  DC    F'0'                   current test #
                                                                SPACE 2
+
+***********************************************************************
+*        TEST failed : FPC message
+***********************************************************************
+*
+*        failed message and associated editting
+*
+FPCPLINE DC    C'      Test # '
+FPCPNUM  DC    C'xxx'
+         DC    c' wrong FPC flags for instruction '
+FPCPNAME DC    CL8'xxxxxxxx'
+         DC    C' expected: flags='
+FPCPEXP  DC    C'xxx'
+         DC    C','
+         DC    C' received: flags='
+FPCPGOT  DC    C'xxx'
+         DC    C'.'
+FPCPLNG  EQU   *-FPCPLINE
+                                                              SPACE 2
+
+***********************************************************************
+*        TEST failed : VXC message
+***********************************************************************
+*
+*        failed message and associated editting
+*
+VXCPLINE DC    C'      Test # '
+VXCPNUM  DC    C'xxx'
+         DC    c' wrong FPC VXC   for instruction '
+VXCPNAME DC    CL8'xxxxxxxx'
+         DC    C' expected:   VXC='
+VXCPEXP  DC    C'xxx'
+         DC    C','
+         DC    C' received:   VXC='
+VXCPGOT  DC    C'xxx'
+         DC    C'.'
+VXCPLNG  EQU   *-VXCPLINE
+                                                               EJECT
+
 ***********************************************************************
 *        TEST failed : result messgae
 ***********************************************************************
@@ -588,8 +717,8 @@ ZVE6TST  CSECT ,
 .*                               &INST  - VRR-c instruction under test
 .*                               &m4    - m4 field
 .*                               &m5    - m5 field
-.*                               &flags - expected FPC flags
-.*                               &VXC   - expected VXC
+.*                               &flags - expected FPC flags (HEX)
+.*                               &VXC   - expected VXC (HEX)
 .*                               &SKIP  - S = skip cross check
          GBLA  &TNUM
 &TNUM    SETA  &TNUM+1
@@ -627,7 +756,7 @@ FPC_XC_&TNUM DS F               1st cross check FPC
 .*
 *
 X&TNUM   DS    0F
-         LFPC  FPCINIT           initialize FPC
+         LFPC  FPCMOFF           initialize FPC
 
          LGF   R2,V2_&TNUM       get v2
          VLM   V22,V23,0(R2)
@@ -675,10 +804,12 @@ TTABLE   DS    0F
 *
 *----------------------------------------------------------------------
 *   VRR-c   instruction, m4, m5, flags, VXC, SKIP
+*           NOTE: flags and VXC are HEX values
+*              and VXC should always by 00 as the FPC mask is zero
 *   followed by
-*              followed by
 *              v1 - 16 byte expected result
-*              v2 - 32 byte source
+*              v2 - 16 byte source
+*              v3 - 16 byte source
 *----------------------------------------------------------------------
 * VCRNF   - VECTOR FP CONVERT AND ROUND TO NNP
 *----------------------------------------------------------------------
@@ -689,81 +820,176 @@ TTABLE   DS    0F
 *
 * +0     simple instruction test and 'test' test
          VRR_C VCRNF,0,2,00,00,N
-         DC    XL16'00000000000000000000000000000000'
-         DC    XL16'00000000000000000000000000000000'
-         DC    XL16'00000000000000000000000000000000'
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'0000000000000000 0000000000000000'
 
 * +1, -1
          VRR_C VCRNF,0,2,00,00,N
-         DC    XL16'3E00000000000000BE00000000000000'
-         DC    XL16'3F800000000000000000000000000000'
-         DC    XL16'BF800000000000000000000000000000'
+         DC    XL16'3E00000000000000 BE00000000000000'
+         DC    XL16'3F80000000000000 0000000000000000'
+         DC    XL16'BF80000000000000 0000000000000000'
 
 * +.5, -.5
          VRR_C VCRNF,0,2,00,00,N
-         DC    XL16'3C00000000000000BC00000000000000'
-         DC    XL16'3F000000000000000000000000000000'
-         DC    XL16'BF000000000000000000000000000000'
+         DC    XL16'3C00000000000000 BC00000000000000'
+         DC    XL16'3F00000000000000 0000000000000000'
+         DC    XL16'BF00000000000000 0000000000000000'
 
 * +1/64, -1/64
          VRR_C VCRNF,0,2,00,00,N
-         DC    XL16'3200000000000000B200000000000000'
-         DC    XL16'3C800000000000000000000000000000'
-         DC    XL16'BC800000000000000000000000000000'
+         DC    XL16'3200000000000000 B200000000000000'
+         DC    XL16'3C80000000000000 0000000000000000'
+         DC    XL16'BC80000000000000 0000000000000000'
 
 * +0, -0
          VRR_C VCRNF,0,2,00,00,N
-         DC    XL16'00000000000000008000000000000000'
-         DC    XL16'00000000000000000000000000000000'
-         DC    XL16'80000000000000000000000000000000'
+         DC    XL16'0000000000000000 8000000000000000'
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'8000000000000000 0000000000000000'
 
 * +15, -15
          VRR_C VCRNF,0,2,00,00,N
-         DC    XL16'45C0000000000000C5C0000000000000'
-         DC    XL16'41700000000000000000000000000000'
-         DC    XL16'C1700000000000000000000000000000'
+         DC    XL16'45C0000000000000 C5C0000000000000'
+         DC    XL16'4170000000000000 0000000000000000'
+         DC    XL16'C170000000000000 0000000000000000'
 
 * +20/7, - 20/7
          VRR_C VCRNF,0,2,00,00,S                 skip xc: lost digits
-         DC    XL16'40DB000000000000C0DB000000000000'
-         DC    XL16'4036DB6E000000000000000000000000'
-         DC    XL16'C036DB6E000000000000000000000000'
+         DC    XL16'40DB000000000000 C0DB000000000000'
+         DC    XL16'4036DB6E00000000 0000000000000000'
+         DC    XL16'C036DB6E00000000 0000000000000000'
 
 * +2^(-126), -2^(-126)
-         VRR_C VCRNF,0,2,10,44,S                 skip xc: underflow
-         DC    XL16'00000000000000008000000000000000'
-         DC    XL16'00800000000000000000000000000000'
-         DC    XL16'80800000000000000000000000000000'
+         VRR_C VCRNF,0,2,10,00,S                 skip xc: underflow
+         DC    XL16'0000000000000000 8000000000000000'
+         DC    XL16'0080000000000000 0000000000000000'
+         DC    XL16'8080000000000000 0000000000000000'
 
 * +2^(-149), -2^(-149) - subnormal
-         VRR_C VCRNF,0,2,10,44,S                 skip xc: underflow
-         DC    XL16'00000000000000008000000000000000'
-         DC    XL16'00000001000000000000000000000000'
-         DC    XL16'80800001000000000000000000000000'
+         VRR_C VCRNF,0,2,10,00,S                 skip xc: underflow
+         DC    XL16'0000000000000000 8000000000000000'
+         DC    XL16'0000000100000000 0000000000000000'
+         DC    XL16'8080000100000000 0000000000000000'
 
-* +2^(128) * (1 - 2^(-24)) , - +2^(128) * (1 - 2^(-24))
-         VRR_C VCRNF,0,2,20,43,S                 skip xc: overflow
-         DC    XL16'7FFE000000000000FFFE000000000000'
-         DC    XL16'7F7FFFFF000000000000000000000000'
-         DC    XL16'FF7FFFFF000000000000000000000000'
+* +2^(128) * (1 - 2^(-24)) , - +2^(128) * (1 - 2^(-24)) : 340282310+32
+         VRR_C VCRNF,0,2,20,00,S                 skip xc: overflow
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7F7FFFFF00000000 0000000000000000'
+         DC    XL16'FF7FFFFF00000000 0000000000000000'
 
 * NAN, -NAN
-         VRR_C VCRNF,0,2,00,00,S                 skip xc: invalid on XC
-         DC    XL16'7FFF000000000000FFFF000000000000'
-         DC    XL16'7FC00000000000000000000000000000'
-         DC    XL16'FFC00000000000000000000000000000'
+         VRR_C VCRNF,0,2,80,00,S                 skip xc: invalid on XC
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7FC0000000000000 0000000000000000'
+         DC    XL16'FFC0000000000000 0000000000000000'
 
 * bad m4 - inexact
-         VRR_C VCRNF,2,2,08,05,S                 skip xc: inexact
-         DC    XL16'7FFF000000000000FFFF000000000000'
-         DC    XL16'7FC00000000000000000000000000000'
-         DC    XL16'FFC00000000000000000000000000000'
+         VRR_C VCRNF,2,2,08,00,S                 skip xc: inexact
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'7FC0000000000000 0000000000000000'
+         DC    XL16'FFC0000000000000 0000000000000000'
 
 * bad m5 - inexact
-         VRR_C VCRNF,0,3,08,05,S                 skip xc: inexact
-         DC    XL16'7FFF000000000000FFFF000000000000'
-         DC    XL16'7FC00000000000000000000000000000'
-         DC    XL16'FFC00000000000000000000000000000'
+         VRR_C VCRNF,0,3,08,00,S                 skip xc: inexact
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'7FC0000000000000 0000000000000000'
+         DC    XL16'FFC0000000000000 0000000000000000'
+
+* Additional tests
+*----------------------------------------------------------------------
+* +99.1, -99.1
+         VRR_C VCRNF,0,2,00,00,S                 skip xc: lost digits
+         DC    XL16'4B19000000000000 CB19000000000000'
+         DC    XL16'42C6333300000000 0000000000000000'
+         DC    XL16'C2C6333300000000 0000000000000000'
+
+* +100.9, -100.9
+         VRR_C VCRNF,0,2,00,00,S                 skip xc: lost digits
+         DC    XL16'4B27000000000000 CB27000000000000'
+         DC    XL16'42C9CCCD00000000 0000000000000000'
+         DC    XL16'C2C9CCCD00000000 0000000000000000'
+
+* +527.7895, -527.7895
+         VRR_C VCRNF,0,2,00,00,S                 skip xc: lost digits
+         DC    XL16'5010000000000000 D010000000000000'
+         DC    XL16'4403F28700000000 0000000000000000'
+         DC    XL16'C403F28700000000 0000000000000000'
+
+* +1055.5790, -1055.5790
+         VRR_C VCRNF,0,2,00,00,S                 skip xc: lost digits
+         DC    XL16'5210000000000000 D210000000000000'
+         DC    XL16'4483F28700000000 0000000000000000'
+         DC    XL16'C483F28700000000 0000000000000000'
+
+* +Zero, -Zero
+         VRR_C VCRNF,0,2,00,00,N
+         DC    XL16'0000000000000000 8000000000000000'
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'8000000000000000 0000000000000000'
+
+* +Normal, -Normal
+         VRR_C VCRNF,0,2,00,00,N                 skip xc: lost digits
+         DC    XL16'4080000000000000 C080000000000000'
+         DC    XL16'4020000000000000 0000000000000000'
+         DC    XL16'C020000000000000 0000000000000000'
+
+* +Subnormal, -Subnormal
+         VRR_C VCRNF,0,2,10,00,S                 skip xc: lost digits
+         DC    XL16'0000000000000000 8000000000000000'
+         DC    XL16'007FFFFF00000000 0000000000000000'
+         DC    XL16'807FFFFF00000000 0000000000000000'
+
+* +Infinity, -Infinity
+         VRR_C VCRNF,0,2,20,00,S                 skip xc: lost digits
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7F80000000000000 0000000000000000'
+         DC    XL16'FF80000000000000 0000000000000000'
+
+* +QNaN, -QNaN
+         VRR_C VCRNF,0,2,80,00,S                 skip xc: lost digits
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7FC1000000000000 0000000000000000'
+         DC    XL16'FFC1000000000000 0000000000000000'
+
+* +SNaN, -SNaN
+         VRR_C VCRNF,0,2,80,00,S                 skip xc: lost digits
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7F81000000000000 0000000000000000'
+         DC    XL16'FF81000000000000 0000000000000000'
+
+* Additional tests - multiple excecptions
+*----------------------------------------------------------------------
+
+* +Subnormal, -Infinity
+         VRR_C VCRNF,0,2,30,00,S                 skip xc: lost digits
+         DC    XL16'0000000000000000 FFFF000000000000'
+         DC    XL16'007FFFFF00000000 0000000000000000'
+         DC    XL16'FF80000000000000 0000000000000000'
+
+* -Infinity, +Subnormal
+         VRR_C VCRNF,0,2,30,00,S                 skip xc: lost digits
+         DC    XL16'0000000000000000 FFFF000000000000'
+         DC    XL16'0000000000000000 0000000000000000'
+         DC    XL16'FF80000000000000 007FFFFF00000000'
+
+* +Infinity, -QNaN
+         VRR_C VCRNF,0,2,A0,00,S                 skip xc: lost digits
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7F80000000000000 0000000000000000'
+         DC    XL16'FFC1000000000000 0000000000000000'
+
+* +Infinity, -QNaN, +Infinity
+         VRR_C VCRNF,0,2,A0,00,S                 skip xc: lost digits
+         DC    XL16'7FFF000000000000 FFFF00007FFF0000'
+         DC    XL16'7F80000000000000 0000000000000000'
+         DC    XL16'FFC1000000000000 7F80000000000000'
+
+* +Infinity, -QNaN, +Subnormal
+         VRR_C VCRNF,0,2,B0,00,S                 skip xc: lost digits
+         DC    XL16'7FFF000000000000 FFFF000000000000'
+         DC    XL16'7F80000000000000 0000000000000000'
+         DC    XL16'FFC1000000000000 007FFFFF00000000'
 
 
          DC    F'0'     END OF TABLE

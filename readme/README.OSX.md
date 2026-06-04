@@ -58,7 +58,7 @@ Before doing the above, though, you must assign the root user a password as foll
 
 passwd is a variable and can be substituted with any password you like. You will need to assign a password to root because the previous command will prompt you for a password for root access to change the variable net.inet.IP.forwarding from the default "0" to "1".
 
-Proxy Arp is already set `ON` in a Mac. This is what really confused me. I kept reading _everywhere_ in Google that it is set `ON` by default. Then I stumbled on the magic command that ties your Hercules host IP address to your ethernet interface so that computers behind the router can get to it and so that Hercules can get out to the rest of the world (the internet). It is the ARP command. It needs be be coded like this:  
+Proxy Arp is already set `ON` in a Mac. This is what really confused me. I kept reading _everywhere_ in Google that it is set `ON` by default. Then I stumbled on the magic command that ties your Hercules host IP address to your ethernet interface so that computers behind the router can get to it and so that Hercules can get out to the rest of the world (the internet). It is the ARP command. It needs be coded like this:  
 
 `arp -s 192.168.0.12 00:16:cb:aa:d4:4c pub en0`  
 

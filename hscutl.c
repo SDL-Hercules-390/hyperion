@@ -251,6 +251,57 @@ strlcat(char *dst, const char *src, size_t siz)
 }
 #endif // !defined(HAVE_STRLCAT)
 
+#if !defined( HAVE_VASPRINTF )
+
+DLL_EXPORT int
+vasprintf(char **strp, const char *fmt, va_list ap)
+{
+    va_list vcopy;
+    int expectedLen, actualLen;
+    size_t bufCount;
+    char *buf;
+
+    va_copy( vcopy, ap );
+  #if defined(_MSVC_) /* See w32_vsnprintf documentation */
+    expectedLen = _vscprintf( fmt, vcopy );
+  #else
+    expectedLen = vsnprintf( NULL, 0, fmt, vcopy );
+  #endif
+    va_end(vcopy);
+    if (expectedLen < 0)
+    {
+        *strp = NULL;
+        return -1;
+    }
+
+    bufCount = ((size_t)expectedLen) + 1;
+    if ((buf = (char *)malloc( bufCount )) == NULL)
+    {
+        *strp = NULL;
+        errno = ENOMEM;
+        return -1;
+    }
+
+  #if defined(_MSVC_)
+    actualLen = _vsnprintf_s( buf, bufCount, bufCount - 1, fmt, ap );
+  #else
+    actualLen = vsprintf( buf, fmt, ap );
+  #endif
+    if (actualLen != expectedLen)
+    {
+        free(buf);
+
+        *strp = NULL;
+        errno = EINVAL;
+        return -1;
+    }
+
+    *strp = buf;
+    return expectedLen;
+}
+
+#endif // !defined(HAVE_VASPRINTF)
+
 /* The following structures are defined herein because they are private structures */
 /* that MUST be opaque to the outside world                                        */
 typedef struct _SYMBOL_TOKEN
@@ -597,11 +648,44 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 /* (called by defsym panel command) */
 DLL_EXPORT void list_all_symbols()
 {
-    SYMBOL_TOKEN* tok; int i;
+    SYMBOL_TOKEN* tok; int i, k;
+    char* p;
+
     for (i=0; i < symbol_count; i++)
-        if ((tok = symbols[i]) != NULL)
-            // "Symbol %-12s %s"
-            WRMSG( HHC02199, "I", tok->var, tok->val ? tok->val : "" );
+    {
+        if (!(tok = symbols[i]))
+            continue;
+
+        p = tok->val ? tok->val : "";
+
+        if ((k = strlen( p )) <= 80)
+        {
+            // "Symbol %-12s %-80s"
+            WRMSG( HHC02199, "I", tok->var, p );
+        }
+        else // (show first 80, then another 80, etc, until all is displayed)
+        {
+            bool  did2199;
+            char  buf80[ 80+1 ];
+
+            for (did2199 = false; k > 0; p += 80, k -= 80)
+            {
+                STRLCPY( buf80, p );   // (grab next chunk)
+
+                if (!did2199)
+                {
+                    // "Symbol %-12s %-80s"
+                    WRMSG( HHC02199, "I", tok->var, buf80 );
+                    did2199 = true;
+                }
+                else
+                {
+                    // "                    %-80s"
+                    WRMSG( HHC02196, "I", buf80 );
+                }
+            }
+        }
+    }
 }
 
 /* Hercules microsecond sleep */
@@ -1318,6 +1402,7 @@ DLL_EXPORT  int hopen( const char* path, int oflag, ... )
         va_list vargs;
         va_start( vargs, oflag );
         pmode = va_arg( vargs, int );
+        va_end( vargs );
     }
     return open( path, oflag, pmode );
 }
@@ -1375,29 +1460,19 @@ DLL_EXPORT int hwrite(int s,const char *bfr,size_t sz)
 
 DLL_EXPORT int hprintf(int s,char *fmt,...)
 {
-    char *bfr;
-    size_t bsize=1024;
-    int rc;
     va_list vl;
+    int rc;
+    char *bfr = NULL;
 
-    bfr=malloc(bsize);
-    while(1)
+    va_start( vl, fmt );
+    rc = vasprintf( &bfr, fmt, vl );
+    va_end( vl );
+    if (rc < 0)
     {
-        if(!bfr)
-        {
-            return -1;
-        }
-        va_start(vl,fmt);
-        rc=vsnprintf(bfr,bsize,fmt,vl);
-        va_end(vl);
-        if(rc<(int)bsize)
-        {
-            break;
-        }
-        bsize+=1024;
-        bfr=realloc(bfr,bsize);
+        return -1;
     }
-    rc=hwrite(s,bfr,strlen(bfr));
+
+    rc = hwrite(s, bfr, rc);
     free(bfr);
     return rc;
 }
@@ -1567,7 +1642,7 @@ DLL_EXPORT const char* trimloc( const char* loc )
     ** The below implementation avoids both issues by just returning
     ** a pointer indexed into the current string constant.
     */
-    char* p = strrchr( loc, '\\' );         /* Windows */
+    const char* p = strrchr( loc, '\\' );   /* Windows */
     if (!p) p = strrchr( loc, '/' );        /* non-Windows */
     if (p)
         loc = p+1;
@@ -1578,7 +1653,7 @@ DLL_EXPORT const char* trimloc( const char* loc )
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
 /* being exactly 26 characters long (27 bytes with null terminator). */
 /* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
-/* the curent time of day as returned by a call to 'gettimeofday' is */
+/* the current time of day returned by a call to 'gettimeofday' is   */
 /* used instead. buf must point to a char work buffer where the time */
 /* is formatted into and must not be NULL. bufsz is the size of buf  */
 /* and must be >= 2. If successful then the value of buf is returned */
@@ -1696,7 +1771,7 @@ DLL_EXPORT size_t fmt_S64( char dst[32], S64 num )
 /* initializes the global 'extgui' flag, initializes SYSBLK "detach" */
 /* and "join" create_thread attributes (the remainder of SYSBLK is   */
 /* set to low values), initializes the translation codepage to the   */
-/* system default, and lastly, intitializes the HOSTINFO structure.  */
+/* system default, and lastly, initializes the HOSTINFO structure.   */
 /* (but it doesn't necessarily do all that in that order of course)  */
 /*                                                                   */
 /* The program name (without .ext) is optionally returned in *pgm    */
@@ -1762,6 +1837,13 @@ int initialize_utility( int argc, char* argv[],
     SET_THREAD_NAME( exename );                 // (then other stuff)
     sysblk.msglvl = DEFAULT_MLVL;
     sysblk.sysgroup = DEFAULT_SYSGROUP;
+
+    if (extgui)
+    {
+        sysblk.gui_verstr = "";
+        sysblk.gui_vernum = 0;
+        initialize_lock( &sysblk.gui_msglock );
+    }
 
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );
@@ -2025,7 +2107,7 @@ DLL_EXPORT char* trim( char* str, const char* dlm )   // (trim both)
 
 #if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
 /*-------------------------------------------------------------------*/
-/* Set thead name           (nonstandard GNU extension)              */
+/* Set thread name          (nonstandard GNU extension)              */
 /*                          (note: retcode is error code, NOT errno) */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
@@ -2299,6 +2381,7 @@ DLL_EXPORT int  idx_snprintf( int idx, char* buffer, size_t bufsiz, const char* 
 
     va_start( vargs, fmt );
     rc = vsnprintf( buffer+idx, bufsiz-idx, fmt, vargs );
+    va_end( vargs );
     return rc;
 }
 
@@ -2792,7 +2875,7 @@ DLL_EXPORT const char* perc2name( BYTE perc, char* buf, size_t bufsiz )
             break;
         }
 
-#if 0 // (probbaly illegal? i.e. should never occur?)
+#if 0 // (probably illegal? i.e. should never occur?)
 
         case 0x2C:
         {
@@ -2918,7 +3001,7 @@ DLL_EXPORT bool are_big_endian()
   #include <sys/sysctl.h>
 #endif
 
-#if defined( __FreeBSD__ ) 
+#if defined( __FreeBSD__ )
   #include <sys/user.h>
   #include <libutil.h>
 #endif
@@ -3004,6 +3087,82 @@ static bool IsDebuggerPresent()
 DLL_EXPORT bool check_if_debugger_is_present()
 {
     return (sysblk.is_debugger_present = IsDebuggerPresent() ? true : false);
+}
+
+/*-------------------------------------------------------------------*/
+/*        Format and send a status message to HercGUI                */
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT void send2gui( const char* pszFormat, ... )
+{
+    if (extgui)
+    {
+        va_list  vl;
+        int      rc;
+        char*    msg   = NULL;
+
+        // Format the message...
+        va_start( vl, pszFormat );
+        rc = vasprintf( &msg, pszFormat, vl );
+        va_end( vl );
+
+        // CRASH if invalid function arguments or Out of Memory
+        // CRASH if unable to successfully format a message
+        if (rc < 0)
+        {
+            CRASH(); // (WTF?!)
+            return;
+        }
+
+        // Send the message to HercGUI...
+
+        LOG_H_to_G( msg );  // (Herc <--> stream debugging)
+
+        obtain_lock( &sysblk.gui_msglock );
+        {
+            fprintf( stderr, "%s", msg );
+            fflush(  stderr );
+        }
+        release_lock( &sysblk.gui_msglock );
+
+        free( msg );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*      convert a version string to a number or vice-versa           */
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT U32 verstr2num( const char* verstr )
+{
+    U32 numvers, major = 0, minor = 0, bugfix = 0;
+    sscanf( verstr, "%u.%u.%u", &major, &minor, &bugfix );
+
+    MINMAX( major,  0, 999 );
+    MINMAX( minor,  0, 999 );
+    MINMAX( bugfix, 0, 999 );
+
+    numvers = (major * 1000000) + (minor * 1000) + (bugfix * 1);
+    return numvers;
+}
+
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT char* vernum2str( U32 vernum, char* verstr )
+{
+    U32  major, minor, bugfix;
+
+    major  = (vernum / 1000000); vernum -= (major * 1000000);
+    minor  = (vernum / 1000);    vernum -= (minor * 1000);
+    bugfix = (vernum / 1);
+
+    snprintf( verstr, VERNUM2STR_BUFFSIZE, "%u.%u.%u"
+        , major
+        , minor
+        , bugfix
+    );
+
+    return verstr;
 }
 
 /*********************************************************************/
@@ -4085,13 +4244,17 @@ DLL_EXPORT bool tf_1315( const DEVBLK* dev, const BYTE* ccw,
               const U32 addr, const U16 count, BYTE* data, BYTE amt )
 {
     TF01315 rec;
+    ASSERT( amt   > 0 ); // (sanity check)
+    ASSERT( count > 0 ); // (sanity check)
     rec.rhdr.devnum = dev->devnum;
+    rec.sysg = (dev == sysblk.sysgdev);
     rec.rhdr.lcss   = SSID_TO_LCSS( dev->ssid );
-    rec.amt   = amt;
+    rec.amt   = MIN( amt, sizeof( rec.data )); // (no buffer o'flows!)
     rec.addr  = addr;
     rec.count = count;
     memcpy( rec.ccw,  ccw,  sizeof( rec.ccw ));
-    memcpy( rec.data, data, amt );
+    memcpy( rec.data, data, rec.amt );
+
     return tf_write( NULL, &rec, sizeof( TF01315 ), 1315 );
 }
 

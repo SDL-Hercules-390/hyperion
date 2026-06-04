@@ -284,6 +284,7 @@ static int reset_cmd( int ac, char* av[], char* cmdline, bool clear )
     UNREFERENCED( av );
     UNREFERENCED( cmdline );
 
+    obtain_lock( &sysblk.sigplock );
     OBTAIN_INTLOCK( NULL );
     {
         /* Note: there's no need to check if the CPUs are stopped.
@@ -295,6 +296,7 @@ static int reset_cmd( int ac, char* av[], char* cmdline, bool clear )
         rc = system_reset( sysblk.arch_mode, clear, ipl, sysblk.pcpu );
     }
     RELEASE_INTLOCK( NULL );
+    release_lock( &sysblk.sigplock );
 
     return rc;
 }
@@ -895,7 +897,7 @@ int rc = 0;
 #endif
         if (regs->arch_mode == ARCH_370_IDX)
         {
-            itimer = INT_TIMER(regs);
+            itimer = INTERVAL_TIMER(regs);
         /* The interval timer counts 76800 per second, or one every
            13.0208 microseconds. */
             MSGBUF(itimer_formatted,"%02u:%02u:%02u.%06u",

@@ -50,10 +50,17 @@ static void DummyCRTInvalidParameterHandler
 {
     // Do nothing to cause CRT to simply ignore the invalid parameter
     // and to instead just pass back the return code to the caller.
+    UNREFERENCED(expression);
+    UNREFERENCED(function);
+    UNREFERENCED(file);
+    UNREFERENCED(line);
+    UNREFERENCED(pReserved);
 }
 
 static _invalid_parameter_handler  old_iph  = NULL;
+#if defined(DEBUG) || defined(_DEBUG)
 static int                         prev_rm  = 0;
+#endif
 
 // This function's sole purpose is to bypass Microsoft's default handling of
 // invalid parameters being passed to CRT functions, which ends up causing
@@ -230,8 +237,24 @@ DLL_EXPORT pid_t  fork( void )
 
 DLL_EXPORT int sched_yield ( void )
 {
+    //                     ***  SwitchToThread  ***
+    //
+    // Note: The yield is limited to THE PROCESSOR OF THE CALLING THREAD!
+    // The operating system will *NOT* SWITCH EXECUTION TO ANOTHER PROCESSOR!
+    // (even if that processor is idle or is running a thread of lower priority!)
+
     if (!SwitchToThread())
+
+        //                      ***  Sleep  ***
+        //
+        // A value of zero causes the thread to relinquish the remainder of its
+        // time slice to any other thread OF EQUAL PRIORITY that is ready to run.
+        //
+        // If there are no other threads OF EQUAL PRIORITY ready to run,
+        // the function returns immediately, AND THE THREAD CONTINUES EXECUTION!
+
         Sleep(0);
+
     return 0;
 }
 
@@ -295,17 +318,17 @@ static ULARGE_INTEGER FileTimeTo1970Nanoseconds( const FILETIME* pFT )
 //
 DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
 {
-    ULARGE_INTEGER          uliWork;                    // (current HPC tick count and work)
-    static ULARGE_INTEGER   uliHPCTicksPerSec   = {0};  // (HPC ticks per second)
-    static ULARGE_INTEGER   uliStartingHPCTick;         // (HPC tick count @ start of interval)
-    static ULARGE_INTEGER   uliMaxElapsedHPCTicks;      // (HPC tick count resync threshold)
-    static ULARGE_INTEGER   uliStartingNanoTime;        // (time of last resync in nanoseconds)
-    static struct timespec  tsPrevRetVal        = {0};  // (previously returned timespec value)
+    ULARGE_INTEGER          uliWork;                                 // (current HPC tick count and work)
+    static THREAD_LOCAL ULARGE_INTEGER   uliHPCTicksPerSec   = {0};  // (HPC ticks per second)
+    static THREAD_LOCAL ULARGE_INTEGER   uliStartingHPCTick;         // (HPC tick count @ start of interval)
+    static THREAD_LOCAL ULARGE_INTEGER   uliMaxElapsedHPCTicks;      // (HPC tick count resync threshold)
+    static THREAD_LOCAL ULARGE_INTEGER   uliStartingNanoTime;        // (time of last resync in nanoseconds)
+    static THREAD_LOCAL struct timespec  tsPrevRetVal        = {0};  // (previously returned timespec value)
 
-    static U64   u64ClockResolution  = MAX_GTOD_RESOLUTION;   // (max emulated TOD clock resolution)
-    static U64   u64ClockNanoScale;                           // (elapsed nanoseconds scale factor)
-    static UINT  uiResyncSecs        = DEF_GTOD_RESYNC_SECS;  // (host TOD clock resync interval)
-    static BOOL  bInSync             = FALSE;                 // (host TOD clock resync flag)
+    static THREAD_LOCAL U64   u64ClockResolution  = MAX_GTOD_RESOLUTION;   // (max emulated TOD clock resolution)
+    static THREAD_LOCAL U64   u64ClockNanoScale;                           // (elapsed nanoseconds scale factor)
+    static THREAD_LOCAL UINT  uiResyncSecs        = DEF_GTOD_RESYNC_SECS;  // (host TOD clock resync interval)
+    static THREAD_LOCAL BOOL  bInSync             = FALSE;                 // (host TOD clock resync flag)
 
     // Validate parameters...
 
@@ -516,7 +539,9 @@ DLL_EXPORT int pthread_getcpuclockid ( TID tid, clockid_t* clk_id )
 //
 DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 {
-    static struct timeval tvPrevRetVal = {0};
+#if 0
+    static THREAD_LOCAL struct timeval tvPrevRetVal = {0};
+#endif
     struct timespec ts = {0};
 
     // Validate parameters...
@@ -612,14 +637,14 @@ static int w32_nanosleep ( const struct timespec* rqtp )
     // that should Windows ever begin providing such support in the future,
     // the changes needed to support such high precisions should be trivial.
 
-    static LONGLONG         timerint    =  0;       // TOD clock interval
-    static HANDLE           hTimer      = NULL;     // Waitable timer handle
-    static LARGE_INTEGER    liWaitAmt   = {0};      // Amount of time to wait
-    static CRITICAL_SECTION waitlock    = {0};      // Multi-threading lock
-    static struct timespec  tsCurrTime  = {0};      // Current Time-of-Day
-    static struct timespec  tsWakeTime  = {0};      // Current wakeup time
-           struct timespec  tsSaveWake  = {0};      // Saved   wakeup time
-           struct timespec  tsOurWake   = {0};      // Our wakeup time
+    static THREAD_LOCAL LONGLONG         timerint    =  0;   // TOD clock interval
+    static THREAD_LOCAL HANDLE           hTimer      = NULL; // Waitable timer handle
+    static THREAD_LOCAL LARGE_INTEGER    liWaitAmt   = {0};  // Amount of time to wait
+    static THREAD_LOCAL CRITICAL_SECTION waitlock    = {0};  // Multi-threading lock
+    static THREAD_LOCAL struct timespec  tsCurrTime  = {0};  // Current Time-of-Day
+    static THREAD_LOCAL struct timespec  tsWakeTime  = {0};  // Current wakeup time
+                        struct timespec  tsSaveWake  = {0};  // Saved   wakeup time
+                        struct timespec  tsOurWake   = {0};  // Our wakeup time
 
     // Check passed parameters...
 
@@ -755,7 +780,7 @@ static int w32_nanosleep ( const struct timespec* rqtp )
         // does not yield the desired behavior, since the system
         // does not always wake us at our exact requested time.
         // Thus obtaining a fresh/current TOD value each time we
-        // are awakened yields more precise/desireable behavior.
+        // are awakened yields more precise/desirable behavior.
 
         VERIFY( clock_gettime( CLOCK_REALTIME, &tsCurrTime ) == 0);
     }
@@ -1558,7 +1583,7 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
             pHostInfo->cachelinesz      = 0;
             pHostInfo->num_physical_cpu = 0;       /* #of cores                 */
-            pHostInfo->num_logical_cpu  = 0;       /* #of of hyperthreads       */
+            pHostInfo->num_logical_cpu  = 0;       /* #of hyperthreads          */
             pHostInfo->num_packages     = 0;       /* #of CPU "chips"           */
 
             while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= retlen)
@@ -2105,8 +2130,9 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
             if (hMod)
             {
-                FARPROC pfnBrandingFormatString =
-                    GetProcAddress( hMod, "BrandingFormatString" );
+                typedef PWSTR (WINAPI* FnBrandingFormatString)(__in PCWSTR);
+                FnBrandingFormatString pfnBrandingFormatString =
+                    (FnBrandingFormatString)GetProcAddress( hMod, "BrandingFormatString" );
 
                 if (pfnBrandingFormatString)
                 {
@@ -2701,9 +2727,8 @@ static int  def_ka_cnt   = 0;   // (initialized by kasock_init)
 
 static void kasock_init()
 {
-    static BOOL bDidThis = FALSE;   // (we only need to do this once)
-    if (bDidThis) return;           // (we only need to do this once)
-    bDidThis = TRUE;                // (we only need to do this once)
+    static LONG bDidThis = FALSE;   // (we only need to do this once)
+    if (InterlockedCompareExchange(&bDidThis, TRUE, FALSE)) return;
 
     InitializeCriticalSectionAndSpinCount( &kasock_lock, 4000 );
     InitializeListHead( &kasock_head );
@@ -2924,7 +2949,7 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
     // Note that the "overlapped" attribute for a socket is completely different
     // from its non-blocking vs. blocking mode. All sockets are created, by default,
     // as blocking mode sockets, but WITH the "overlapped" attribute set. Thus all
-    // sockets are actually asynchonous by default. (The winsock DLL(s) handle the
+    // sockets are actually asynchronous by default. (The winsock DLL(s) handle the
     // blocking mode separately programmatically internally even though the socket
     // is actually an asynchronous Win32 "file").
     //
@@ -2933,7 +2958,7 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
     // C runtime read/write/etc functions, the C runtime's ReadFile/WriteFile calls
     // work (which they don't (they fail with error 87 ERROR_INVALID_PARAMETER)
     // when called on a Win32 "file" handle created with the OVERLAPPED attribute
-    // but without an OVERLAPPED structure pased in the ReadFile/WriteFile call
+    // but without an OVERLAPPED structure passed in the ReadFile/WriteFile call
     // (which the C runtime functions don't use)). You follow?).
     //
     // See KB (Knowledge Base) article 181611 for more information:
@@ -2951,7 +2976,7 @@ DLL_EXPORT int w32_socket( int af, int type, int protocol )
     //  ---------------------------------------------------------------------
     //
     // The documentation for the "SOL_SOCKET" SO_OPENTYPE socket option contains
-    // the folowing advice/warning however:
+    // the following advice/warning however:
     //
     //
     //    "Once set, subsequent sockets created will be non-overlapped.
@@ -3594,7 +3619,7 @@ static void SelectSet
         if ( !parHandles ) continue;
         ASSERT( *pdwHandles < ( 2 * FD_SETSIZE ) );
         *( parHandles + *pdwHandles ) = (HANDLE) pSet->fd_array[i];
-        *pdwHandles++;
+        (*pdwHandles)++;
     }
 }
 
@@ -3904,10 +3929,19 @@ DLL_EXPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE
 // the number of bytes (excluding the terminating null byte) that would
 // be written had count been sufficiently large, 2) ALWAYS appending a
 // terminating null byte REGARDLESS of whether count is large enough.
+//
+// With older MSVC versions, passing a NULL buffer with a zero count to
+// vsnprintf were considered invalid and invoked the error handler or returned
+// -1. C99 and POSIX explicitly define this behavior so the function is updated
+// to match.
+//
+// Since this is MSVC-only we are also ignoring va_copy.
 
 DLL_EXPORT int w32_vsnprintf( char* bfr, size_t cnt, const char* fmt, va_list vargs )
 {
-    int rc = _vsnprintf_s( bfr, cnt, _TRUNCATE, fmt, vargs );
+    int rc = -1;
+    if (bfr != NULL) // ASSERT( cnt > 0 );
+        rc = _vsnprintf_s( bfr, cnt, _TRUNCATE, fmt, vargs );
     if (rc < 0)
         rc = _vscprintf( fmt, vargs );
     return rc;
@@ -3939,34 +3973,35 @@ DLL_EXPORT int w32_snprintf( char* bfr, size_t cnt, const char* fmt, ... )
 DLL_EXPORT int w32_fprintf( FILE* stream, const char* format, ... )
 {
     char* buff = NULL;
-    int bytes = 0, rc;
+    int bytes, rc;
     va_list vl;
     SOCKET sock;
 
     ASSERT( stream && format );
 
-    va_start( vl, format );
-
     {
         int sd = fileno( stream );
         if ( !socket_is_socket( sd ) )
-            return vfprintf( stream, format, vl );
+        {
+            va_start( vl, format );
+            rc = vfprintf( stream, format, vl );
+            va_end( vl );
+
+            return rc;
+        }
         sock = (SOCKET) _get_osfhandle( sd );
     }
 
-    do
+    va_start( vl, format );
+    bytes = vasprintf( &buff, format, vl );
+    va_end( vl );
+    if (bytes < 0)
     {
-        free( buff );
-
-        if ( !( buff = malloc( bytes += 1000 ) ) )
-        {
-            errno = ENOMEM;
-            return -1;
-        }
+        errno = ENOMEM;
+        return -1;
     }
-    while ( ( rc = vsnprintf( buff, bytes, format, vl ) ) < 0 );
 
-    rc = send( sock, buff, bytes = rc, 0 );
+    rc = send( sock, buff, bytes, 0 );
 
     free( buff );
 
@@ -4131,7 +4166,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
         VERIFY( CreatePipe( &hChildReadFromStdin, &hPipeWriteHandle, &saAttr, PIPEBUFSIZE ));
 
-        // Create non-inheritable duplcate of pipe handle for our own private use...
+        // Create non-inheritable duplicate of pipe handle for our own private use...
 
         VERIFY( DuplicateHandle
         (
@@ -4149,7 +4184,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     VERIFY( CreatePipe( &hPipeReadHandle, &hChildWriteToStdout, &saAttr, PIPEBUFSIZE ));
 
-    // Create non-inheritable duplcate of pipe handle for our own private use...
+    // Create non-inheritable duplicate of pipe handle for our own private use...
 
     VERIFY( DuplicateHandle
     (
@@ -4166,7 +4201,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     VERIFY( CreatePipe( &hPipeReadHandle, &hChildWriteToStderr, &saAttr, PIPEBUFSIZE ));
 
-    // Create non-inheritable duplcate of pipe handle for our own private use...
+    // Create non-inheritable duplicate of pipe handle for our own private use...
 
     VERIFY( DuplicateHandle
     (
@@ -4257,7 +4292,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         return -1;
     }
 
-    // Allocate/intialize control blocks for piped process/thread control...
+    // Allocate/initialize control blocks for piped process/thread control...
 
     // If we were passed a pnWriteToChildStdinFD pointer, then the caller
     // is in charge of the process and will handle message capturing/logging
@@ -4639,6 +4674,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
 
 #define  MS_VC_EXCEPTION   0x406D1388       // (special value)
 
+#pragma pack(push,8)
 typedef struct tagTHREADNAME_INFO
 {
     DWORD   dwType;         // must be 0x1000
@@ -4647,6 +4683,7 @@ typedef struct tagTHREADNAME_INFO
     DWORD   dwFlags;        // reserved for future use, must be zero
 }
 THREADNAME_INFO;
+#pragma pack(pop)
 
 DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
 {
@@ -4659,14 +4696,17 @@ DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
     info.dwThreadID = (DWORD)tid;   // (-1 == current thread, else tid)
     info.dwFlags    = 0;
 
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
     __try
     {
-        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const U_LONG_PTR*)&info );
+        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(U_LONG_PTR), (const U_LONG_PTR*)&info );
     }
     __except ( EXCEPTION_CONTINUE_EXECUTION )
     {
         /* (do nothing) */
     }
+#pragma warning(pop)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -4874,6 +4914,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
         va_list vargs;
         va_start( vargs, oflag );
         pmode = va_arg( vargs, int );
+        va_end( vargs );
     }
 
     err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
@@ -4938,7 +4979,7 @@ DLL_EXPORT  bool are_elevated()
 // has been deprecated and returns INACCURATE information for any version
 // of Windows newer than Windows 8. It essentially LIES! Thanks Microsuck!)
 
-void (WINAPI* pfnRtlGetNtVersionNumbers)
+typedef void (WINAPI* FnRtlGetNtVersionNumbers)
 (
     __out_opt ULONG* pNtMajorVersion,
     __out_opt ULONG* pNtMinorVersion,
@@ -4947,7 +4988,7 @@ void (WINAPI* pfnRtlGetNtVersionNumbers)
 
 DLL_EXPORT void w32_GetWinVersInfo( OSVERSIONINFOEX* pOSVersInfoEx )
 {
-    FARPROC  pfnRtlGetNtVersionNumbers =  NULL;
+    FnRtlGetNtVersionNumbers pfnRtlGetNtVersionNumbers =  NULL;
 
     ULONG  ulMajorVersion  = 0;
     ULONG  ulMinorVersion  = 0;
@@ -4969,7 +5010,7 @@ DLL_EXPORT void w32_GetWinVersInfo( OSVERSIONINFOEX* pOSVersInfoEx )
 
     // Now retrieve the TRUE/ACCURATE/REAL Windows version numbers
 
-    pfnRtlGetNtVersionNumbers = GetProcAddress(
+    pfnRtlGetNtVersionNumbers = (FnRtlGetNtVersionNumbers)GetProcAddress(
         GetModuleHandle( "ntdll.dll" ), "RtlGetNtVersionNumbers" );
 
     if (!pfnRtlGetNtVersionNumbers)

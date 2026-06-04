@@ -51,6 +51,7 @@
 
 # DEVTMAX      0                # Device threads, 8 on Windows, else unlimited
   CNSLPORT  3270                # TCP port number to which consoles connect
+  WSCNSLPORT 6080               # TCP port for browser-based WebSocket consoles
 # SHRDPORT  3990                # TCP port number for sharing DASD images
                                 # on this instance of Hercules (inactive)
 

@@ -39,6 +39,23 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*              Define THREAD_LOCAL attributes by compiler           */
+/*-------------------------------------------------------------------*/
+
+#if !defined(THREAD_LOCAL)
+  #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L \
+                                && !defined __STDC_NO_THREADS__
+    #define THREAD_LOCAL _Thread_local
+  #elif defined(_MSC_VER)
+    #define THREAD_LOCAL __declspec(thread)
+  #elif defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+    #define THREAD_LOCAL __thread
+  #else
+    #define THREAD_LOCAL /* thread_local */
+  #endif
+#endif
+
+/*-------------------------------------------------------------------*/
 /*         Round a value 'x' up to the next 'b' boundary             */
 /*-------------------------------------------------------------------*/
 #define ROUND_UP(x,b)       ((x)?((((x)+((b)-1))/(b))*(b)):(b))
@@ -152,7 +169,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 #undef likely
 #undef unlikely
 
-#ifdef _MSVC_
+#if defined(_MSVC_) && !defined( __clang__ )
 
   #define likely(_c)      ( (_c) ? ( __assume((_c)), 1 ) :                    0   )
   #define unlikely(_c)    ( (_c) ?                   1   : ( __assume(!(_c)), 0 ) )
@@ -231,7 +248,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define  FD_ISSET             w32_FD_ISSET
   #define  select(n,r,w,e,t)    w32_select((n),(r),(w),(e),(t),__FILE__,__LINE__)
   #define  pselect(n,r,w,e,t,m) w32_pselect((n),(r),(w),(e),(t),(m),__FILE__,__LINE__)
-  #define  poll(p,n,t)          WSAPoll((p),(n),(t))      
+  #define  poll(p,n,t)          WSAPoll((p),(n),(t))
   #define  fdopen               w32_fdopen
   #define  fwrite               w32_fwrite
   #define  fprintf              w32_fprintf
@@ -519,7 +536,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*-------------------------------------------------------------------*/
 /*      CRASH                       (with hopefully a dump)          */
 /*-------------------------------------------------------------------*/
-#define CRASH()         do { BYTE* p=NULL; *p=0; } while (0)
+#define CRASH()         do { volatile BYTE* p=NULL; *p=0; } while (0)
 
 /*-------------------------------------------------------------------*/
 /*      Perform standard utility initialization                      */
@@ -784,7 +801,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*               Define compiler error bypasses                      */
 /*********************************************************************/
 
-#ifdef _MSVC_
+#if defined( _MSVC_ ) && !defined( __clang__ )
 
     /*
      *  MS VC Bug ID 363375 Bypass
@@ -808,5 +825,91 @@ typedef int CMPFUNC(const void*, const void*);
     #define DISABLE_VS_BUG_ID_363375_BYPASS     /* (nothing) */
 
 #endif // _MSVC_
+
+/*-------------------------------------------------------------------*/
+/*                 CCW tracing helper macro                          */
+/*-------------------------------------------------------------------*/
+#define DISPLAY_CCW( _did, _dev, _ccw, _addr, _count, _flags )         \
+                                                                       \
+    display_ccw( (_did), (_dev), (_ccw), (_addr), (_count), (_flags),  \
+                 __FILE__, __LINE__, __FUNCTION__ )
+
+
+/*-------------------------------------------------------------------*/
+/*   Hercules --> HercGUI / HercGUI <-- Hercules stream debugging    */
+/*-------------------------------------------------------------------*/
+#ifdef HG_GH_DEBUG
+
+#define OPEN_X_TO_X()       /* Open both debugging files */            \
+                                                                       \
+    do                                                                 \
+    {                                                                  \
+        if         (!H_to_G) {                                         \
+                     H_to_G = fopen(                                   \
+                     H_to_G_PATH, "wb" );                              \
+            setvbuf( H_to_G, NULL, _IONBF, 0 );                        \
+                 LOG_H_to_G( "opened...\n" );                          \
+        }                                                              \
+        if         (!H_fr_G) {                                         \
+                     H_fr_G = fopen(                                   \
+                     H_fr_G_PATH, "wb" );                              \
+            setvbuf( H_fr_G, NULL, _IONBF, 0 );                        \
+                 LOG_H_fr_G( "opened...\n" );                          \
+        }                                                              \
+    }                                                                  \
+    while (0)
+
+
+#define CLOSE_X_TO_X()         /* Close both debugging files */        \
+                                                                       \
+      do                                                               \
+      {                                                                \
+          if         (H_to_G) {                                        \
+                  LOG_H_to_G( "closed...\n" );                         \
+              fclose( H_to_G );                                        \
+                      H_to_G = NULL;                                   \
+          }                                                            \
+          if         (G_fr_H) {                                        \
+                  LOG_G_fr_H( "closed...\n" );                         \
+              fclose( G_fr_H );                                        \
+                      G_fr_H = NULL;                                   \
+          }                                                            \
+      }                                                                \
+      while (0)
+
+
+#define LOG_X_to_X( file, msg )  /* log a stream debugging message */  \
+                                                                       \
+    do                                                                 \
+    {                                                                  \
+        size_t size = strlen( msg );                                   \
+        fwrite( msg, size, 1, file );                                  \
+        fflush( file );                                                \
+    }                                                                  \
+    while (0)
+
+
+#define LOG_X_fr_X( file, msg )  /* log a stream debugging message */  \
+                                                                       \
+    do                                                                 \
+    {                                                                  \
+        fprintf( file, "%s\n", msg );                                  \
+        fflush( file );                                                \
+    }                                                                  \
+    while (0)
+
+
+#define LOG_H_to_G( msg )       LOG_X_to_X( H_to_G, msg )
+#define LOG_H_fr_G( msg )       LOG_X_fr_X( H_fr_G, msg )
+
+#else
+
+#define OPEN_X_TO_X()           /* (nothing) */
+#define CLOSE_X_TO_X()          /* (nothing) */
+
+#define LOG_H_to_G( msg )       /* (nothing) */
+#define LOG_H_fr_G( msg )       /* (nothing) */
+
+#endif // HG_GH_DEBUG
 
 #endif // _HMACROS_H

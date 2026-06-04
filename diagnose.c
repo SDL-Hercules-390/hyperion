@@ -78,6 +78,9 @@ struct ipl_pb0_common {
 /* Following define value copied from S390-tools-2.14.0 include/boot/ipl.h */
 #define IPL_TYPE_PV       0x5
 
+/* Following define value copied from linux-7.1-rc3 linux/arch/s390/include/uapi/asm/ipl.h */
+#define IPL_PB0_FLAG_LOADPARM	0x80
+
 /* IPL Parameter Block 0 for CCW */
 struct ipl_pb0_ccw {
   uint32_t len;
@@ -169,7 +172,9 @@ struct ipl_parameter_block {
 /*-------------------------------------------------------------------*/
 
 /* Diagnose 308 function subcodes */
+#define DIAG308_CLEAR_RESET        0
 #define DIAG308_START_KERNEL       1
+#define DIAG308_LOAD_NORMAL_RESET  1
 #define DIAG308_REL_HSA            2
 #define DIAG308_LOAD_CLEAR         3
 #define DIAG308_LOAD_NORMAL_DUMP   4
@@ -182,6 +187,10 @@ struct ipl_parameter_block {
 /* Diagnose 308 return codes */
 #define DIAG308_RC_OK        0x0001
 #define DIAG308_RC_NOCONFIG  0x0102
+
+// predefine ipl.c s390_common_load_finish function here
+// so it can be called from diagnose 308 subcode 1
+int s390_common_load_finish(REGS *regs);
 
 #endif // COMPILE_THIS_ONLY_ONCE
 
@@ -540,79 +549,357 @@ U32   code;
         break;
 #endif /*FEATURE_EMULATE_VM*/
 
+#define DIAG308_DEBUG false
 
     case 0x308:
     /*---------------------------------------------------------------*/
     /* Diagnose 308: IPL functions                                   */
     /*---------------------------------------------------------------*/
+    /* DIAG  r1,r3,0x308                                             */
+    /*---------------------------------------------------------------*/
+    /* On entry                                                      */
+    /*   R3   Function subcode                                       */
+    /*   R1   R1 must be an even numbered register defining an       */
+    /*        even-odd pair                                          */
+    /*        r1  (even) - an optional argument depending on subcode */
+    /*        r1+1 (odd) - return code                               */
+    /*---------------------------------------------------------------*/
+    /* Note: Incomplete experimental implementation                  */
+    /*---------------------------------------------------------------*/
+    /* Note: Linux source and experimentation with s390 Ubuntu 26.04 */
+    /*       was used to develop this version of Diag 308.           */
+    /*       Referenced Linux source was 7.1-rc3,                    */
+    /*                  s390-tools was v2.42.0                       */
+    /*                                                               */
+    /* Linux was used to test                                        */
+    /*      DIAG308_START_KERNEL          subcode 1                  */
+    /*      DIAG308_LOAD_CLEAR            subcode 3                  */
+    /*      DIAG308_LOAD_NORMAL_DUMP      subcode 4                  */
+    /*      DIAG308_SET                   subcode 5                  */
+    /*      DIAG308_STORE                 subcode 6                  */
+    /*                                                               */
+    /* Other subcodes were not observed.                             */
+    /*                                                               */
+    /*---------------------------------------------------------------*/
+    /* Note: Linux source indicates that CC is modified, but Linux   */
+    /*       only uses the return code. CC is not modified.          */
+    /*---------------------------------------------------------------*/
+    {
+        int rc      = DIAG308_RC_OK;         /* rc for diag         */
+        int cpu     = regs->cpuad;           /* running on this cpu */
+        int clear   = false;                 /* not clear IPL       */
+        int subcode = regs->GR_L(r3);        /* subcode             */
+
+        if ( DIAG308_DEBUG )
+        {
+            logmsg(">>>> DIAG308: subcode=%d, cpu=%d\n", subcode, cpu);
+        }
+
         PTT_ERR("*DIAG308",regs->GR_G(r1),regs->GR_G(r3),regs->psw.IA_L);
 
-        switch(regs->GR_L(r3))
+        /* some validation */
+        /* Must be in ESA/390 or z/arch mode */
+        if( regs->arch_mode == ARCH_370_IDX )
+            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+        /* Program check if running problem state. */
+        PRIV_CHECK(regs);
+
+        /* Program check if Rx is not an even register number */
+        if ( r1 & 1 )
         {
-#if defined(FEATURE_PROGRAM_DIRECTED_REIPL)
-            TID   tid;                              /* Thread identifier         */
-            char *ipltype;                          /* "ipl" or "iplc"           */
-            int   rc;
-#endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL)*/
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
 
+        /* clear on ipl? */
+        if ( subcode == DIAG308_CLEAR_RESET ||
+             subcode == DIAG308_LOAD_CLEAR )
+        {
+            clear = true;
+        }
+
+        switch( subcode )
+        {
         case DIAG308_START_KERNEL:
-            /*-------------------------------------------------------*/
-            /* Linux for z uses this function code, without a        */
-            /* defined value, in a function named start_kernel (see  */
-            /* ZIPL stage3.c). The Diagnose instruction is DIAG      */
-            /* 1,1,0x308, with GPR 1 containing DIAG308_START_KERNEL */
-            /* (i.e. equal to 1). This author has no idea what       */
-            /* function start_kernel is expecting the Diagnose       */
-            /* instruction to do (other than starting the kernel!),  */
-            /* but the function does not check a return code, or     */
-            /* anything else, and is prepared for the Diagnose       */
-            /* instruction to program check. Fortunately, the        */
-            /* function code DIAG308_START_KERNEL and the return     */
-            /* code DIAG308_RC_OK both have the same value (i.e.     */
-            /* equal to 1), so we'll simply return without doing     */
-            /* anything, letting the function code become the        */
-            /* return code.                                          */
-            /*-------------------------------------------------------*/
-            break;
-
-#if defined(FEATURE_PROGRAM_DIRECTED_REIPL)
-        case DIAG308_LOAD_CLEAR:
-            ipltype = "iplc";
-            goto diag308_cthread;
-        case DIAG308_LOAD_NORMAL:
-            ipltype = "ipl";
-        diag308_cthread:
-            rc = create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl");
-            if(rc)
-                WRMSG(HHC00102, "E", strerror(rc));
-            regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
-            break;
-        case DIAG308_SET:
-            /* INCOMPLETE */
-            regs->GR(1) = DIAG308_RC_OK;
-            break;
-#endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL)*/
-
-        case DIAG308_STORE:
+          /*-------------------------------------------------------*/
+          /* DIAG308_START_KERNEL:      Subcode 1                  */
+          /* DIAG308_LOAD_NORMAL_RESET: Subcode 1 (new name)       */
+          /*-------------------------------------------------------*/
+          /* From Linux: ZIPL boot loader has loaded the kernel    */
+          /* and need to start the kernel. An ESA/390 PSW is       */
+          /* provided at address 0. CPU reset et al is required,   */
+          /* similar to a normal IPL. Just use common_load_begin   */
+          /* and s390_common_load_finish from ipl.c.               */
+          /*-------------------------------------------------------*/
+          /* On entry                                              */
+          /*   r1    is not used                                   */
+          /*-------------------------------------------------------*/
           {
-            /*-------------------------------------------------------*/
-            /* On entry                                              */
-            /*   Rx    Rx must be an even numbered register          */
-            /*         containing the real address of a 4K page      */
-            /*         aligned storage area into which the IPL       */
-            /*         parameter block will be copied.               */
-            /* On return                                             */
-            /*   Rx+1  Contains the return code.                     */
-            /*-------------------------------------------------------*/
+            DBLWRD  saved_iplpsw;
+
+            if ( DIAG308_DEBUG )
+            {
+                logmsg(">>>> DIAG308_START_KERNEL: enter clear=%d\n", clear);
+                logmsg(">>>> DIAG308_START_KERNEL: start 'common_load_begin'\n");
+            }
+
+            /* ESA/390 psw should be at address zero */
+            /* save                                  */
+            memcpy( saved_iplpsw, regs->psa->iplpsw, sizeof( DBLWRD ) );
+
+            OBTAIN_INTLOCK( NULL );
+            {
+                /* Get started */
+                if ( ARCH_DEP( common_load_begin )( cpu, clear ) != 0 )
+                {
+                    rc = DIAG308_RC_NOCONFIG;
+                }
+            }
+            RELEASE_INTLOCK( NULL );
+
+            /* NOTE: run_cpu() will allocate a TXF page map */
+            /* make sure that it is freed, if there is one  */
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_START_KERNEL: release txf_pagemap\n");
+
+            if ( regs->txf_pagesmap->altpageaddr )
+            {
+                TXF_FREEMAP( regs );
+            }
+
+            /* ESA/390 psw should be at address zero */
+            /* restore                               */
+            memcpy( regs->psa->iplpsw, saved_iplpsw, sizeof( DBLWRD ) );
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_START_KERNEL: start 's390_common_load_finish'\n");
+
+            OBTAIN_INTLOCK( NULL );
+            {
+                /* finish; use ESA/390 version of common_load_finish     */
+                /* as PSW is ESA/390 format                              */
+                if ( rc == DIAG308_RC_OK  &&
+                     s390_common_load_finish(regs) != 0
+                   )
+                {
+                    rc = DIAG308_RC_NOCONFIG;
+                }
+            }
+            RELEASE_INTLOCK( NULL );
+
+            regs->GR_L(r1+1) = rc;
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_START_KERNEL: exit. rc=%d\n", rc);
+
+            break;
+          }
+
+        case DIAG308_LOAD_CLEAR:                     /* sub code 3 */
+          /*-------------------------------------------------------*/
+          /* Perform a clear IPL.                                  */
+          /* same as DIAG308_LOAD_NORMAL_DUMP but a clear ipl      */
+          /* On Ubuntu, a clear ccw ipl is requested by:           */
+          /*      echo 1 > /sys/firmware/reipl/ccw/clear           */
+          /*-------------------------------------------------------*/
+          clear = true;
+
+          /* remove 'warning: this statement may fall through' with*/
+          // fall through
+
+        case DIAG308_LOAD_NORMAL_DUMP:               /* sub code 4 */
+          /*-------------------------------------------------------*/
+          /* Perform an IPL.                                       */
+          /* Note: only a CCW ipl is supported because DIAG308_SET */
+          /*       only accepts a CCW IPL block                    */
+          /*-------------------------------------------------------*/
+          /* On entry                                              */
+          /*   r1    is not used                                   */
+          /*-------------------------------------------------------*/
+          {
+            if ( DIAG308_DEBUG )
+            {
+                logmsg(">>>> DIAG308_LOAD_NORMAL_DUMP: enter. clear=%d\n", clear);
+                logmsg(">>>> DIAG308_LOAD_NORMAL_DUMP: start 'initial_cpu_reset'\n");
+            }
+
+            OBTAIN_INTLOCK( NULL );
+            {
+                /* Get started */
+                /* first: an inital cpu reset for this cpu */
+                if ( initial_cpu_reset( regs ) != 0 )
+                {
+                    rc = DIAG308_RC_NOCONFIG;
+                }
+            }
+            RELEASE_INTLOCK( NULL );
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_LOAD_NORMAL_DUMP: release txf_pagemap\n");
+
+            /* NOTE: run_cpu() will allocate a TXF page map */
+            /* make sure that it is freed, if there is one  */
+            if ( regs->txf_pagesmap->altpageaddr )
+            {
+                TXF_FREEMAP( regs );
+            }
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_LOAD_NORMAL_DUMP: start 'load_ipl'\n");
+
+            OBTAIN_INTLOCK( NULL );
+            {
+                /* second: do a ccw IPL */
+                if ( rc == DIAG308_RC_OK &&
+                     load_ipl( sysblk.ipllcss, sysblk.ipldev, cpu, clear) != 0
+                   )
+                {
+                    rc = DIAG308_RC_NOCONFIG;
+                }
+            }
+            RELEASE_INTLOCK( NULL );
+
+            regs->GR_L(r1+1) = rc;
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_LOAD_NORMAL_DUMP: exit. rc=%d\n", rc);
+            break;
+          }
+
+        case DIAG308_SET:
+          /*-------------------------------------------------------*/
+          /* DIAG308_SET: Subcode 5: Upload IPLB to PR/SM          */
+          /*-------------------------------------------------------*/
+          /* set system ipllcs, ipldev and loadparm from           */
+          /* a CCW IPL block                                       */
+          /*-------------------------------------------------------*/
+          /* On entry                                              */
+          /*   r1    contains the real address of a 4K page        */
+          /*         which contains an IPL parameter block         */
+          /*-------------------------------------------------------*/
+          {
             RADR    stgarea;            /* Storage area real address */
+            struct ipl_parameter_block  ipb;
             U32     headsize;
             U32     bodysize;
-            struct ipl_parameter_block  ipb;
             int     lopasize;
 
-            /* Program check if running problem state. */
-            PRIV_CHECK(regs);
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_SET: enter\n");
+
+            /* Register Rx contains the real address of the storage area. */
+            if(regs->psw.amode64) {
+                stgarea = regs->GR_G(r1);
+            } else {
+                stgarea = regs->GR_L(r1);
+            }
+
+            /* Program check if the address contained in Rx      */
+            /* is not on a 4K page boundary.                     */
+            if ( stgarea & 0xFFF)
+            {
+                ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+            }
+
+            /* Ensure that the 4K storage area is addressable. */
+            ARCH_DEP(validate_operand) (stgarea, USE_REAL_ADDR, 4095, ACCTYPE_READ, regs);
+
+            /* Get the IPL parameter block in real storage */
+            headsize = sizeof(struct ipl_pl_hdr);
+            bodysize = sizeof(struct ipl_pb0_ccw);
+
+            /* Fetch the IPL parameter block in real storage         */
+            /* NOTE: fields are BIG ENDIAN; access values with CSWAP */
+            /* Note: vstorec copies a maximum of 256 bytes.          */
+            ARCH_DEP(vfetchc) (&ipb, (headsize+bodysize-1), stgarea, USE_REAL_ADDR, regs);
+
+            /* Validate the IPL parameter block. */
+            /* validate structure */
+            if (   0 ||
+                   ipb.hdr.version > IPL_MAX_SUPPORTED_VERSION ||
+                   CSWAP32(ipb.hdr.len) > (headsize + bodysize) ||
+                   CSWAP32(ipb.ccw.len) != bodysize
+                )
+            {
+                WRMSG(HHC01960, "E", subcode, ipb.hdr.version, CSWAP32(ipb.hdr.len), CSWAP32(ipb.ccw.len) );
+                ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+            }
+
+            /* validate: only support CCW type IPL block*/
+            if ( ipb.ccw.pbt != IPL_TYPE_CCW)
+            {
+                WRMSG(HHC01961, "E", subcode, "IPL Block is not a CCW type block" );
+                ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+            }
+
+            /* LOADPARM? */
+            memset( &sysblk.loadparm, 0, sizeof(sysblk.loadparm) );
+            if ( (ipb.ccw.flags & IPL_PB0_FLAG_LOADPARM) == 0 )
+            {
+                if ( DIAG308_DEBUG )
+                    logmsg(">>>> DIAG308_SET: LOADPARM flag not set in IPL block. ccw.flags: %2.2x\n", ipb.ccw.flags );
+            }
+            else
+            {
+                /* set LOADPARM */
+                if ( DIAG308_DEBUG )
+                    logmsg(">>>> DIAG308_SET: IPLB ccw.flags: %2.2x, Loadparm= %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
+                        ipb.ccw.flags,
+                        ipb.common.loadparm[0], ipb.common.loadparm[1], ipb.common.loadparm[2], ipb.common.loadparm[3],
+                        ipb.common.loadparm[4], ipb.common.loadparm[5], ipb.common.loadparm[6], ipb.common.loadparm[7] );
+
+                /* determine length of loadparm without trailing spaces */
+                for( lopasize = sizeof(ipb.common.loadparm); lopasize > 0; lopasize--)
+                {
+                    if (ipb.common.loadparm[lopasize-1] != 0x40) /* EBCDIC space */
+                        break;
+                }
+
+                if (lopasize > 0)
+                {
+                    str_guest_to_host( ipb.common.loadparm, sysblk.loadparm, lopasize);
+                }
+            }
+
+            /* Set IPL device and subsystem ID */
+            STORE_HW(&sysblk.ipldev, ipb.ccw.devno);
+            sysblk.ipllcss = ipb.ccw.ssid;
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_SET: Loadparm='%s', IPL lcss=%d, IPL device=%4.4X\n",
+                    sysblk.loadparm, sysblk.ipllcss, sysblk.ipldev);
+
+            /* Successful */
+            regs->GR(r1+1) = DIAG308_RC_OK;
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_SET: exit. rc=%d\n", rc);
+
+            break;
+          }
+
+        case DIAG308_STORE:
+          /*-------------------------------------------------------*/
+          /* DIAG308_STORE: Subcode 6:                             */
+          /*                      Retrieve current IPLB from PR/SM */
+          /*-------------------------------------------------------*/
+          /* On entry                                              */
+          /*   Rx    Rx must be an even numbered register          */
+          /*         containing the real address of a 4K page      */
+          /*         aligned storage area into which the IPL       */
+          /*         parameter block will be copied.               */
+          /* On return                                             */
+          /*   Rx+1  Contains the return code.                     */
+          /*-------------------------------------------------------*/
+          {
+            RADR    stgarea;          /* Storage area real address */
+            U32     headsize;
+            U32     bodysize;
+            struct  ipl_parameter_block  ipb;
+            int     lopasize;
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_STORE: enter\n");
 
             /* Register Rx contains the real address of the storage area. */
             if(regs->psw.amode64) {
@@ -621,9 +908,9 @@ U32   code;
               stgarea = regs->GR_L(r1);
             }
 
-            /* Program check if Rx is not an even register number or     */
+            /* Program check if                                          */
             /* the address contained in Rx is not on a 4K page boundary. */
-            if (r1 & 1 || stgarea & 0xFFF)
+            if (stgarea & 0xFFF)
             {
                 ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
             }
@@ -633,22 +920,46 @@ U32   code;
 
             /* Prepare the IPL parameter block. */
             memset(&ipb, 0, sizeof(ipb));
+
             /* Setup head and body values common to all. */
             ipb.hdr.version = IPL_MAX_SUPPORTED_VERSION;
             headsize = sizeof(ipb.hdr);
-            memset(ipb.common.loadparm, 0x40, sizeof(ipb.common.loadparm));  /* EBCDIC spaces */
-            lopasize = strlen(sysblk.loadparm);
-            if (lopasize)
-            {
-                str_host_to_guest(ipb.common.loadparm, sysblk.loadparm, lopasize);
-            }
+
             /* Setup head and body values specific to CCW. */
             bodysize = sizeof(ipb.ccw);
             STORE_FW(&ipb.hdr.len, (headsize + bodysize));
             STORE_FW(&ipb.ccw.len, bodysize);
             ipb.ccw.pbt = IPL_TYPE_CCW;
+
+            /* Set LOADPARM */
+            memset(ipb.ccw.loadparm, 0x40, sizeof(ipb.ccw.loadparm));  /* EBCDIC spaces */
+            lopasize = strlen(sysblk.loadparm);
+            if (lopasize)
+            {
+                str_host_to_guest(sysblk.loadparm, ipb.ccw.loadparm, lopasize);
+                ipb.ccw.flags |= IPL_PB0_FLAG_LOADPARM;
+            }
+
+            ipb.ccw.ssid = sysblk.ipllcss;
             STORE_HW(&ipb.ccw.devno, sysblk.ipldev);
-            STRLCPY(ipb.ccw.vm_parm, "Hercules");  /* just to show its us! */
+
+            /* Set VM PARM, just to a 'hercules' iidentifier */
+            memset(ipb.ccw.vm_parm, 0x40, sizeof(ipb.ccw.vm_parm));  /* EBCDIC spaces */
+            //                          H   E   R   C   U   L   E   S
+            STRLCPY(ipb.ccw.vm_parm, "\xC8\xC5\xD9\xC3\xE4\xD3\xC5\xE2");  /* just to show its us!        */
+            ipb.ccw.vm_parm_len = 0;                                       /* no vm parm; just our marker */
+
+            if ( DIAG308_DEBUG )
+            {
+
+                logmsg(">>>> DIAG308_STORE: IPLB ccw.flags: %2.2x, Loadparm= %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
+                    ipb.ccw.flags,
+                    ipb.common.loadparm[0], ipb.common.loadparm[1], ipb.common.loadparm[2], ipb.common.loadparm[3],
+                    ipb.common.loadparm[4], ipb.common.loadparm[5], ipb.common.loadparm[6], ipb.common.loadparm[7] );
+
+                logmsg(">>>> DIAG308_STORE: IPLB ssid=%d, IPLB devno=%4.4X\n",
+                    ipb.ccw.ssid, CSWAP16(ipb.ccw.devno) );
+            }
 
             /* Store the IPL parameter block in real storage */
             /* Note: vstorec copies a maximum of 256 bytes.  */
@@ -656,13 +967,21 @@ U32   code;
 
             /* Successful */
             regs->GR(r1+1) = DIAG308_RC_OK;
+
+            if ( DIAG308_DEBUG )
+                logmsg(">>>> DIAG308_STORE: exit. rc=%d\n", rc);
             break;
+
           }
 
         default:
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-        } /* end switch(r3) */
+        } /* end switch(subcode) */
+
         break;
+    } /* end diag 0x308 */
+
+#undef DIAG308_DEBUG
 
 #ifdef FEATURE_HERCULES_DIAGCALLS
     case 0xF00:
@@ -889,6 +1208,83 @@ U32   code;
         ARCH_DEP(diagf18_call) (r1, r3, regs);
         break;
 #endif /* defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY) */
+
+    case 0xF1C:
+    /*-----------------------------------------------------------------*/
+    /* Diagnose F1C: Get 32-bits of Hercules feature list              */
+    /*                                                                 */
+    /*  R1: returned 32-bits of hercules facility list.                */
+    /*      In Z/arch mode, result is returned in R1 bits 32-63.       */
+    /*                                                                 */
+    /*  R3: unsigned byte index, in bits 24-31 or 56-63, used to       */
+    /*      select 32-bits within the Hercules facility list.          */
+    /*                                                                 */
+    /*  CC: 0 - byte index is within the hercules facility list.       */
+    /*          R1 contains 32-bits of the facility list at R3 index.  */
+    /*          If there are fewer than 32-bits remaining in the       */
+    /*          facility list, the remaining bits are set to zero.     */
+    /*          R3 is unchanged.                                       */
+    /*                                                                 */
+    /*      3 - byte index is beyond the end of the hercules facility  */
+    /*          list. R1 is set to zero. R3 (bits 24-31 or 56 - 63)    */
+    /*          is updated with the Index of the last valid byte in    */
+    /*          the Hercules facility list.                            */
+    /*                                                                 */
+    /*  Note: see stfl.h for Hercules Facility List definitions        */
+    /*-----------------------------------------------------------------*/
+        {
+            int i;
+            union   { U32 w; BYTE b[4]; } temp;
+            U32 byte_index;
+
+            /* get byte offset into Hercules facility list bits */
+            byte_index = regs->GR_LHLCL(r3);         // bits 56-63
+            byte_index += STFL_HERC_FIRST_BIT / 8;   // (convert from bit offset to byte offset)
+
+            if ( byte_index >= STFL_HERC_BY_SIZE )
+            {
+                regs->psw.cc = 3;   // (beyond end of list)
+                regs->GR_L(r1) = 0;
+                regs->GR_LHLCL(r3) = STFL_HERC_BY_SIZE - (STFL_HERC_FIRST_BIT / 8) -1;
+
+            }
+            else
+            {
+                regs->psw.cc = 0;   // (within list)
+
+                temp.w = 0;
+                for (i=0; i < 4 && byte_index < STFL_HERC_BY_SIZE ; i++, byte_index++)
+                {
+                    temp.b[i] = regs->facility_list[byte_index];
+                }
+                regs->GR_L(r1) = CSWAP32( temp.w );
+            }
+
+#if 0 // (debug)
+            LOGMSG( "Diag F1C: STFL_IBM_BY_SIZE: %d, STFL_IBM_DW_SIZE: %lu\n", STFL_IBM_BY_SIZE, STFL_IBM_DW_SIZE );
+            LOGMSG( "Diag F1C: STFL_HERC_BY_SIZE: %lu, STFL_HERC_DW_SIZE: %lu\n", STFL_HERC_BY_SIZE, STFL_HERC_DW_SIZE );
+            LOGMSG( "Diag F1C: STFL_HERC_FIRST_BIT: %lu\n", STFL_HERC_FIRST_BIT );
+            for (i=0; i < (int) STFL_HERC_DW_SIZE; i++)
+            {
+                LOGMSG( "Diag F1C: facility_list DW%d:  %2.2X %2.2X %2.2X %2.2X %2.2X %2.2X %2.2X %2.2X\n",
+                    i,
+                    regs->facility_list[i*8 +0],
+                    regs->facility_list[i*8 +1],
+                    regs->facility_list[i*8 +2],
+                    regs->facility_list[i*8 +3],
+                    regs->facility_list[i*8 +4],
+                    regs->facility_list[i*8 +5],
+                    regs->facility_list[i*8 +6],
+                    regs->facility_list[i*8 +7] );
+            }
+            LOGMSG( "Diag F1C: CC: %d, r1: R%d, r3: R%d, R%d: %8.8X, R%d: %8.8X\n",
+                     regs->psw.cc, r1, r3,
+                     r1, regs->GR_L(r1),
+                     r3, regs->GR_L(r3)
+                   );
+#endif
+        }
+        break;
 
     case 0xFF8:
     /*---------------------------------------------------------------*/

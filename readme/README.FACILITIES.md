@@ -54,7 +54,7 @@ The [stfl.h](../stfl.h) header looks like this:
                                                      are installed             */
       #define STFL_001_ZARCH_INSTALLED       1    /* z/Arch mode is available on
                                                      this processor            */
-      #define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architecural
+      #define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architectural
                                                      mode active. When bit 2 and
                                                      168 are both zero, ESA/390
                                                      mode is active. When bit 2

@@ -320,6 +320,7 @@
     <ClCompile Include="con1052c.c" />
     <ClCompile Include="config.c" />
     <ClCompile Include="console.c" />
+    <ClCompile Include="wscnsl.c" />
     <ClCompile Include="conspawn.c" />
     <ClCompile Include="control.c" />
     <ClCompile Include="cpu.c" />
@@ -475,6 +476,7 @@
     <ClCompile Include="zfcp.c" />
     <ClCompile Include="zvector.c" />
     <ClCompile Include="zvector2.c" />
+    <ClCompile Include="zvector3.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".travis.yml" />
@@ -727,6 +729,7 @@
     <None Include="readme\README.TRACEFILE.md" />
     <None Include="readme\README.VMFPLC2.md" />
     <None Include="readme\README.VMHANDSHAKE.md" />
+    <None Include="readme\README.WebSocket.md" />
     <None Include="readme\README.WIN64.md" />
     <None Include="RELEASE.NOTES" />
     <None Include="retail-all.jobs" />
@@ -904,6 +907,11 @@
     <None Include="tests\CDSG.list" />
     <None Include="tests\CDSG.PDF" />
     <None Include="tests\CDSG.tst" />
+    <None Include="tests\cff-01-CompareAndLoad.asm" />
+    <None Include="tests\cff-01-CompareAndLoad.core" />
+    <None Include="tests\cff-01-CompareAndLoad.list" />
+    <None Include="tests\cff-01-CompareAndLoad.pdf" />
+    <None Include="tests\cff-01-CompareAndLoad.tst" />
     <None Include="tests\CLCL-et-al.asm" />
     <None Include="tests\CLCL-et-al.core" />
     <None Include="tests\CLCL-et-al.list" />
@@ -1057,6 +1065,21 @@
     <None Include="tests\mhi.core" />
     <None Include="tests\mhi.list" />
     <None Include="tests\mhi.tst" />
+    <None Include="tests\mie4-01-BDXPG-BDEPG.asm" />
+    <None Include="tests\mie4-01-BDXPG-BDEPG.core" />
+    <None Include="tests\mie4-01-BDXPG-BDEPG.list" />
+    <None Include="tests\mie4-01-BDXPG-BDEPG.pdf" />
+    <None Include="tests\mie4-01-BDXPG-BDEPG.tst" />
+    <None Include="tests\mie4-02-CLZG-CTZG.asm" />
+    <None Include="tests\mie4-02-CLZG-CTZG.core" />
+    <None Include="tests\mie4-02-CLZG-CTZG.list" />
+    <None Include="tests\mie4-02-CLZG-CTZG.pdf" />
+    <None Include="tests\mie4-02-CLZG-CTZG.tst" />
+    <None Include="tests\mie4-03-IndexedAddress.asm" />
+    <None Include="tests\mie4-03-IndexedAddress.core" />
+    <None Include="tests\mie4-03-IndexedAddress.list" />
+    <None Include="tests\mie4-03-IndexedAddress.pdf" />
+    <None Include="tests\mie4-03-IndexedAddress.tst" />
     <None Include="tests\mkcore.rexx" />
     <None Include="tests\mvcle.assemble" />
     <None Include="tests\mvcle.listing" />
@@ -1323,6 +1346,21 @@
     <None Include="tests\zvector-e6-21-VCRNF.list" />
     <None Include="tests\zvector-e6-21-VCRNF.pdf" />
     <None Include="tests\zvector-e6-21-VCRNF.tst" />
+    <None Include="tests\zvector-e6-22-VTZ.asm" />
+    <None Include="tests\zvector-e6-22-VTZ.core" />
+    <None Include="tests\zvector-e6-22-VTZ.list" />
+    <None Include="tests\zvector-e6-22-VTZ.pdf" />
+    <None Include="tests\zvector-e6-22-VTZ.tst" />
+    <None Include="tests\zvector-e6-23-VCVBQ.asm" />
+    <None Include="tests\zvector-e6-23-VCVBQ.core" />
+    <None Include="tests\zvector-e6-23-VCVBQ.list" />
+    <None Include="tests\zvector-e6-23-VCVBQ.pdf" />
+    <None Include="tests\zvector-e6-23-VCVBQ.tst" />
+    <None Include="tests\zvector-e6-24-VCVDQ.asm" />
+    <None Include="tests\zvector-e6-24-VCVDQ.core" />
+    <None Include="tests\zvector-e6-24-VCVDQ.list" />
+    <None Include="tests\zvector-e6-24-VCVDQ.pdf" />
+    <None Include="tests\zvector-e6-24-VCVDQ.tst" />
     <None Include="tests\zvector-e7-01-MinMaxAvg.asm" />
     <None Include="tests\zvector-e7-01-MinMaxAvg.core" />
     <None Include="tests\zvector-e7-01-MinMaxAvg.list" />
@@ -1468,6 +1506,26 @@
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.list"/>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.pdf"/>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.tst"/>
+    <None Include="tests\zvector-e7-30-DivideRem.asm"/>
+    <None Include="tests\zvector-e7-30-DivideRem.core"/>
+    <None Include="tests\zvector-e7-30-DivideRem.list"/>
+    <None Include="tests\zvector-e7-30-DivideRem.pdf"/>
+    <None Include="tests\zvector-e7-30-DivideRem.tst"/>
+    <None Include="tests\zvector-e7-31-VBLEND.asm"/>
+    <None Include="tests\zvector-e7-31-VBLEND.core"/>
+    <None Include="tests\zvector-e7-31-VBLEND.list"/>
+    <None Include="tests\zvector-e7-31-VBLEND.pdf"/>
+    <None Include="tests\zvector-e7-31-VBLEND.tst"/>
+    <None Include="tests\zvector-e7-32-VGEM.asm"/>
+    <None Include="tests\zvector-e7-32-VGEM.core"/>
+    <None Include="tests\zvector-e7-32-VGEM.list"/>
+    <None Include="tests\zvector-e7-32-VGEM.pdf"/>
+    <None Include="tests\zvector-e7-32-VGEM.tst"/>
+    <None Include="tests\zvector-e7-33-VEVAL.asm"/>
+    <None Include="tests\zvector-e7-33-VEVAL.core"/>
+    <None Include="tests\zvector-e7-33-VEVAL.list"/>
+    <None Include="tests\zvector-e7-33-VEVAL.pdf"/>
+    <None Include="tests\zvector-e7-33-VEVAL.tst"/>
     <None Include="tests\zvector-e7-99-performance.asm"/>
     <None Include="tests\zvector-e7-99-performance.core"/>
     <None Include="tests\zvector-e7-99-performance.list"/>
@@ -1633,8 +1691,10 @@
     <ClInclude Include="w32mtio.h" />
     <ClInclude Include="w32stape.h" />
     <ClInclude Include="w32util.h" />
+    <ClInclude Include="wscnsl.h" />
     <ClInclude Include="x75.h" />
     <ClInclude Include="zfcp.h" />
+    <ClInclude Include="zvector.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="decNumber\decNumber.readme.txt" />

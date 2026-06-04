@@ -14,6 +14,23 @@
 #ifndef _HSTDINC_H
 #define _HSTDINC_H
 
+//---------------------------------------------------------------------
+//#define HG_GH_DEBUG             // Herc <--> GUI stream debugging
+//---------------------------------------------------------------------
+
+#ifdef HG_GH_DEBUG              // Herc <--> GUI stream debugging
+
+// PROGRAMMING NOTE: to keep things simple, the log files are
+// currently hard-coded. MAKE DAMN SURE they are valid (can be
+// opened and written to) as NO ERROR CHECKING is ever done!!
+
+#define H_to_G_PATH         "C:\\Users\\Fish\\Downloads\\H-to-G.txt"
+#define H_fr_G_PATH         "C:\\Users\\Fish\\Downloads\\H-from-G.txt"
+
+#endif
+//---------------------------------------------------------------------
+
+
 #define SDL_HYPERION            /* Distinguish ourselves from others */
 //#define NOT_HERC              /* This is Hercules, NOT the utility */
 

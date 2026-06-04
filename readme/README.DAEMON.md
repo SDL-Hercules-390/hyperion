@@ -23,23 +23,22 @@ This can prove to be quite convenient when using Hercules as a [Shared Device Se
 
 ## How to run in no UI mode
 
-To run Hercules in No UI mode, simply specify the `--NoUI` or `-n` [command line option](https://sdl-hercules-390.github.io/html/hercinst.html#arguments) when you start Hercules:
+To run Hercules in No UI mode, simply specify the **`--NoUI`** _(or `-n`)_ [command line option](https://sdl-hercules-390.github.io/html/hercinst.html#arguments) when you start Hercules, _**as well as** using redirection to create the logfile_:
 
 (Linux):
 <pre>
-    hercules <b><i>--NoUI</i></b> --config=hercules.cnf --logfile=hercules.log   <b>< /dev/null > /dev/null 2>&1</b>
+    hercules <big><b><i>--NoUI</i></b></big> --config=hercules.cnf  <b>>  hercules.log   <  /dev/null  2>&1</b>
 </pre>
 
 (Windows):
 <pre>
-    hercules <b><i>--NoUI</i></b> --config=hercules.cnf --logfile=hercules.log   <b>< NUL > NUL 2>&1</b>
+    hercules <big><b><i>--NoUI</i></b></big> --config=hercules.cnf  <b>>  hercules.log   <  NUL        2>&1</b>
 </pre>
 
-When Hercules runs in No UI mode, it does not write or read anything to/from the HMC (hardware panel/terminal). It only writes messages to the specified logfile.
 
-As you can see in the above example, `stdout` and `stderr` are both being redirected to `/dev/null` since, when run in No UI mode, all messages are written to the specified logfile instead.
+When Hercules runs in No UI mode, it does not write or read anything to/from the HMC (hardware panel/terminal). It only writes messages to the standard `stdout` and `stderr` output files instead.
 
-Additionally, `stdin` is also being redirected <i><u>from</u></i> `/dev/null` as well, since, when run in No UI mode, Hercules will never read from `stdin`. Instead, it loops forever until it receives the `quit` or `exit` command.
+As you can see in the above example, `stdout` and `stderr` are both being redirected <i><u>to</u></i> the desired Hercules logfile name, and `stdin` is being redirected <i><u>from</u></i> an empty (null) file, since when run in No UI mode, Hercules will never read from `stdin`. Instead, it loops forever until it receives the `quit` or `exit` command.
 
 For this reason, you _must_ supply some other means for issuing commands to Hercules. The most common and perhaps simplest way to do this is to use Hercules's built-in <i><b>"HTTP Server"</b></i> feature, via the
 [`HTTP PORT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPPORT), [`HTTP ROOT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPROOT) and [`HTTP START`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPSTRT)
@@ -57,9 +56,9 @@ ___
 
     # Shared Dasd devices...
 
-    0123  3390  "FOO001.cckd64"  ro  cu=3990-6
-    0124  3390  "BAR002.cckd64"  ro  cu=3990-6
-    0125  3390  "FOOBAR.cckd64"  ro  cu=3990-6
+    0123  3390  "FOO001.cckd64"  ro  cu=2107
+    0124  3390  "BAR002.cckd64"  ro  cu=2107
+    0125  3390  "FOOBAR.cckd64"  ro  cu=2107
 </pre>
 
 
@@ -78,10 +77,10 @@ Running Hercules in this manner is <i><u>not</u></i> a requirement for running i
 To use Hercules's HTTP Server, simply open your browser and surf to the following URL:
 
 <pre>
-    http://127.0.0.1:8181
+    http://127.0.0.1:<b><i>8181</i></b>
 </pre>
 
-where "127.0.0.1" is the IP address of the system where Hercules is running _(in this case the local machine)_, and "8181" is port number that the server is listening for connections on _(as specified in your [`HTTP PORT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPPORT) configuration file statement)_.
+where "**127.0.0.1**" is the IP address of the system where Hercules is running _(in this case the local machine)_, and "**8181**" is the port number that the server is listening for connections on _(as specified in your [`HTTP PORT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPPORT) configuration file statement)_.
 
 The [`HTTP ROOT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPROOT) statement specifies the root directory where the HTTP Server's files reside. This is usually the "html" subdirectory of Hercules's distributed source code where all of the Server's required files exist.
 

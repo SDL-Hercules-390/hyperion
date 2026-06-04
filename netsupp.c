@@ -380,6 +380,8 @@ int read_tuntap( int fd, BYTE* buffer, size_t nBuffLen, int secs )
     if (rc == 0)
         return 0;
 
+#else
+    UNREFERENCED(secs);
 #endif // !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
 
     nBytesRead = TUNTAP_Read( fd, buffer, nBuffLen );

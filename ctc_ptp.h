@@ -178,6 +178,8 @@ struct  _PTPBLK
     BYTE        bTerminate4;               // IPv4 termination progress
     BYTE        bTerminate6;               // IPv6 termination progress
     BYTE        bTerminateLL6;             // IPv6 link local termination progress
+
+    int         internal;                  // Did Hercules create this device?
 };
 
 #define HEASKEDME_START       0x80         // He asked me Start
@@ -203,14 +205,14 @@ struct  _PTPBLK
                                            // (i.e. the messages presented
                                            // to or accepted from the CTC
                                            // devices in network byte order
-                                           // Note: a maximun of 256 bytes
+                                           // Note: a maximum of 256 bytes
                                            // is displayed)
 #define DBGPTPEXPAND          0x00000004   // Data expanded
                                            // (i.e. the messages presented
                                            // to or accepted from the CTC
                                            // devices in network byte order
                                            // showing the MPC_TH etc.
-                                           // Note: a maximun of 64 bytes
+                                           // Note: a maximum of 64 bytes
                                            // of data is displayed)
 #define DBGPTPUPDOWN          0x00000010   // Connection up and down
 #define DBGPTPCCW             0x00000020   // CCWs executed

@@ -188,12 +188,15 @@
                                 \
   "Format:\n"                                                                   \
   "\n"                                                                          \
-  "     \"b addr-addr   [asid]\"\n"                                             \
-  "     \"b addr:addr   [asid]\"\n"                                             \
-  "     \"b addr.length [asid]\"\n"                                             \
+  "     \"b addr-addr   [asid [P|S|H]]\"\n"                                     \
+  "     \"b addr:addr   [asid [P|S|H]]\"\n"                                     \
+  "     \"b addr.length [asid [P|S|H]]\"\n"                                     \
   "\n"                                                                          \
   "Sets the instruction address or address range where you wish to halt\n"      \
-  "execution.  This command is synonymous with the \"s+\" command.\n"
+  "execution.  This command is synonymous with the \"s+\" command. If\n"        \
+  "the asid parameter is specified, an optional Primary, Secondary or Home\n"   \
+  "Address Space designation may also be specified. If not specified the\n"     \
+  "default is P.\n"
 
 #define bear_cmd_desc           "Display or set BEAR register"
 #define bear_cmd_help           \
@@ -601,7 +604,7 @@
   "'facility' is the SHORT facility name to be enabled, disabled or queried.\n"  \
   "The facility may also be specified by explicit bit number or via 'BITnnn'.\n" \
   "ALL is a synonym for SHORT. RAW displays the hex string. ENABLED displays\n"  \
-  "only facilities which are enabled. DISABLED shows only disabled failities.\n" \
+  "only facilities which are enabled. DISABLED shows only disabled facilities.\n" \
   "LONG sorts the display by Long Description. SHORT is the default.\n"
 
 #define fcb_cmd_desc            "Display a printer's current FCB"
@@ -680,7 +683,7 @@
 #define xxxprio_cmd_desc        "(deprecated)"
 #define xxxprio_cmd_help        \
                                 \
-  "This command is no longer supported and and will be removed in the future.\n"
+  "This command is no longer supported and will be removed in the future.\n"
 
 #define hst_cmd_desc            "History of commands"
 #define hst_cmd_help            \
@@ -798,7 +801,7 @@
   "Specifies the default eight-character IPL 'LOADPARM' parameter used by\n"    \
   "some operating systems to select certain initialization options. The\n"      \
   "value specified here can be overridden by specifying a different value\n"   \
-  "on the the IPL command itself. The LOADPARM command simply defines the\n"    \
+  "on the IPL command itself. The LOADPARM command simply defines the\n"       \
   "default value that is used if not overridden on the IPL command itself.\n"
 
 #define loadtext_cmd_desc       "Load a text deck file"
@@ -828,12 +831,12 @@
 #define logopt_cmd_help         \
                                 \
   "Format: \"LOGOPT [DATESTAMP | NODATESTAMP] [TIMESTAMP | NOTIMESTAMP]\".\n\n" \
-  "Sets logfile options. \"TIMESTAMP\" inserts a time stamp in front of\n"     \
-  "each log message. \"NOTIMESTAMP\" logs messages without time stamps.\n"      \
-  "Similarly, \"DATESTAMP\" and \"NODATESTAMP\" prefixes logfile messages\n"    \
-  "with or without the current date. Entering the command with no arguments\n"  \
-  "displays current logging options. The current resolution of the stamp\n"     \
-  "is one second.\n"
+  "Sets logfile options. \"TIMESTAMP\" (the default) inserts a time stamp\n"    \
+  "in front of each log message. \"NOTIMESTAMP\" logs messages without time\n"  \
+  "stamps. Similarly, \"DATESTAMP\" and \"NODATESTAMP\" prefixes logfile\n"     \
+  "messages with or without the current date. Entering the command with no\n"   \
+  "arguments displays current logging options. The current resolution of the\n" \
+  "stamp is one second.\n"
 
 #define lparname_cmd_desc       "Set LPAR name"
 #define lparname_cmd_help       \
@@ -871,7 +874,7 @@
   "        mmmm    - define main storage size mmmm Megabytes\n"                 \
   "\n"                                                                          \
   "        nnnS    - define main storage size nnn S where S is the\n"           \
-  "                  multipler:\n"                                              \
+  "                  multiplier:\n"                                             \
   "                  B = no multiplier\n"                                       \
   "                  K = 2**10 (kilo/kibi)\n"                                   \
   "                  M = 2**20 (mega/mebi)\n"                                   \
@@ -905,7 +908,7 @@
                                 \
   "Format: \"message * text\". The 'text' field is variable in size.\n"         \
   "A 'VM' message similar to: \"13:02:41 * MSG FROM HERCULES: hello\" is\n"     \
-  "diplayed on the console panel as a result of the panel command\n"            \
+  "displayed on the console panel as a result of the panel command\n"           \
   "'message * hello'.  (See also the \"msgnoh\" command)\n"
 
 #define model_cmd_desc          "Set/Query STSI model code"
@@ -951,6 +954,30 @@
   "Where <path> specifies the relative or absolute path of the directory\n"     \
   "where dynamic modules should be loaded from. Only one directory may be\n"    \
   "specified. Enclose the path within double quotes if it contains blanks.\n"
+
+#define loadtape_cmd_desc       "Alias for mount"
+#define unload_cmd_desc         "Alias for unmount"
+#define dismount_cmd_desc       "Alias for unmount"
+
+#define mount_cmd_desc          "mount tape onto a tape drive"
+#define mount_cmd_help          \
+                                \
+  "Format:      \"mount <tape> [ON|ONTO] <drive>\"\n"                           \
+  "\n"                                                                          \
+  "Mounts tape file \"<tape>\" onto tape drive device \"<drive>\". This\n"      \
+  "command is simply an alternative format of the \"devinit\" command that\n"   \
+  "is normally used to mount tapes onto tape drives. All it does is issue\n"    \
+  "an appropriate devinit command for you.\n"
+
+#define unmount_cmd_desc        "unloads a tape from a tape drive"
+#define unmount_cmd_help        \
+                                \
+  "Format:      \"unmount <drive>\"\n"                                          \
+  "\n"                                                                          \
+  "Unmounts (rewinds and unloads) the currently mounted tape file (if one is\n" \
+  "mounted) from the specified tape drive. This command is an alternative\n"    \
+  "format of the \"devinit\" command that is normally used to dismount tapes\n" \
+  "from tape drives. It just issues an appropriate devinit command for you.\n"
 
 #define mtapeinit_cmd_desc      "Control tape initialization"
 #define mtapeinit_cmd_help      \
@@ -1217,7 +1244,7 @@
   "registered with the device identified by <devnum> or for all QETH (OSA)\n"   \
   "device groups if <devnum> is not specified or specified as 'ALL'.  The\n"    \
   "optional 'mask' value may be specified more than once. Mask values are\n"    \
-  "'Ccw', 'DAta', 'DRopped', 'Expand', 'Interupts', 'Packet', 'Queues',\n"      \
+  "'Ccw', 'DAta', 'DRopped', 'Expand', 'Interrupts', 'Packet', 'Queues',\n"     \
   "'SBale', 'SIga', 'Updown' or 0xhhhhhhhh hexadecimal value.\n"
 
 #define qpfkeys_cmd_desc        "Display the current PF Key settings"
@@ -1408,7 +1435,7 @@
 #define savecore_cmd_help       \
                                 \
   "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and\n"     \
-  "'end' define the starting and ending addresss of the range of real\n"        \
+  "'end' define the starting and ending address of the range of real\n"         \
   "storage to be saved to file 'filename'. An '*' for either the start\n"       \
   "address or end address (the default) means: \"the first/last byte of\n"      \
   "the first/last modified page as determined by the storage-key\n"             \
@@ -1424,7 +1451,7 @@
   "disables SCLP disk I/O. If no operand is specified, sclproot displays\n"     \
   "the current setting.\n"
 
-#define scpecho_cmd_desc        "Set/Display option to echo to console and history of scp replys"
+#define scpecho_cmd_desc        "Set/Display option to echo to console and history of scp replies"
 #define scpecho_cmd_help        \
                                 \
   "Format: \"scpecho [ on | off ]\"\n"                                          \
@@ -1579,7 +1606,7 @@
   "via the DIAG 8 interface.\n"                                                 \
   "\n"                                                                          \
   "If the optional NODIAG8 option is specified, then only the programmatic\n"   \
-  "execution of commands via the the Diagnose 8 interface are disabled, but\n"  \
+  "execution of commands via the Diagnose 8 interface are disabled, but\n"      \
   "shell and Rexx commands entered directly via the Hercules command line\n"    \
   "still work.\n"                                                               \
   "\n"                                                                          \
@@ -1678,6 +1705,22 @@
 
 #define sysgport_cmd_desc       "Define SYSG console port"
 
+#define wscnslport_cmd_desc     "Define WebSocket console port"
+#define wscnslport_cmd_help                                                     \
+                                                                                \
+  "Format:    \"wscnslport [port|host:port|NO]\"\n"                             \
+  "\n"                                                                          \
+  "Defines the listening port (and optionally the binding host) for the\n"      \
+  "WebSocket variant of the console. WebSocket console connections carry\n"     \
+  "exactly the same byte stream as the regular telnet console (CNSLPORT),\n"    \
+  "wrapped in RFC 6455 binary frames (websockify-style). The standard\n"        \
+  "telnet listener on CNSLPORT remains active and unaffected.\n"                \
+  "\n"                                                                          \
+  "Specify \"NO\" to disable the WebSocket listener. With no arguments,\n"      \
+  "displays the currently configured value. The port must differ from\n"        \
+  "CNSLPORT and (if set) SYSGPORT.\n"
+
+
 #define tf_cmd_desc             "Define trace-to-file parameters"
 #define tf_cmd_help             \
                                 \
@@ -1732,13 +1775,28 @@
 #define tquest_cmd_desc         "Query instruction tracing"
 #define tquest_cmd_help         \
                                 \
-  "Format: \"t?\" displays whether instruction tracing is ON or OFF\n"          \
-  "and the address range if any.\n"
+  "Format: \"t?\" displays whether instruction and/or CCW tracing\n"            \
+  "is ON or OFF and the address range and/or device number, if any.\n"
 
 #define tckd_cmd_desc           "Turn Search Key tracing ON/OFF for device"
 #define tcpu_cmd_desc           "Turn instruction tracing ON/OFF for CPU(s)"
 #define odev_cmd_desc           "Turn ORB tracing ON/OFF for device"
+
+
+
 #define tdev_cmd_desc           "Turn ORB and CCW tracing ON/OFF for device"
+#define tdev_cmd_help           \
+                                \
+  "Format:   \"t+devnum   [(hh[,hh]...)]\"\n"                                   \
+  "\n"                                                                          \
+  "where 'devnum' is the device address of the device whose CCWs are to be\n"   \
+  "traced, and 'hh' are the optional list of specific CCW opcodes that are\n"   \
+  "to be traced. If just the device number is specified, then all CCW opcodes\n"\
+  "will be traced. Otherwise if any optional 'hh' values are specified, then\n" \
+  "ONLY those specific CCW opcodes will be traced for that device. Note that\n" \
+  "if any 'hh' value(s) is/are specified, it/they must be enclosed within\n"    \
+  "parentheses and separated from the others, if any, with a single comma.\n"
+
 #define tplus_cmd_desc          "Turn instruction tracing ON for all CPUs"
 #define tplus_cmd_help          \
                                 \
@@ -2012,6 +2070,14 @@ COMMAND( "k",                       k_cmd,                  SYSCMDNOPER,        
 COMMAND( "loadcore",                loadcore_cmd,           SYSCMDNOPER,        loadcore_cmd_desc,      loadcore_cmd_help   )
 COMMAND( "loadtext",                loadtext_cmd,           SYSCMDNOPER,        loadtext_cmd_desc,      loadtext_cmd_help   )
 COMMAND( "maxcpu",                  maxcpu_cmd,             SYSCMDNOPER,        maxcpu_cmd_desc,        NULL                )
+
+COMMAND( "loadtape",                mount_cmd,              SYSCMDNOPER,        loadtape_cmd_desc,      NULL                )
+COMMAND( "unload",                  unmount_cmd,            SYSCMDNOPER,        unload_cmd_desc,        NULL                )
+COMMAND( "dismount",                unmount_cmd,            SYSCMDNOPER,        dismount_cmd_desc,      NULL                )
+
+COMMAND( "mount",                   mount_cmd,              SYSCMDNOPER,        mount_cmd_desc,         mount_cmd_help      )
+COMMAND( "unmount",                 unmount_cmd,            SYSCMDNOPER,        unmount_cmd_desc,       unmount_cmd_help    )
+
 CMDABBR( "mounted_tape_reinit",  9, mounted_tape_reinit_cmd,SYSCMDNOPER,        mtapeinit_cmd_desc,     mtapeinit_cmd_help  )
 COMMAND( "netdev",                  netdev_cmd,             SYSCMDNOPER,        netdev_cmd_desc,        netdev_cmd_help     )
 COMMAND( "numcpu",                  numcpu_cmd,             SYSCMDNOPER,        numcpu_cmd_desc,        NULL                )
@@ -2083,6 +2149,7 @@ COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       
 COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      shcmdopt_cmd_help   )
 COMMAND( "sysepoch",                sysepoch_cmd,           SYSCFGNDIAG8,       sysepoch_cmd_desc,      NULL                )
 COMMAND( "sysgport",                sysgport_cmd,           SYSCFGNDIAG8,       sysgport_cmd_desc,      NULL                )
+COMMAND( "wscnslport",              wscnslport_cmd,         SYSCFGNDIAG8,       wscnslport_cmd_desc,    wscnslport_cmd_help )
 COMMAND( "tzoffset",                tzoffset_cmd,           SYSCFGNDIAG8,       tzoffset_cmd_desc,      NULL                )
 COMMAND( "xpndsize",                xpndsize_cmd,           SYSCFGNDIAG8,       xpndsize_cmd_desc,      xpndsize_cmd_help   )
 COMMAND( "yroffset",                yroffset_cmd,           SYSCFGNDIAG8,       yroffset_cmd_desc,      NULL                )
@@ -2151,7 +2218,7 @@ COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             
 
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             f_cmd_help          )
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
-COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
+COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          tdev_cmd_help       )
 COMMAND( "t{+/-}CKD [devnum]",      NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL                )
 COMMAND( "t{+/-}CPU [cpunum]",      NULL,                   SYSCMDNOPER,        tcpu_cmd_desc,          NULL                )
 

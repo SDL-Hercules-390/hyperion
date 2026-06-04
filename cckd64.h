@@ -156,7 +156,8 @@ struct CCKD64_EXT {                     /* Ext for compressed ckd    */
                          notnull:1,     /* 1=Device has track images */
                          L2ok:1,        /* 1=All l2s below bounds    */
                          sfmerge:1,     /* 1=sf-xxxx merge           */
-                         sfforce:1;     /* 1=sf-xxxx force           */
+                         sfforce:1,     /* 1=sf-xxxx force           */
+                         needsdh:1;     /* 1=written since last harden */
 
         int              sflevel;       /* sfk xxxx level            */
 

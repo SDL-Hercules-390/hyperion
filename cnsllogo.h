@@ -27,13 +27,13 @@ Set the Highlight and/or Protected attribute
 Forces going to the next line
 
 @ALIGN NONE|LEFT|RIGHT|CENTER
-Specified the text alignement (relative to the left and right borders of the
+Specified the text alignment (relative to the left and right borders of the
 terminal). When ALIGN is other than "NONE", a new line is automatically
 inserted after each line of text. If ALIGN is "NONE", then the text will
 be written without skipping to the next line.
 
-It is also possible to embbed substitution variables in outgoing text.
-Substition is indicated by enclosing the variable name between $( and ).
+It is also possible to embedded substitution variables in outgoing text.
+Substitution is indicated by enclosing the variable name between $( and ).
 
 The following variables are defined in that environment :
 

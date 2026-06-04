@@ -12,7 +12,7 @@
 /*-------------------------------------------------------------------*/
 /* This module implements the various Hercules System Console        */
 /* (i.e. hardware console) commands that the emulator supports.      */
-/* To define a new commmand, add an entry to the "Commands" CMDTAB   */
+/* To define a new command, add an entry to the "Commands" CMDTAB    */
 /* table pointing to the command processing function, and optionally */
 /* add additional help text to the HelpTab HELPTAB. Both tables are  */
 /* near the end of this module.                                      */
@@ -1506,7 +1506,7 @@ static char* check_define_default_automount_dir()
     /* Define default AUTOMOUNT directory if needed */
     if (sysblk.tamdir && sysblk.defdir == NULL)
     {
-        char cwd[ MAX_PATH ];
+        char cwd[ PATH_MAX ];
         TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
         if (!pNewTAMDIR)
         {
@@ -1534,7 +1534,7 @@ static char* check_define_default_automount_dir()
 /* Add directory to AUTOMOUNT allowed/disallowed directories list    */
 /*                                                                   */
 /* Input:  tamdir     pointer to work character array of at least    */
-/*                    MAX_PATH size containing an allowed/disallowed */
+/*                    PATH_MAX size containing an allowed/disallowed */
 /*                    directory specification, optionally prefixed   */
 /*                    with the '+' or '-' indicator.                 */
 /*                                                                   */
@@ -1557,38 +1557,38 @@ static char* check_define_default_automount_dir()
 /*-------------------------------------------------------------------*/
 static int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 {
-    char pathname[MAX_PATH];
+    char pathname[PATH_MAX];
     int  rc, rej = 0;
-    char dirwrk[ MAX_PATH ] = {0};
+    char dirwrk[ PATH_MAX ] = {0};
 
     *ppTAMDIR = NULL;
 
     if (*tamdir == '-')
     {
         rej = 1;
-        memmove (tamdir, tamdir+1, MAX_PATH);
+        memmove (tamdir, tamdir+1, PATH_MAX);
     }
     else if (*tamdir == '+')
     {
         rej = 0;
-        memmove (tamdir, tamdir+1, MAX_PATH);
+        memmove (tamdir, tamdir+1, PATH_MAX);
     }
 
     /* Convert tamdir to absolute path ending with a slash */
 
 #if defined( _MSVC_ )
     /* (expand any embedded %var% environment variables) */
-    rc = expand_environ_vars( tamdir, dirwrk, MAX_PATH );
+    rc = expand_environ_vars( tamdir, dirwrk, PATH_MAX );
     if (rc == 0)
-        strlcpy (tamdir, dirwrk, MAX_PATH);
+        strlcpy (tamdir, dirwrk, PATH_MAX);
 #endif
 
     if (!realpath( tamdir, dirwrk ))
         return (1); /* ("unresolvable path") */
-    strlcpy (tamdir, dirwrk, MAX_PATH);
+    strlcpy (tamdir, dirwrk, PATH_MAX);
 
-    hostpath(pathname, tamdir, MAX_PATH);
-    strlcpy (tamdir, pathname, MAX_PATH);
+    hostpath(pathname, tamdir, PATH_MAX);
+    strlcpy (tamdir, pathname, PATH_MAX);
 
     /* Verify that the path is valid */
     if (access( tamdir, R_OK | W_OK ) != 0)
@@ -1597,7 +1597,7 @@ static int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
     /* Append trailing path separator if needed */
     rc = (int)strlen( tamdir );
     if (tamdir[rc-1] != *PATH_SEP)
-        strlcat (tamdir, PATH_SEP, MAX_PATH);
+        strlcat (tamdir, PATH_SEP, PATH_MAX);
 
     /* Check for duplicate/conflicting specification */
     for (*ppTAMDIR = sysblk.tamdir;
@@ -1647,7 +1647,7 @@ static int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 /*-------------------------------------------------------------------*/
 int automount_cmd(int argc, char *argv[], char *cmdline)
 {
-char pathname[MAX_PATH];
+char pathname[PATH_MAX];
 int rc;
 
     UNREFERENCED(cmdline);
@@ -1691,7 +1691,7 @@ int rc;
     if ( CMD(argv[1],add,3) || *argv[1] == '+' )
     {
         char *argv2;
-        char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
+        char tamdir[PATH_MAX+1]; /* +1 for optional '+' or '-' prefix */
         TAMDIR* pTAMDIR = NULL;
 //      int was_empty = (sysblk.tamdir == NULL);
 
@@ -1719,8 +1719,8 @@ int rc;
 
         // Add the requested entry...
 
-        hostpath(pathname, argv2, MAX_PATH);
-        strlcpy (tamdir, pathname, MAX_PATH);
+        hostpath(pathname, argv2, PATH_MAX);
+        strlcpy (tamdir, pathname, PATH_MAX);
 
         rc = add_tamdir( tamdir, &pTAMDIR );
 
@@ -1730,7 +1730,7 @@ int rc;
         {
             default:     /* (oops!) */
             {
-                WRMSG(HHC02218, "E");
+                BREAK_INTO_DEBUGGER(); // (should never occur!)
                 return -1;
             }
 
@@ -1770,7 +1770,7 @@ int rc;
 
                 if (sysblk.defdir == NULL)
                 {
-                    static char cwd[ MAX_PATH ];
+                    static char cwd[ PATH_MAX ];
 
                     VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
                     rc = (int)strlen( cwd );
@@ -1805,9 +1805,9 @@ int rc;
     if ( CMD(argv[1],del,3) || *argv[1] == '-')
     {
         char *argv2;
-        char tamdir1[MAX_PATH+1] = {0};     // (resolved path)
-        char tamdir2[MAX_PATH+1] = {0};     // (expanded but unresolved path)
-        char workdir[MAX_PATH+1] = {0};     // (work)
+        char tamdir1[PATH_MAX+1] = {0};     // (resolved path)
+        char tamdir2[PATH_MAX+1] = {0};     // (expanded but unresolved path)
+        char workdir[PATH_MAX+1] = {0};     // (work)
         char *tamdir = tamdir1;             // (-> tamdir2 on retry)
 
         TAMDIR* pPrevTAMDIR = NULL;
@@ -1839,14 +1839,14 @@ int rc;
         // Convert argument to absolute path ending with a slash
 
         STRLCPY( tamdir2, argv2 );
-        if      (tamdir2[0] == '-') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
-        else if (tamdir2[0] == '+') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
+        if      (tamdir2[0] == '-') memmove (&tamdir2[0], &tamdir2[1], PATH_MAX);
+        else if (tamdir2[0] == '+') memmove (&tamdir2[0], &tamdir2[1], PATH_MAX);
 
 #if defined( _MSVC_ )
         // (expand any embedded %var% environment variables)
-        rc = expand_environ_vars( tamdir2, workdir, MAX_PATH );
+        rc = expand_environ_vars( tamdir2, workdir, PATH_MAX );
         if (rc == 0)
-            strlcpy (tamdir2, workdir, MAX_PATH);
+            strlcpy (tamdir2, workdir, PATH_MAX);
 #endif
 
         if (sysblk.defdir == NULL
@@ -1869,10 +1869,10 @@ int rc;
 
         if (realpath(tamdir1, workdir) != NULL)
         {
-            strlcpy (tamdir1, workdir, MAX_PATH);
+            strlcpy (tamdir1, workdir, PATH_MAX);
             rc = (int)strlen( tamdir1 );
             if (tamdir1[rc-1] != *PATH_SEP)
-                strlcat (tamdir1, PATH_SEP, MAX_PATH);
+                strlcat (tamdir1, PATH_SEP, PATH_MAX);
             tamdir = tamdir1;   // (try tamdir1 first)
         }
         else
@@ -1880,10 +1880,10 @@ int rc;
 
         rc = (int)strlen( tamdir2 );
         if (tamdir2[rc-1] != *PATH_SEP)
-            strlcat (tamdir2, PATH_SEP, MAX_PATH);
+            strlcat (tamdir2, PATH_SEP, PATH_MAX);
 
-        hostpath(pathname, tamdir2, MAX_PATH);
-        strlcpy (tamdir2, pathname, MAX_PATH);
+        hostpath(pathname, tamdir2, PATH_MAX);
+        strlcpy (tamdir2, pathname, PATH_MAX);
 
         // Find entry to be deleted...
 
@@ -1937,7 +1937,7 @@ int rc;
 
                             if (!pCurrTAMDIR)
                             {
-                                static char cwd[ MAX_PATH ] = {0};
+                                static char cwd[ PATH_MAX ] = {0};
 
                                 VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
                                 rc = (int)strlen( cwd );
@@ -2825,7 +2825,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                 // PLEASE KEEP THESE IN ALPHABETICAL ORDER!
                 // PLEASE NOTE THE MINIMUM ABBREVIATIONS!
 
-                // 'Ccw', 'DAta', 'DRopped', 'Expand', 'Interupts',
+                // 'Ccw', 'DAta', 'DRopped', 'Expand', 'Interrupts',
                 // 'Packet', 'Queues', 'SBale', 'SIga', 'Updown',
 
                 // 0xhhhhhhhh hexadecimal value
@@ -3270,7 +3270,7 @@ int sclproot_cmd( int argc, char* argv[], char* cmdline )
     {
         if ((basedir = get_sce_dir()))
         {
-            char buf[ MAX_PATH + 64 ];
+            char buf[ PATH_MAX + 64 ];
             char* p = strchr( basedir, ' ' );
 
             if (!p)
@@ -4509,6 +4509,161 @@ int sysgport_cmd( int argc, char* argv[], char* cmdline )
             }
         }
     }
+
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/* wscnslport command - define WebSocket console port                */
+/*-------------------------------------------------------------------*/
+int wscnslport_cmd( int argc, char* argv[], char* cmdline )
+{
+    static char const* def_port = "6080";
+    bool disabled = false;
+    int rc = 0;
+    int i;
+
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
+
+    if (argc > 2)
+    {
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        rc = -1;
+    }
+    else if (argc == 1) // Display current value
+    {
+        char buf[128];
+
+        if (sysblk.wscnslport && strchr( sysblk.wscnslport, ':' ) == NULL)
+        {
+            MSGBUF( buf, "on port %s", sysblk.wscnslport );
+        }
+        else // (!sysblk.wscnslport || host:port specified)
+        {
+            if (sysblk.wscnslport)
+            {
+                char* serv = NULL;
+                char* host = NULL;
+                char* port = NULL;
+
+                port = strdup( sysblk.wscnslport );
+
+                if ((serv = strchr( port, ':' )))
+                {
+                    *serv++ = '\0';
+
+                    if (*port)
+                        host = port;
+                }
+
+                MSGBUF( buf, "on port %s for host %s", serv, host );
+                free( port );
+            }
+        }
+
+        if (sysblk.wscnslport)
+        {
+            // "%s server %slistening %s"
+            WRMSG( HHC17001, "I", "WebSocket console", "", buf );
+        }
+        else
+        {
+            // "%s server %slistening %s"
+            WRMSG( HHC17001, "I", "WebSocket console", "NOT ", "on any port" );
+        }
+        rc = 0;
+    }
+    else // Set new value
+    {
+        if (str_caseless_eq( argv[1], "NO" ))
+        {
+            disabled = true;
+            rc = 1;
+        }
+        else
+        {
+            char* port;
+            char* host = strdup( argv[1] );
+
+            if ((port = strchr( host, ':' )) == NULL)
+                port = host;
+            else
+                *port++ = '\0';
+
+            for (i=0; i < (int) strlen( port ); i++)
+            {
+                if (!isdigit( (unsigned char)port[i] ))
+                {
+                    // "Invalid value %s specified for %s"
+                    WRMSG( HHC01451, "E", port, argv[0] );
+                    rc = -1;
+                    break;
+                }
+            }
+
+            if (rc != -1)  // (if no parsing error)
+            {
+                i = atoi( port );
+
+                if (i < 0 || i > 65535)
+                {
+                    // "Invalid value %s specified for %s"
+                    WRMSG( HHC01451, "E", port, argv[0] );
+                    rc = -1;
+                }
+                else
+                    rc = 1;
+            }
+
+            free( host );
+        }
+    }
+
+    if (rc != 0) // (new value specified or error)
+    {
+        const char* port = (rc == -1) ? def_port : argv[1];
+
+        if (!disabled && str_eq( port, sysblk.cnslport ))
+        {
+            // "%s cannot be the same as %s"
+            WRMSG( HHC01453, "E", argv[0], "CNSLPORT" );
+            rc = -1;
+        }
+        else if (!disabled && sysblk.sysgport && str_eq( port, sysblk.sysgport ))
+        {
+            // "%s cannot be the same as %s"
+            WRMSG( HHC01453, "E", argv[0], "SYSGPORT" );
+            rc = -1;
+        }
+        else // (disabled || port okay)
+        {
+            free( sysblk.wscnslport );
+            sysblk.wscnslport = NULL;
+
+            if (!disabled && rc == -1)
+            {
+                // "Default port %s being used for %s"
+                WRMSG( HHC01452, "W", def_port, argv[0] );
+                sysblk.wscnslport = strdup( def_port );
+                rc = 1;
+            }
+            else // (disabled || rc != -1)
+            {
+                if (!disabled)
+                    sysblk.wscnslport = strdup( argv[1] );
+
+                // "%-14s set to %s"
+                WRMSG( HHC02204, "I", argv[0],
+                    disabled ? "NO" : sysblk.wscnslport );
+                rc = 0;
+            }
+        }
+    }
+
+    /* Wake the console connection thread so it picks up the new port. */
+    SIGNAL_CONSOLE_THREAD();
 
     return rc;
 }
@@ -6108,7 +6263,7 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
     // immune from the actual order/sequence of the actual DEVBLK chain.
 
     // Note too that there is no lock to lock access to ALL device blocks
-    // (even though there really SHOULD be). The only lock there is is one
+    // (even though there really SHOULD be). The only lock there is one
     // to lock an individual DEVBLK (which doesn't do us much good here).
 
     if (!(orig_pDevBlkPtrs = malloc( sizeof( DEVBLK* ) * MAX_DEVLIST_DEVICES )))
@@ -7635,6 +7790,159 @@ BYTE     unitstat, code = 0;
 }
 
 /*-------------------------------------------------------------------*/
+/* unmount command - unmount a tape file from a tape drive           */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int unmount_cmd( int argc, char *argv[], char *cmdline )
+{
+    int     rc, unmount_argc;
+    DEVBLK* dev = NULL;
+    char    unmount_cmdline[ 2 * PATH_MAX ] = {0};
+    char    szdevnum [ 16 ] = {0};
+    char*   unmount_argv[ MAX_ARGS ] = {0};
+    U16     unmount_devnum  =  0;
+    U16     unmount_lcss    =  0;
+
+    // unmount <devn> ===> devinit <devn> *
+
+    UNREFERENCED( cmdline );
+
+    if (argc != 2)
+    {
+        // "Incorrect number of arguments"
+        WRMSG( HHC00231,"E" );
+        return -1;
+    }
+
+    if (strchr( argv[1], ':'))
+        STRLCPY( szdevnum, argv[1] );
+    else
+        MSGBUF( szdevnum, "0:%s", argv[1] );
+
+    if ((rc = parse_single_devnum( szdevnum, &unmount_lcss, &unmount_devnum )) < 0)
+        return -1;    // (message already displayed)
+
+    if (!(dev = find_device_by_devnum( unmount_lcss, unmount_devnum )))
+    {
+        // HHC02200 "%1d:%04X device not found"
+        WRMSG( HHC02200, "E", unmount_lcss, unmount_devnum );
+        return -1;
+    }
+
+    // Build the corresponding "devinit" command...
+    MSGBUF( unmount_cmdline, "devinit %1d:%04X *", unmount_lcss, unmount_devnum );
+
+    parse_args( unmount_cmdline, MAX_ARGS, unmount_argv, &unmount_argc );
+
+    return devinit_cmd( unmount_argc, unmount_argv, unmount_cmdline );
+}
+
+/*-------------------------------------------------------------------*/
+/* mount command - mount a tape file onto a tape drive               */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int mount_cmd( int argc, char *argv[], char *cmdline )
+{
+    // mount <file> [ON|ONTO] <devn> ===> devinit <devn> <file>
+
+    DEVBLK* dev             =  NULL;
+    int    i, drive_argnum  =  0;
+    U16    mount_devnum     =  0;
+    U16    mount_lcss       =  0;
+    int    mount_argc       =  0;
+    bool   has_blanks       = false;
+
+    char   mount_szdevnum [     PATH_MAX ] = {0};
+    char   mount_tapename [     PATH_MAX ] = {0};
+    char   mount_cmdline  [ 2 * PATH_MAX ] = {0};
+    char*  mount_argv     [     MAX_ARGS ] = {0};
+
+    UNREFERENCED( cmdline );
+
+    // Chcek for correct number of arguments...
+
+    if (argc > 4)
+    {
+        // "Incorrect number of arguments"
+        WRMSG( HHC00231,"E" );
+        return -1;
+    }
+
+    if (argc < 3)
+    {
+        // "Missing argument(s). Type 'help %s' for assistance."
+        WRMSG( HHC02202,"E", argv[0] );
+        return -1;
+    }
+
+    // tape file name...
+    STRLCPY( mount_tapename, argv[1] );
+    has_blanks = strpbrk( mount_tapename, WHITESPACE ) ? true : false;
+
+    if (!sysblk.auto_tape_create) // if not "autoinit", file MUST exist
+    {
+        if (strcmp( mount_tapename, "*" ) != 0) // (unless it's "no tape")
+        {
+            if (access( mount_tapename, F_OK ) != 0) // (does it exist?)
+            {
+                char filename[ PATH_MAX + 2 ] = {0}; // (no, error!)
+                if (!has_blanks)
+                    STRLCPY( filename, mount_tapename );
+                else
+                    MSGBUF( filename, "\"%s\"", mount_tapename );
+
+                // "Tape file %s not found"
+                WRMSG( HHC00230,"E", filename );
+                return -1;
+            }
+        }
+    }
+
+    if (argc == 4) // possible "ON" or "ONTO"?
+    {
+        if (!CMD( argv[ 2 ], ONTO, 2 ))
+        {
+            // "Incorrect number of arguments"
+            WRMSG( HHC00231,"E" );
+            return -1;
+        }
+        drive_argnum = 3; // argnum of tapedrive device number
+    }
+    else
+        drive_argnum = 2; // argnum of tapedrive device number
+
+    // tape drive devnum...
+
+    if (strchr( argv[ drive_argnum ], ':'))  // (LCSS specified?)
+        STRLCPY( mount_szdevnum, argv[ drive_argnum ]);
+    else
+        MSGBUF( mount_szdevnum, "0:%s", argv[ drive_argnum ]);
+
+    if ((i = parse_single_devnum( mount_szdevnum, &mount_lcss, &mount_devnum )) < 0)
+        return -1;    // (message already displayed)
+
+    if (!(dev = find_device_by_devnum( mount_lcss, mount_devnum )))
+    {
+        // HHC02200 "%1d:%04X device not found"
+        WRMSG( HHC02200, "E", mount_lcss, mount_devnum );
+        return -1;
+    }
+
+    // Build the corresponding "devinit" command...
+    MSGBUF( mount_cmdline
+
+        , "devinit %1d:%04X %s%s%s"
+
+        , mount_lcss, mount_devnum
+        , has_blanks ? "\"" : ""
+        , mount_tapename
+        , has_blanks ? "\"" : ""
+    );
+
+    parse_args( mount_cmdline, MAX_ARGS, mount_argv, &mount_argc );
+
+    return devinit_cmd( mount_argc, mount_argv, mount_cmdline );
+}
+
+/*-------------------------------------------------------------------*/
 /* devinit command - assign/open a file for a configured device      */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int devinit_cmd(int argc, char *argv[], char *cmdline)
@@ -7788,7 +8096,7 @@ REGS *regs;
     U64     total;                      /* Total bytes to be written */
     U64     saved;                      /* Total bytes saved so far  */
     BYTE    c;                          /* (dummy sscanf work area)  */
-    char    pathname[MAX_PATH];         /* fname in host path format */
+    char    pathname[PATH_MAX];         /* fname in host path format */
     time_t  begtime, curtime;           /* progress messages times   */
     char    fmt_mem[8];                 /* #of M/G/etc. saved so far */
 
@@ -9151,7 +9459,7 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
                   && strlen(sysblk.hercules_pgmpath) > 0 )
     {
         char altfn[FILENAME_MAX];
-        char pathname[MAX_PATH];
+        char pathname[PATH_MAX];
 
         memset(altfn,0,sizeof(altfn));
 
@@ -9177,6 +9485,7 @@ int sizeof_cmd( int argc, char* argv[], char* cmdline )
 
     // HHC02257 "%s%7d"
 
+    WRMSG( HHC02257, "I", "bool ........... ......", (int) sizeof( bool           ));
     WRMSG( HHC02257, "I", "(unsigned short) ......", (int) sizeof( unsigned short ));
     WRMSG( HHC02257, "I", "(void*) ...............", (int) sizeof( void*          ));
     WRMSG( HHC02257, "I", "(unsigned int) ........", (int) sizeof( unsigned int   ));

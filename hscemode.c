@@ -82,7 +82,7 @@ int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
 
 
 /*-------------------------------------------------------------------*/
-/*       NON-architecure-dependent code from here onward             */
+/*       NON-architecture-dependent code from here onward             */
 /*-------------------------------------------------------------------*/
 
 static inline int devnotfound_msg( const U16 lcss, const U16 devnum )
@@ -794,9 +794,12 @@ char  buf[512];
         regs->aie = INVALID_AIE;
     }
 
-    /* Display the PSW and PSW field by field */
-    DISPLAY_PSW( regs, buf );
-    WRMSG( HHC02278, "I", buf );
+    /* Display the PSW and each of its individual fields... */
+
+    DISPLAY_PSW( regs, buf ); // (just the raw hex PSW value)
+    // "Processor %s%02X PSW: %s"
+    WRMSG( HHC02278, "I", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, buf );
+    // "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"PRIX64
     WRMSG( HHC02300, "I",
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
@@ -820,6 +823,14 @@ char  buf[512];
     else if ( sysblk.instbreak )                    rc = 3; /* Instruction Step */
     else if ( regs->cpustate == CPUSTATE_STOPPED )  rc = 4; /* Manual Mode */
     else                                            rc = 0; /* Running Normal */
+
+    //  "State: %s"
+    WRMSG( HHC02313, "I", rc == 0 ? "Running Normal"   :
+                          rc == 1 ? "Enabled Wait"     :
+                          rc == 2 ? "Disabled Wait"    :
+                          rc == 3 ? "Instruction Step" :
+                          rc == 4 ? "Manual Mode"      : "unknown" );
+
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1205,6 +1216,29 @@ int tf_cmd( int argc, char* argv[], char* cmdline )
         // "%-14s: %s"
         WRMSG( HHC02203, "I", argv[0], buf );
 
+    // Inform HercGUI about the new(?) values...
+
+    if (extgui)
+    {
+        if (GNUM() >= VNUM( 1.22.0 ))
+        {
+            MSGBUF( buf,"TF_ON=%c", sysblk.traceFILE  ? '1' : '0' );
+            EXTGUIMSG( "%s\n", buf );
+
+
+            MSGBUF( buf,"TF_STOP=%c", sysblk.tfnostop ? '0' : '1' );
+            EXTGUIMSG( "%s\n", buf );
+
+
+            MSGBUF( buf,"TF_MAX=%"PRId64, sysblk.maxtracesize );
+            EXTGUIMSG( "%s\n", buf );
+
+
+            MSGBUF( buf,"TF_FILE=%s", sysblk.tracefilename ? sysblk.tracefilename : ""  );
+            EXTGUIMSG( "%s\n", buf );
+        }
+    }
+
     /* Auto-stop tracing unless asked not to */
     if (!enable && !nostop)
     {
@@ -1225,18 +1259,20 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     U64   addr[2]         =  {0};       /* Parsed address range      */
     BYTE  c[2]            =  {0};       /* [0]=range sep, [1]=sscanf */
     U16   breakasid       =   0;        /* Optional asid argument    */
+    BYTE  asid_arn        =   0;        /* Access register number    */
+    char  asid_arn_char   =  'P';       /* 'P' or 'S' or 'H'         */
 
     char  rangemsg [128]  =  {0};       /* MSGBUF work buffer        */
     char  asidmsg  [128]  =  {0};       /* MSGBUF work buffer        */
 
-    bool  trace   =  false;             /* Whether command was 't'   */
-    bool  step    =  false;             /* Whether command was 's'   */
-    bool  breakp  =  false;             /* Whether command was 'b'   */
-    bool  on      =  false;             /* Whether + was specified   */
-    bool  off     =  false;             /* Whether - was specified   */
-    bool  query   =  false;             /* Whether ? was specified   */
-    bool  update  =  false;             /* Whether parms were given  */
-    bool  unlock  =  false;             /* Should do RELEASE_INTLOCK */
+    bool  trace    =  false;            /* Whether command was 't'   */
+    bool  step     =  false;            /* Whether command was 's'   */
+    bool  breakp   =  false;            /* Whether command was 'b'   */
+    bool  on       =  false;            /* Whether + was specified   */
+    bool  off      =  false;            /* Whether - was specified   */
+    bool  query    =  false;            /* Whether ? was specified   */
+    bool  update   =  false;            /* Whether parms were given  */
+    bool  unlock   =  false;            /* Should do RELEASE_INTLOCK */
 
     cmdline[0] = tolower( (unsigned char)cmdline[0] );
 
@@ -1288,8 +1324,8 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
 
     /* Check for invalid number of arguments */
     if (0
-        // No more than 3 arguments allowed (cmd, range, asid)
-        || (argc > 3)
+        // No more than 4 arguments allowed (cmd, range, asid, P|S|H)
+        || (argc > 4)
 
         // If explicit - or ? then can't change settings
         || ((off || query) && update)
@@ -1363,7 +1399,35 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 return -1;
             }
 
-            breakasid = (U16) (asid & 0xFFFF);
+            breakasid     = (U16) (asid & 0xFFFF);
+            asid_arn      = USE_PRIMARY_SPACE;      // (default)
+            asid_arn_char = 'P';                    // (default)
+
+            /* Parse optional [P|S|H] parameter, if specified */
+            if (argc >= 4)
+            {
+                asid_arn_char = argv[3][0];
+
+                if (0
+                    || strcasecmp( argv[3], "P" ) == 0
+                    || strcasecmp( argv[3], "S" ) == 0
+                    || strcasecmp( argv[3], "H" ) == 0
+                )
+                {
+                    switch (toupper( asid_arn_char ))
+                    {
+                        case 'P': asid_arn = USE_PRIMARY_SPACE;   break;
+                        case 'S': asid_arn = USE_SECONDARY_SPACE; break;
+                        case 'H': asid_arn = USE_HOME_SPACE;      break;
+                    }
+                }
+                else
+                {
+                    // Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", argv[3], "" );
+                    return -1;
+                }
+            }
         }
     }
     else
@@ -1390,9 +1454,10 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             {
                 if (update)
                 {
-                    sysblk.traceaddr[0] = addr[0];
-                    sysblk.traceaddr[1] = addr[1];
-                    sysblk.breakasid    = 0;
+                    sysblk.traceaddr[0]  = addr[0];
+                    sysblk.traceaddr[1]  = addr[1];
+                    sysblk.breakasid     = 0;
+                    sysblk.breakasid_arn = 0;
                 }
 
                 if (on || off)
@@ -1410,9 +1475,10 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             {
                 if (update)
                 {
-                    sysblk.breakaddr[0] = addr[0];
-                    sysblk.breakaddr[1] = addr[1];
-                    sysblk.breakasid    = breakasid;
+                    sysblk.breakaddr[0]  = addr[0];
+                    sysblk.breakaddr[1]  = addr[1];
+                    sysblk.breakasid     = breakasid;
+                    sysblk.breakasid_arn = asid_arn;
                 }
 
                 if (on || off)
@@ -1434,6 +1500,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             addr[0]   = sysblk.traceaddr[0];
             addr[1]   = sysblk.traceaddr[1];
             breakasid = 0;
+            asid_arn  = 0;
             on        = sysblk.insttrace;
         }
         else // (step || breakp)
@@ -1441,6 +1508,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             addr[0]   = sysblk.breakaddr[0];
             addr[1]   = sysblk.breakaddr[1];
             breakasid = sysblk.breakasid;
+            asid_arn  = sysblk.breakasid_arn;
             on        = sysblk.instbreak;
         }
     }
@@ -1458,7 +1526,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     }
 
     if (breakasid)
-        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"'", breakasid );
+        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"' %c", breakasid, asid_arn_char );
 
     /* Display (current or new) settings */
 
@@ -2002,11 +2070,6 @@ int auto_trace_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#if defined( SUPPRESS_128BIT_PRINTF_FORMAT_WARNING )
-PUSH_GCC_WARNINGS()
-DISABLE_GCC_WARNING( "-Wformat" )
-#endif
-
 /*-------------------------------------------------------------------*/
 /* ipending command - display pending interrupts                     */
 /*-------------------------------------------------------------------*/
@@ -2201,10 +2264,10 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     }
 
     // "config mask "F_CPU_BITMAP" started mask "F_CPU_BITMAP" waiting mask "F_CPU_BITMAP
-    WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
+    WRMSG( HHC00870, "I", F_CPU_BITARG(sysblk.config_mask), F_CPU_BITARG(sysblk.started_mask), F_CPU_BITARG(sysblk.waiting_mask) );
 
     // "syncbc mask "F_CPU_BITMAP" %s"
-    WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
+    WRMSG( HHC00871, "I", F_CPU_BITARG(sysblk.sync_mask), sysblk.syncing ? "sync in progress" : "" );
 
     WRMSG( HHC00872, "I", test_lock(&sysblk.sigplock) ? "" : "not ");
     WRMSG( HHC00873, "I", test_lock(&sysblk.todlock) ? "" : "not ");
@@ -2315,6 +2378,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     for (io = sysblk.iointq; io; io = io->next)
     {
+        // "device %1d:%04X: %s%s%s%s pri ISC %02X CSS %02X CU %02X"
         WRMSG( HHC00882, "I", SSID_TO_LCSS(io->dev->ssid), io->dev->devnum
                 ,io->pending      ? " normal, " : ""
                 ,io->pcipending   ? " PCI,    " : ""
@@ -2329,11 +2393,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
-#if defined( SUPPRESS_128BIT_PRINTF_FORMAT_WARNING )
-POP_GCC_WARNINGS()
-#endif
-
 
 /*-------------------------------------------------------------------*/
 /* bear command - display or alter BEAR register                     */

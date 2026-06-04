@@ -33,7 +33,6 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 int cckd64_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 CCKD64_EXT  *cckd;                      /* -> cckd extension         */
-DEVBLK      *dev2;                      /* -> device in cckd queue   */
 int          i;                         /* Counter                   */
 int          fdflags;                   /* File flags                */
 char         buf[32];                   /* Work buffer                      */
@@ -103,10 +102,9 @@ char         buf[32];                   /* Work buffer                      */
 
     /* Insert the device into the cckd device queue */
     cckd_lock_devchain(1);
-    for (cckd = NULL, dev2 = cckdblk.dev1st; dev2; dev2 = cckd->devnext)
-        cckd = dev2->cckd_ext;
-    if (cckd) cckd->devnext = dev;
-    else cckdblk.dev1st = dev;
+    {
+        add_dev_to_cckd_chain_locked( dev );
+    }
     cckd_unlock_devchain();
 
     cckdblk.batch = dev->batch;
@@ -186,16 +184,8 @@ int             rc, i;                  /* Return code, Loop index   */
 
     /* Remove the device from the cckd queue */
     cckd_lock_devchain(1);
-    if (dev == cckdblk.dev1st) cckdblk.dev1st = cckd->devnext;
-    else
     {
-        DEVBLK *dev2 = cckdblk.dev1st;
-        CCKD64_EXT *cckd2 = dev2->cckd_ext;
-        while (cckd2->devnext != dev)
-        {
-           dev2 = cckd2->devnext; cckd2 = dev2->cckd_ext;
-        }
-        cckd2->devnext = cckd->devnext;
+        remove_dev_from_cckd_chain_locked( dev );
     }
     cckd_unlock_devchain();
 
@@ -375,7 +365,7 @@ CCKD64_EXT     *cckd;                   /* -> cckd extension         */
 /* Open a cckd file                                                  */
 /*                                                                   */
 /* If O_CREAT is not set and mode is non-zero then the error message */
-/* will be supressed.                                                */
+/* will be suppressed.                                               */
 /*-------------------------------------------------------------------*/
 int cckd64_open (DEVBLK *dev, int sfx, int flags, mode_t mode)
 {
@@ -663,6 +653,9 @@ int cckd64_update_track (DEVBLK *dev, int trk, int off,
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 
+    if (!dev->cckd64)
+        return cckd_update_track( dev, trk, off, buf, len, unitstat );
+
     cckd = dev->cckd_ext;
 
     /* Error if opened read-only */
@@ -713,6 +706,10 @@ int             rc;                     /* Return code               */
         dev->bufupd = 1;
         shared_update_notify (dev, trk);
     }
+
+    /* Ensure the Dasd Hardener is running, if it's supposed to be. */
+    if (cckdblk.dhint > 0)
+        cckd_dhstart( false );
 
     return len;
 
@@ -786,7 +783,8 @@ int             maxlen;                 /* Size for cache entry      */
         {
             len = cache_getval(CACHE_DEVBUF, dev->cache) + CKD_TRKHDR_SIZE;
             newbuf = cckd64_uncompress (dev, cbuf, len, maxlen, blkgrp);
-            if (newbuf == NULL) {
+            if (newbuf == NULL)
+            {
                 dev->sense[0] = SENSE_EC;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 dev->bufcur = dev->cache = -1;
@@ -1023,7 +1021,7 @@ cckd_read_trk_retry:
 
         release_lock (&cckd->cckdiolock);
 
-        /* Asynchrously schedule readaheads */
+        /* Asynchronously schedule readaheads */
         if (curtrk > 0 && trk > curtrk && trk <= curtrk + 2)
             cckd_readahead (dev, trk);
 
@@ -1274,11 +1272,9 @@ DEVBLK         *dev = data;             /* -> device block           */
 /*-------------------------------------------------------------------*/
 void cckd64_writer_write( int writer, int o )
 {
-TID             tid;                    /* Writer thead id           */
 CCKD64_EXT*     cckd;                   /* -> cckd extension         */
 DEVBLK*         dev;                    /* Device block              */
 U16             devnum;                 /* Device number             */
-int             rc;                     /* (work) return code        */
 int             trk;                    /* Track number              */
 BYTE*           buf;                    /* Buffer                    */
 BYTE*           bufp;                   /* Buffer to be written      */
@@ -1360,41 +1356,9 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
 
         /* Write the track image */
         cckd64_write_trkimg( dev, bufp, bufl, trk, CCKD_SIZE_ANY );
+        cckd->needsdh = 1;    /* We've updated the file. */
     }
     release_lock( &cckd->filelock );
-
-    /* Schedule the garbage collector */
-    obtain_lock( &cckdblk.gclock );/* ensure read integrity for gc count */
-    {
-        if (cckdblk.gcint > 0 && cckdblk.gcs < cckdblk.gcmax)
-        {
-            /* Schedule a new garbage collector thread */
-
-            if (!cckdblk.batch || cckdblk.batchml > 1)
-                // "Starting thread %s, active=%d, started=%d, max=%d"
-                WRMSG( HHC00107, "I", CCKD_GC_THREAD_NAME "()",
-                    cckdblk.gca, cckdblk.gcs, cckdblk.gcmax );
-
-            ++cckdblk.gcs;
-
-            /* Release lock across thread create to prevent interlock  */
-            release_lock( &cckdblk.gclock );
-            {
-                rc = create_thread( &tid, JOINABLE, cckd_gcol, NULL, CCKD_GC_THREAD_NAME );
-            }
-            obtain_lock( &cckdblk.gclock );
-
-            if (rc)
-            {
-                // "Error in function create_thread() for %s %d of %d: %s"
-                WRMSG( HHC00106, "E", CCKD_GC_THREAD_NAME "()",
-                    cckdblk.gcs-1, cckdblk.gcmax, strerror( rc ));
-
-                --cckdblk.gcs;
-            }
-        }
-    }
-    release_lock( &cckdblk.gclock );
 
     obtain_lock( &cckd->cckdiolock );
     {
@@ -1413,8 +1377,9 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
                 || !cckd->wrpending
                )
         )
-        {   CCKD_TRACE( "writer[%d] cache[%2.2d] %d signalling write complete",
-                        writer, o, trk );
+        {
+            CCKD_TRACE( "writer[%d] cache[%2.2d] %d signalling write complete",
+                         writer, o, trk );
 
             broadcast_condition( &cckd->cckdiocond );
         }
@@ -1423,6 +1388,14 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
 
     CCKD_TRACE( "%d wrtrk[%2.2d] %d complete flags:%8.8x",
                 writer, o, trk, cache_getflag( CACHE_DEVBUF, o ));
+
+    /* Schedule the garbage collector, if it needs to be. */
+    if (cckdblk.gcint > 0)
+        cckd_gcstart( false );
+
+    /* Ensure the Dasd Hardener is running, if it's supposed to be. */
+    if (cckdblk.dhint > 0)
+        cckd_dhstart( false );
 
 } /* end function cckd64_writer_write */
 
@@ -2294,6 +2267,9 @@ CCKD64_FREEBLK *fsp = NULL;             /* -> new format free space  */
 
         if (fpos)
         {
+            /* Zero entire block to avoid writing garbage to underlying file */
+            memset (&fsp[0], 0, CCKD64_FREEBLK_SIZE);
+
             /* New format free space */
             memcpy (&fsp[0], "FREE_BLK", 8);
             ppos = cckd->cdevhdr[sfx].free_off;
@@ -2578,7 +2554,7 @@ int             sfx,L1idx,l2x;          /* Lookup table indices      */
     L1idx = trk >> 8;
     l2x = trk & 0xff;
 
-    if (l2 != NULL) l2->L2_trkoff = l2->L2_len = l2->L2_size = 0;
+    if (l2 != NULL) l2->L2_trkoff = l2->L2_len = l2->L2_size = l2->L2_pad = 0;
 
     for (sfx = cckd->sfn; sfx >= 0; sfx--)
     {
@@ -2759,6 +2735,7 @@ int             size;                   /* Size of new track         */
         l2.L2_trkoff = off;
         l2.L2_len    = (U16)len;
         l2.L2_size   = (U16)size;
+        l2.L2_pad    = 0;
 
         if (1
             && oldl2.L2_trkoff != CCKD64_NOSIZE
@@ -2780,6 +2757,7 @@ int             size;                   /* Size of new track         */
     {
         l2.L2_trkoff = 0;
         l2.L2_len = l2.L2_size = (U16)len;
+        l2.L2_pad    = 0;
     }
 
     /* Update the level 2 entry */
@@ -2833,9 +2811,9 @@ int             rc=0;                   /* Return code               */
     if (cckdblk.fsync)
     {
         fdatasync (cckd->fd[cckd->sfn]);
-		cckdblk.stats_fsyncs++;
-	}
-	cckdblk.stats_hardens++;
+        cckdblk.stats_fsyncs++;
+    }
+    cckdblk.stats_hardens++;
 
     return rc;
 } /* cckd64_harden */
@@ -3359,7 +3337,7 @@ sf_new_error:
 /*-------------------------------------------------------------------*/
 /* Add a shadow file  (sf+)                                          */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void *cckd64_sf_add (void *data)
+DLL_EXPORT void* cckd64_sf_add( void* data )
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
@@ -3413,7 +3391,8 @@ CCKD64_EXT     *cckd;                   /* -> cckd extension         */
         cckd64_harden (dev);
 
         /* Create a new shadow file */
-        if (cckd64_sf_new (dev) < 0) {
+        if (cckd64_sf_new (dev) < 0)
+        {
             WRMSG (HHC00319, "E", LCSS_DEVNUM, cckd->sfn+1,
                      cckd_sf_name(dev, cckd->sfn+1)?cckd_sf_name(dev, cckd->sfn+1):"(null)");
             goto cckd_sf_add_exit;
@@ -3571,11 +3550,11 @@ BYTE            buf[64*1024];           /* Buffer                    */
     /* Attempt to re-open the `to' file read-write */
     cckd64_close( dev, to_sfx );
     if (to_sfx > 0 || !dev->ckdrdonly || force)
-        cckd64_open( dev, to_sfx, O_RDWR|O_BINARY, 1 );
+        cckd64_open( dev, to_sfx, O_RDWR | O_BINARY, 1 );
     if (cckd->fd[to_sfx] < 0)
     {
         /* `from' file can't be opened read-write */
-        cckd64_open( dev, to_sfx, O_RDONLY|O_BINARY, 0 );
+        cckd64_open( dev, to_sfx, O_RDONLY | O_BINARY, 0 );
         if (merge)
         {
             // "%1d:%04X CCKD file[%d] %s: shadow file not merged: file[%d] %s%s"
@@ -3757,7 +3736,7 @@ sf_remove_exit:
     /* Re-read the l1 to set L2_bounds, L2ok */
     cckd64_read_l1( dev );
 
-    release_lock (&cckd->filelock);
+    release_lock( &cckd->filelock );
 
     obtain_lock( &cckd->cckdiolock );
     {
@@ -3996,7 +3975,7 @@ int             level = 2;              /* Check level               */
 /*-------------------------------------------------------------------*/
 /* Display shadow file statistics   (sfd)                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void *cckd64_sf_stats (void *data)
+DLL_EXPORT void* cckd64_sf_stats( void* data )
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
@@ -4122,77 +4101,6 @@ S64             free_count=0;           /* Total number free spaces  */
 } /* end function cckd64_sf_stats */
 
 /*-------------------------------------------------------------------*/
-/* Start garbage collector                                           */
-/*-------------------------------------------------------------------*/
-void cckd64_gcstart()
-{
-    DEVBLK*      dev;
-    CCKD64_EXT*  cckd;
-    TID tid;
-    int flag = 0;
-    int rc;
-
-    cckd_lock_devchain(0);
-    {
-        for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
-        {
-            cckd = dev->cckd_ext;
-
-            if (!dev->cckd64)
-                continue;
-
-            obtain_lock( &cckd->filelock );
-            {
-                if (cckd->cdevhdr[ cckd->sfn ].free_total)
-                {
-                    cckd->cdevhdr[ cckd->sfn ].cdh_opts |= (CCKD_OPT_OPENED | CCKD_OPT_OPENRW);
-                    cckd64_write_chdr( dev );
-                    flag = 1;
-                }
-            }
-            release_lock( &cckd->filelock );
-        }
-    }
-    cckd_unlock_devchain();
-
-    /* Schedule the garbage collector */
-    if (flag && cckdblk.gcs < cckdblk.gcmax)
-    {
-        /* ensure read integrity for gc count */
-        obtain_lock( &cckdblk.gclock );
-        {
-            if (cckdblk.gcs < cckdblk.gcmax)
-            {
-                /* Schedule a new garbage collector thread  */
-                if (!cckdblk.batch || cckdblk.batchml > 1)
-                    // "Starting thread %s, active=%d, started=%d, max=%d"
-                    WRMSG( HHC00107, "I", CCKD_GC_THREAD_NAME "() by command line",
-                        cckdblk.gca, cckdblk.gcs, cckdblk.gcmax );
-
-                ++cckdblk.gcs;
-
-                /* Release lock across thread create to prevent interlock  */
-                release_lock( &cckdblk.gclock );
-                {
-                    rc = create_thread( &tid, JOINABLE, cckd_gcol, NULL, CCKD_GC_THREAD_NAME );
-                }
-                obtain_lock( &cckdblk.gclock );
-
-                if (rc)
-                {
-                    // "Error in function create_thread() for %s %d of %d: %s"
-                    WRMSG( HHC00106, "E", CCKD_GC_THREAD_NAME "() by command line",
-                        cckdblk.gcs-1, cckdblk.gcmax, strerror( rc ));
-
-                    --cckdblk.gcs;
-                }
-            }
-        }
-        release_lock( &cckdblk.gclock );
-    }
-}
-
-/*-------------------------------------------------------------------*/
 /* Report Garbage Collection state for a given CCKD device           */
 /*-------------------------------------------------------------------*/
 void cckd64_gc_rpt_state( DEVBLK* dev )
@@ -4210,9 +4118,9 @@ void cckd64_gc_rpt_state( DEVBLK* dev )
 
     /* Retrieve and report garbage collector state, but ONLY if
        the image is over 100MB in size. This prevents "scaring"
-       the user about SEVERELY fragmented files when the file
-       is too small to be much of a concern, as is usually the
-       case with e.g. shadow files.
+       the user about very fragmented files when the file is
+       too small to be much of a concern, as is usually the case
+       with e.g. shadow files.
     */
     if (cckd->cdevhdr->cdh_size < (100 * _1M))
         return;
@@ -4224,21 +4132,21 @@ void cckd64_gc_rpt_state( DEVBLK* dev )
         case 0:     // critical!
         case 1:     // severe
 
-            // "%1d:%04X CCKD%s image %s is SEVERELY fragmented!"
+            // "%1d:%04X CCKD%s image %s is very fragmented."
             WRMSG( HHC00387, "W", LCSS_DEVNUM, "64",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;
 
         case 2:     // moderate
 
-            // "%1d:%04X CCKD%s image %s is moderately fragmented"
-            WRMSG( HHC00388, "W", LCSS_DEVNUM, "64",
+            // "%1d:%04X CCKD%s image %s is moderately fragmented."
+            WRMSG( HHC00388, "I", LCSS_DEVNUM, "64",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;
 
         case 3:     // light
 
-            // "%1d:%04X CCKD%s image %s is slightly fragmented"
+            // "%1d:%04X CCKD%s image %s is slightly fragmented."
             WRMSG( HHC00389, "I", LCSS_DEVNUM, "64",
                 TRIMLOC( cckd_sf_name( dev, cckd->sfn )));
             break;
@@ -4366,22 +4274,22 @@ int             gc;                     /* Garbage collection state  */
     /* Sync the file */
     if (cckdblk.fsync && cckd->lastsync + 10 <= tv_now->tv_sec)
     {
-        obtain_lock (&cckd->filelock);
+        obtain_lock( &cckd->filelock );
         {
             rc = fdatasync (cckd->fd[cckd->sfn]);
             cckd->lastsync = tv_now->tv_sec;
         }
-        release_lock (&cckd->filelock);
+        release_lock( &cckd->filelock );
     }
 
     /* Flush the free space */
     if (cckd->cdevhdr[cckd->sfn].free_num)
     {
-        obtain_lock (&cckd->filelock);
+        obtain_lock( &cckd->filelock );
         {
             cckd64_flush_space (dev);
         }
-        release_lock (&cckd->filelock);
+        release_lock( &cckd->filelock );
     }
 }
 
@@ -4849,8 +4757,8 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     }
 
     /* Uncompress the track image */
-    switch (comp) {
-
+    switch (comp)
+    {
     case CCKD_COMPRESS_NONE:
         newlen = cckd_trklen (dev, from);
         to = from;

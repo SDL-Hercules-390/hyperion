@@ -15,6 +15,11 @@
 #include "devtype.h"
 #include "opcode.h"
 
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wunused-variable" )
+DISABLE_GCC_WARNING( "-Wunused-parameter" )
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Some handy macros...       (feel free to add these to hercules.h)
 
@@ -33,7 +38,6 @@
 
 #define  INPUT_STREAM_FILE_PTR    ( stdin  )
 #define  OUTPUT_STREAM_FILE_PTR   ( stdout )
-#define  STATUS_STREAM_FILE_PTR   ( stderr )
 #define  MAX_COMMAND_LEN          (  1024  )
 #define  DEF_MAXRATES_RPT_INTVL   (  1440  )
 
@@ -45,7 +49,6 @@
 #endif
 
 static FILE*    fOutputStream        = NULL;   // (stdout stream)
-static FILE*    fStatusStream        = NULL;   // (stderr stream)
 static int      nInputStreamFileNum  =  -1;    // (file descriptor for stdin stream)
 static int      gui_nounload         =   1;    // (nounload indicator)
 
@@ -72,8 +75,6 @@ void  UpdateCPUStatus    ();
 void  UpdateRegisters    ();
 void  UpdateDeviceStatus ();
 void  NewUpdateDevStats  ();
-
-void  gui_fprintf( FILE* stream, const char* pszFormat, ... );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our main processing loop...
@@ -324,8 +325,6 @@ void  ProcessInputData ()
 ///////////////////////////////////////////////////////////////////////////////
 // (These are actually boolean flags..)
 
-double gui_version           = 0.0;     // (version of HercGUI we're talking to)
-
 BYTE   gui_forced_refresh    = 1;       // (force initial update refresh)
 
 BYTE   gui_wants_gregs       = 0;
@@ -347,11 +346,111 @@ U32    prev_mips_rate  = 0;
 U32    prev_sios_rate  = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our Hercules "panel_command" override...
+//       Helper function to report OUR version to HercGUI...
+///////////////////////////////////////////////////////////////////////////////
+
+static void tell_gui_our_version()
+{
+    char buffer[64] = {0};
+
+    // Here's a trick! Hercules reports its version number to the GUI
+    // by means of the MAINSIZE value!
+    //
+    // Later releases of HercGUI know to interpret mainsize values of
+    // less than 1000 as a Hercules version number.
+    //
+    // Earlier versions of HercGUI will simply try to interpret it as
+    // the actual mainsize, but no real harm is done since we  send it
+    // the CORRECT mainsize immediately afterwards.
+    //
+    // This allows future versions of HercGUI to know which version of
+    // Hercules they're talking to and thus whether it supports a given
+    // feature or not.
+
+#if defined( _MSVC_ )
+
+    // PROGRAMMING NOTE: we use VERS_MAJ, VERS_MIN and VERS_INT here
+    // (and NOT the our actual VERSION string) since our VERSION string
+    // can be any value the user wants, and thus might not be numeric
+    // nor even correspond at all to Hercules's actual build version.
+    //
+    // Our VERS_MAJ, VERS_INT and VERS_INT values however, will ALWAYS
+    // be numbers and thus should ALWAYS equal Hercules's actual build
+    // version.
+    //
+    // The makefile.bat file on Windows guarantees this and also ensures
+    // that none of them have any leading zeroes (which would cause them
+    // to be interpreted by the 'C' compiler as invalid octal numbers!
+    // (e.g. 3.08, etc).
+
+
+    // (windows: use individual VERS_MAJ, VERS_INT, VERS_MIN values)
+    MSGBUF( buffer, "%u.%u.%u", VERS_MAJ, VERS_INT, VERS_MIN );
+
+#else
+    // VERSION is set in configure.ac as x.xx. (why we insist on using
+    // two digits for the second part is unclear).
+    //
+    // However, if 'xx' is greater than '07' (as it would be for Hercules
+    // versions 3.08 and 3.09 for example) then printing VERS_INT with
+    // a %d format fails with a compiler error about it being an invalid
+    // octal constant.
+    //
+    // On Windows the makefile.bat build script used to build Hercules
+    // ensures this will never happen.
+    //
+    // It could STILL conceivably happen on non-Windws platforms however.
+    //
+    // So for the time being, we have no choice but use the full VERSION
+    // string instead, and hope that all non-Windows GUIs will be able
+    // to properly parse it.
+
+
+    // (non-Windows: use full VERSION string)
+    MSGBUF( buffer, "%s", VERSION );
+
+#endif
+
+    // Report our version to HercGUI...
+
+    TRACE("+++ HERCULES: reporting OUR version to HercGUI "
+                         "(via the \"MAINSIZE=\" message) "
+                         "as: \"MAINSIZE=%s\"\n", buffer );
+    EXTGUIMSG( "MAINSIZE=%s\n", buffer );
+
+    // Now that we've sent HercGUI our version via the "MAINSIZE="
+    // message, we NOW need to CORRECT that little white lie by
+    // sending it ANOTHER "MAINSIZE=" message with our TRUE/ACTUAL
+    // (accurate) mainsize value...
+
+    if (GNUM() < VNUM( 1.12.0 ))  // (older GUI?)
+    {
+        // Older versions of HercGUI only support
+        // maximum 32-bit (4GB) mainsize values...
+
+        MSGBUF( buffer, "%"PRIu32, (U32) sysblk.mainsize );
+        TRACE("+++ HERCULES: (gui_verstr < 1.12): U32 mainsize = \"%s\"\n", buffer );
+    }
+    else // (more modern GUI)
+    {
+        // Newer versions of HercGUI now support
+        // up to 64-bit (8M TB) mainsize values...
+
+        MSGBUF( buffer, "%"PRIu64, (U64) sysblk.mainsize );
+        TRACE("+++ HERCULES: (gui_verstr >= 1.12): U64 mainsize = \"%s\"\n", buffer );
+    }
+
+    EXTGUIMSG( "MAINSIZE=%s\n", buffer );  // (fix our previous lie)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Our Hercules "panel_command" override... (i.e. our stdin input stream)
 
 void*  gui_panel_command (char* pszCommand)
 {
     void* (*next_panel_command_handler)(char* pszCommand);
+
+    LOG_H_fr_G( pszCommand );   // (Herc <-- GUI stream debugging)
 
     // Special GUI commands start with ']'. At the moment, all these special
     // gui commands tell us is what status information it's interested in...
@@ -363,9 +462,14 @@ void*  gui_panel_command (char* pszCommand)
 
     pszCommand++;                                   // (bump past ']')
 
-    if (strncasecmp(pszCommand,"VERS=",5) == 0)
+    // If HercGUI telling us it's version, then reciprocate by
+    // telling it OUR OWN version in return...
+
+    if (strncasecmp( pszCommand, "VERS=", 5 ) == 0)
     {
-        gui_version = atof(pszCommand+5);
+        sysblk.gui_verstr = strdup( pszCommand  + 5 );
+        sysblk.gui_vernum = verstr2num( sysblk.gui_verstr );
+        tell_gui_our_version();
         return NULL;
     }
 
@@ -452,70 +556,10 @@ void*  gui_panel_command (char* pszCommand)
     if (strncasecmp( pszCommand, "MAINSTOR=", 9 ) == 0)
     {
         char buffer[64] = {0};
-
         MSGBUF( buffer, "%"PRIu64, (U64) pTargetCPU_REGS->mainstor );
         TRACE("**** sending: \"MAINSTOR=%s\"\n", buffer );
-        gui_fprintf( fStatusStream, "MAINSTOR=%s\n", buffer );
-
-        // Here's a trick! Hercules reports its version number to the GUI
-        // by means of the MAINSIZE value! Later releases of HercGUI know
-        // to interpret mainsizes less than 1000 as Hercule's version number.
-        // Earlier versions of HercGUI will simply try to interpret it as
-        // the actual mainsize, but no real harm is done since we immediately
-        // send it the CORRECT mainsize immediately afterwards. This allows
-        // future versions of HercGUI to know which version of Hercules they
-        // are talking to and thus whether it supports a given feature or not.
-
-#if defined( _MSVC_ )
-
-        // PROGRAMMING NOTE: we use 'VERS_MAJ' and 'VERS_INT' here and NOT
-        // the VERSION string since the 'VERSION' string can be any value
-        // the user wants and thus might not be numeric nor even correspond
-        // at all to Hercules's actual build version.
-        //
-        // The VERS_MAJ and VERS_INT variables however are ALWAYS be numbers
-        // and thus should ALWAYS equal Hercules's actual build version. The
-        // makefile.bat file on Windows guarantees this and ensures neither
-        // has any leading zeroes (which would cause them to be intrepreted
-        // by the C compiler as invalid octal numbers for e.g. 3.08, etc).
-
-        MSGBUF( buffer, "%u.%u", VERS_MAJ, VERS_INT );
-#else
-        //  VERSION is set in configure.ac as x.xx. (why we insist on using
-        //  two digits for the second part is unclear) However, if 'xx' is
-        //  greater than '07' (as it would be for Hercules versions 3.08 and
-        //  3.09 for example) then printing VERS_INT with a %d format fails
-        //  with a compiler error about it being an invalid octal constant.
-        //
-        //  On Windows the makefile.bat build script used to build Hercules
-        //  with ensures this will never happen. On non-Windows platforms
-        //  however it could conceivably still happen, so for the time being
-        //  we have no choice but to use the full VERSION string instead and
-        //  hope all non-Windows GUIs will be able to properly parse it.
-
-        MSGBUF( buffer, "%s", VERSION );
-#endif
-        TRACE("**** sending: \"MAINSIZE=%s\"\n", buffer );
-        gui_fprintf( fStatusStream, "MAINSIZE=%s\n", buffer );
-
-        if (gui_version < 1.12)
-        {
-            // Older versions of HercGUI only support
-            // maximum 32-bit (4GB) mainsize values
-
-            MSGBUF( buffer, "%"PRIu32, (U32) sysblk.mainsize );
-            TRACE("**** (gui_version < 1.12): sending: \"MAINSIZE=%s\"\n", buffer );
-        }
-        else
-        {
-            // Newer versions of HercGUI now support
-            // up to 64-bit (8M TB) mainsize values
-
-            MSGBUF( buffer, "%"PRIu64, (U64) sysblk.mainsize );
-            TRACE("**** (gui_version >= 1.12): sending: \"MAINSIZE=%s\"\n", buffer );
-        }
-
-        gui_fprintf( fStatusStream, "MAINSIZE=%s\n", buffer );
+        EXTGUIMSG( "MAINSTOR=%s\n", buffer );
+        tell_gui_our_version();
         return NULL;
     }
 
@@ -536,6 +580,39 @@ void*  gui_panel_command (char* pszCommand)
     {
         gui_wants_aggregates = atoi(pszCommand+10);
         gui_forced_refresh = 1;
+        return NULL;
+    }
+
+    if (strncasecmp(pszCommand,"NO_OOPS_ICON=",13) == 0)
+    {
+        bool no_oops_icon = atoi(pszCommand+13);
+        sysblk.no_oops_icon = no_oops_icon;
+        return NULL;
+    }
+
+    // Is HercGUI requesting updated Trace to File information?
+
+    if (strncasecmp( pszCommand,"TF=", 3 ) == 0)
+    {
+        char buffer[ 2 * MAX_PATH ];
+
+
+        MSGBUF( buffer, "TF_ON=%c", sysblk.traceFILE ? '1'  : '0' );
+        EXTGUIMSG( "%s\n", buffer );
+
+
+        MSGBUF( buffer, "TF_MAX=%"PRId64, sysblk.maxtracesize );
+        EXTGUIMSG( "%s\n", buffer );
+
+
+        MSGBUF( buffer, "TF_FILE=%s", sysblk.tracefilename ? sysblk.tracefilename   : ""  );
+        EXTGUIMSG( "%s\n", buffer );
+
+
+        MSGBUF( buffer, "TF_STOP=%c", sysblk.tfnostop ? '0' : '1' );
+        EXTGUIMSG( "%s\n", buffer );
+
+
         return NULL;
     }
 
@@ -600,7 +677,7 @@ void  UpdateStatus ()
         || CPUSTATE_STOPPED  == pTargetCPU_REGS->cpustate
     ))
     {
-        gui_fprintf(fStatusStream,
+        EXTGUIMSG(
 
             "SYS=%c\n"
 
@@ -624,7 +701,7 @@ void  UpdateStatus ()
                     cpupct += sysblk.regs[ cpu ]->cpupct;
                 }
             }
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "CPUPCT=%d\n"
 
@@ -633,7 +710,7 @@ void  UpdateStatus ()
         }
         else
         {
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "CPUPCT=%d\n"
 
@@ -658,7 +735,7 @@ void  UpdateStatus ()
             if (cpupct != prev_cpupct[i])
             {
                 prev_cpupct[i] = cpupct;
-                gui_fprintf( fStatusStream, "CPUPCT%02d=%d\n", i, cpupct );
+                EXTGUIMSG( "CPUPCT%02d=%d\n", i, cpupct );
             }
         }
     }
@@ -677,6 +754,7 @@ void  UpdateStatus ()
         || curr_instcount            != prev_instcount
         || pTargetCPU_REGS->cpustate != prev_cpustate
         || memcmp( prev_psw, psw, sizeof( prev_psw )) != 0
+        || (WAITSTATE( &pTargetCPU_REGS->psw) && IS_IC_DISABLED_WAIT_PSW( pTargetCPU_REGS ))
     )
     {
         bStatusChanged = TRUE;          // (something has indeed changed...)
@@ -781,23 +859,40 @@ void HandleForcedRefresh()
 
 void  UpdateCPUStatus ()
 {
-    if (sysblk.shutdown) return;
+    if (sysblk.shutdown)
+        return;
 
     if (pTargetCPU_REGS == &sysblk.dummyregs)
     {
+        const char* typstr = PTYPSTR( pcpu );  // (could return NULL)
+
         // pTargetCPU_REGS == &sysblk.dummyregs; cpu is offline
 
-        gui_fprintf(fStatusStream, "STATUS="
+        EXTGUIMSG("STATUS="
 
             "%s%02X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n",
 
-            PTYPSTR(pcpu) ,pcpu);
+            typstr ? typstr : "cp" , pcpu );
     }
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
         // CPU status line...  (PSW, status indicators, and instruction count)
 
-        gui_fprintf(fStatusStream, "STATUS="
+        const char* typstr = PTYPSTR( pTargetCPU_REGS->cpuad ); // (could return NULL)
+        char  SIE_stat   = '.';
+        char  Z900_stat  = '.';
+
+#if defined( _FEATURE_SIE )
+        if (SIE_MODE( pTargetCPU_REGS ))
+            SIE_stat = 'S';
+#endif
+
+#if defined( _900 )
+        if (pTargetCPU_REGS->arch_mode == ARCH_900_IDX)
+            Z900_stat = 'Z';
+#endif
+
+        EXTGUIMSG("STATUS="
 
             "%s%02X "
 
@@ -809,7 +904,7 @@ void  UpdateCPUStatus ()
 
             "instcount=%"PRIu64"\n"
 
-            ,PTYPSTR(pTargetCPU_REGS->cpuad), pTargetCPU_REGS->cpuad
+            ,typstr?typstr:"cp" , pTargetCPU_REGS->cpuad
 
             ,psw[0], psw[1], psw[2],  psw[3]
             ,psw[4], psw[5], psw[6],  psw[7]
@@ -820,19 +915,9 @@ void  UpdateCPUStatus ()
             ,wait_bit                                      ? 'W' : '.'
             ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
             ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'
-            ,PROBSTATE(&pTargetCPU_REGS->psw)              ? 'P' : '.'
-            ,
-#if        defined(_FEATURE_SIE)
-            SIE_MODE(pTargetCPU_REGS)                      ? 'S' : '.'
-#else  // !defined(_FEATURE_SIE)
-                                                                   '.'
-#endif //  defined(_FEATURE_SIE)
-            ,
-#if        defined(_900)
-            ARCH_900_IDX == pTargetCPU_REGS->arch_mode     ? 'Z' : '.'
-#else  // !defined(_900)
-                                                                   '.'
-#endif //  defined(_900)
+            ,PROBSTATE( &pTargetCPU_REGS->psw )            ? 'P' : '.'
+            ,SIE_stat
+            ,Z900_stat
             ,curr_instcount
         );
 
@@ -856,7 +941,7 @@ void  UpdateCPUStatus ()
 
         if (*mipsrate != prev_mips_rate)
         {
-            gui_fprintf( fStatusStream,
+            EXTGUIMSG(
 
                 "MIPS=%4d.%2.2d\n"
 
@@ -869,7 +954,7 @@ void  UpdateCPUStatus ()
 
         if (*siosrate != prev_sios_rate)
         {
-            gui_fprintf( fStatusStream,
+            EXTGUIMSG(
 
                 "SIOS=%4d\n"
 
@@ -905,7 +990,7 @@ void  UpdateRegisters ()
             prev_gr[2] = pTargetCPU_REGS->GR_L(2);
             prev_gr[3] = pTargetCPU_REGS->GR_L(3);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "GR0-3="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -928,7 +1013,7 @@ void  UpdateRegisters ()
             prev_gr[6] = pTargetCPU_REGS->GR_L(6);
             prev_gr[7] = pTargetCPU_REGS->GR_L(7);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "GR4-7="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -951,7 +1036,7 @@ void  UpdateRegisters ()
             prev_gr[10] = pTargetCPU_REGS->GR_L(10);
             prev_gr[11] = pTargetCPU_REGS->GR_L(11);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "GR8-B="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -974,7 +1059,7 @@ void  UpdateRegisters ()
             prev_gr[14] = pTargetCPU_REGS->GR_L(14);
             prev_gr[15] = pTargetCPU_REGS->GR_L(15);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "GRC-F="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -996,7 +1081,7 @@ void  UpdateRegisters ()
             prev_gr64[0] = pTargetCPU_REGS->GR_G(0);
             prev_gr64[1] = pTargetCPU_REGS->GR_G(1);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GR0-1="REG64FMT" "REG64FMT"\n"
 
@@ -1013,7 +1098,7 @@ void  UpdateRegisters ()
             prev_gr64[2] = pTargetCPU_REGS->GR_G(2);
             prev_gr64[3] = pTargetCPU_REGS->GR_G(3);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GR2-3="REG64FMT" "REG64FMT"\n"
 
@@ -1030,7 +1115,7 @@ void  UpdateRegisters ()
             prev_gr64[4] = pTargetCPU_REGS->GR_G(4);
             prev_gr64[5] = pTargetCPU_REGS->GR_G(5);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GR4-5="REG64FMT" "REG64FMT"\n"
 
@@ -1047,7 +1132,7 @@ void  UpdateRegisters ()
             prev_gr64[6] = pTargetCPU_REGS->GR_G(6);
             prev_gr64[7] = pTargetCPU_REGS->GR_G(7);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GR6-7="REG64FMT" "REG64FMT"\n"
 
@@ -1064,7 +1149,7 @@ void  UpdateRegisters ()
             prev_gr64[8] = pTargetCPU_REGS->GR_G(8);
             prev_gr64[9] = pTargetCPU_REGS->GR_G(9);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GR8-9="REG64FMT" "REG64FMT"\n"
 
@@ -1081,7 +1166,7 @@ void  UpdateRegisters ()
             prev_gr64[10] = pTargetCPU_REGS->GR_G(10);
             prev_gr64[11] = pTargetCPU_REGS->GR_G(11);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GRA-B="REG64FMT" "REG64FMT"\n"
 
@@ -1098,7 +1183,7 @@ void  UpdateRegisters ()
             prev_gr64[12] = pTargetCPU_REGS->GR_G(12);
             prev_gr64[13] = pTargetCPU_REGS->GR_G(13);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GRC-D="REG64FMT" "REG64FMT"\n"
 
@@ -1115,7 +1200,7 @@ void  UpdateRegisters ()
             prev_gr64[14] = pTargetCPU_REGS->GR_G(14);
             prev_gr64[15] = pTargetCPU_REGS->GR_G(15);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_GRE-F="REG64FMT" "REG64FMT"\n"
 
@@ -1139,7 +1224,7 @@ void  UpdateRegisters ()
             prev_cr[2] = pTargetCPU_REGS->CR_L(2);
             prev_cr[3] = pTargetCPU_REGS->CR_L(3);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "CR0-3="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1162,7 +1247,7 @@ void  UpdateRegisters ()
             prev_cr[6] = pTargetCPU_REGS->CR_L(6);
             prev_cr[7] = pTargetCPU_REGS->CR_L(7);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "CR4-7="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1185,7 +1270,7 @@ void  UpdateRegisters ()
             prev_cr[10] = pTargetCPU_REGS->CR_L(10);
             prev_cr[10] = pTargetCPU_REGS->CR_L(10);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "CR8-B="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1208,7 +1293,7 @@ void  UpdateRegisters ()
             prev_cr[14] = pTargetCPU_REGS->CR_L(14);
             prev_cr[15] = pTargetCPU_REGS->CR_L(15);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "CRC-F="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1230,7 +1315,7 @@ void  UpdateRegisters ()
             prev_cr64[0] = pTargetCPU_REGS->CR_G(0);
             prev_cr64[1] = pTargetCPU_REGS->CR_G(1);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CR0-1="REG64FMT" "REG64FMT"\n"
 
@@ -1247,7 +1332,7 @@ void  UpdateRegisters ()
             prev_cr64[2] = pTargetCPU_REGS->CR_G(2);
             prev_cr64[3] = pTargetCPU_REGS->CR_G(3);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CR2-3="REG64FMT" "REG64FMT"\n"
 
@@ -1264,7 +1349,7 @@ void  UpdateRegisters ()
             prev_cr64[4] = pTargetCPU_REGS->CR_G(4);
             prev_cr64[5] = pTargetCPU_REGS->CR_G(5);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CR4-5="REG64FMT" "REG64FMT"\n"
 
@@ -1281,7 +1366,7 @@ void  UpdateRegisters ()
             prev_cr64[6] = pTargetCPU_REGS->CR_G(6);
             prev_cr64[7] = pTargetCPU_REGS->CR_G(7);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CR6-7="REG64FMT" "REG64FMT"\n"
 
@@ -1298,7 +1383,7 @@ void  UpdateRegisters ()
             prev_cr64[8] = pTargetCPU_REGS->CR_G(8);
             prev_cr64[9] = pTargetCPU_REGS->CR_G(9);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CR8-9="REG64FMT" "REG64FMT"\n"
 
@@ -1315,7 +1400,7 @@ void  UpdateRegisters ()
             prev_cr64[10] = pTargetCPU_REGS->CR_G(10);
             prev_cr64[11] = pTargetCPU_REGS->CR_G(11);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CRA-B="REG64FMT" "REG64FMT"\n"
 
@@ -1332,7 +1417,7 @@ void  UpdateRegisters ()
             prev_cr64[12] = pTargetCPU_REGS->CR_G(12);
             prev_cr64[13] = pTargetCPU_REGS->CR_G(13);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CRC-D="REG64FMT" "REG64FMT"\n"
 
@@ -1349,7 +1434,7 @@ void  UpdateRegisters ()
             prev_cr64[14] = pTargetCPU_REGS->CR_G(14);
             prev_cr64[15] = pTargetCPU_REGS->CR_G(15);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_CRE-F="REG64FMT" "REG64FMT"\n"
 
@@ -1373,7 +1458,7 @@ void  UpdateRegisters ()
             prev_ar[2] = pTargetCPU_REGS->AR(2);
             prev_ar[3] = pTargetCPU_REGS->AR(3);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "AR0-3="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1396,7 +1481,7 @@ void  UpdateRegisters ()
             prev_ar[6] = pTargetCPU_REGS->AR(6);
             prev_ar[7] = pTargetCPU_REGS->AR(7);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "AR4-7="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1419,7 +1504,7 @@ void  UpdateRegisters ()
             prev_ar[10] = pTargetCPU_REGS->AR(10);
             prev_ar[11] = pTargetCPU_REGS->AR(11);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "AR8-B="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1442,7 +1527,7 @@ void  UpdateRegisters ()
             prev_ar[14] = pTargetCPU_REGS->AR(14);
             prev_ar[15] = pTargetCPU_REGS->AR(15);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "ARC-F="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
 
@@ -1464,7 +1549,7 @@ void  UpdateRegisters ()
             prev_fpr[0] = pTargetCPU_REGS->FPR_L(0);
             prev_fpr[1] = pTargetCPU_REGS->FPR_L(2);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "FR0-2="REG64FMT" "REG64FMT"\n"
 
@@ -1481,7 +1566,7 @@ void  UpdateRegisters ()
             prev_fpr[2] = pTargetCPU_REGS->FPR_L(4);
             prev_fpr[3] = pTargetCPU_REGS->FPR_L(6);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "FR4-6="REG64FMT" "REG64FMT"\n"
 
@@ -1501,7 +1586,7 @@ void  UpdateRegisters ()
             prev_fpr64[0] = pTargetCPU_REGS->FPR_L(0);
             prev_fpr64[1] = pTargetCPU_REGS->FPR_L(1);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FR0-1="REG64FMT" "REG64FMT"\n"
 
@@ -1518,7 +1603,7 @@ void  UpdateRegisters ()
             prev_fpr64[2] = pTargetCPU_REGS->FPR_L(2);
             prev_fpr64[3] = pTargetCPU_REGS->FPR_L(3);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FR2-3="REG64FMT" "REG64FMT"\n"
 
@@ -1535,7 +1620,7 @@ void  UpdateRegisters ()
             prev_fpr64[4] = pTargetCPU_REGS->FPR_L(4);
             prev_fpr64[5] = pTargetCPU_REGS->FPR_L(5);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FR4-5="REG64FMT" "REG64FMT"\n"
 
@@ -1552,7 +1637,7 @@ void  UpdateRegisters ()
             prev_fpr64[6] = pTargetCPU_REGS->FPR_L(6);
             prev_fpr64[7] = pTargetCPU_REGS->FPR_L(7);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FR6-7="REG64FMT" "REG64FMT"\n"
 
@@ -1569,7 +1654,7 @@ void  UpdateRegisters ()
             prev_fpr64[8] = pTargetCPU_REGS->FPR_L(8);
             prev_fpr64[9] = pTargetCPU_REGS->FPR_L(9);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FR8-9="REG64FMT" "REG64FMT"\n"
 
@@ -1586,7 +1671,7 @@ void  UpdateRegisters ()
             prev_fpr64[10] = pTargetCPU_REGS->FPR_L(10);
             prev_fpr64[11] = pTargetCPU_REGS->FPR_L(11);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FRA-B="REG64FMT" "REG64FMT"\n"
 
@@ -1603,7 +1688,7 @@ void  UpdateRegisters ()
             prev_fpr64[12] = pTargetCPU_REGS->FPR_L(12);
             prev_fpr64[13] = pTargetCPU_REGS->FPR_L(13);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FRC-D="REG64FMT" "REG64FMT"\n"
 
@@ -1620,7 +1705,7 @@ void  UpdateRegisters ()
             prev_fpr64[14] = pTargetCPU_REGS->FPR_L(14);
             prev_fpr64[15] = pTargetCPU_REGS->FPR_L(15);
 
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "64_FRE-F="REG64FMT" "REG64FMT"\n"
 
@@ -1650,7 +1735,7 @@ void  UpdateRegisters ()
                 PREV_VR_D( r+1, 0 ) = pTargetCPU_REGS->VR_D( r+1, 0 );
                 PREV_VR_D( r+1, 1 ) = pTargetCPU_REGS->VR_D( r+1, 1 );
 
-                gui_fprintf( fStatusStream,
+                EXTGUIMSG(
 
                     "VR%02d=%016" PRIX64 ".%016" PRIX64
                     "               " // (make it look like other regs bars)
@@ -1732,7 +1817,7 @@ void  UpdateDeviceStatus ()
 
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
         if (pDEVBLK == sysblk.sysgdev)
-            gui_fprintf( fStatusStream,
+            EXTGUIMSG(
 
                 "DEV=%s0000 SYSG %-4.4s %c%c%c%c %s\n"
 
@@ -1748,7 +1833,7 @@ void  UpdateDeviceStatus ()
             );
         else
 #endif // defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-            gui_fprintf(fStatusStream,
+            EXTGUIMSG(
 
                 "DEV=%s%4.4X %4.4X %-4.4s %c%c%c%c %s\n"
 
@@ -1770,7 +1855,7 @@ void  UpdateDeviceStatus ()
     // and/or removed at any time, the GUI needs to know "That's all the
     // devices there are" so that it can detect when devices are removed...
 
-    gui_fprintf(fStatusStream, "DEV=X\n");    // (indicates end of list)
+    EXTGUIMSG( "%s", "DEV=X\n" );    // (indicates end of list)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1816,7 +1901,7 @@ void  NewUpdateDevStats ()
             {
                 // Send "device deleted" message...
 
-                gui_fprintf ( fStatusStream, "DEVD=%s%4.4X\n", lcss_num, pDEVBLK->devnum );
+                EXTGUIMSG ( "DEVD=%s%4.4X\n", lcss_num, pDEVBLK->devnum );
                 bUpdatesSent = TRUE;
 
                 *pGUIStat->pszNewStatStr = 0;   // (prevent re-reporting it)
@@ -1907,7 +1992,7 @@ void  NewUpdateDevStats ()
 
         if (strcmp( pGUIStat->pszNewStatStr, pGUIStat->pszOldStatStr ))
         {
-            gui_fprintf ( fStatusStream, "%s\n", pGUIStat->pszNewStatStr );
+            EXTGUIMSG ( "%s\n", pGUIStat->pszNewStatStr );
             bUpdatesSent = TRUE;
             {
                 register char*
@@ -1924,7 +2009,7 @@ void  NewUpdateDevStats ()
     if ( bUpdatesSent || bFirstBatch )
     {
         bFirstBatch = FALSE;
-        gui_fprintf(fStatusStream, "DEVX=\n");  // (send end-of-batch indicator)
+        EXTGUIMSG( "%s", "DEVX=\n" );    // (indicates end of list)
     }
 }
 
@@ -1958,13 +2043,15 @@ void *(*next_debug_call)(REGS *);
     if (bLoading != (pREGS->loadstate ? TRUE : FALSE))
     {
         bLoading  = (pREGS->loadstate ? TRUE : FALSE);
-        gui_fprintf(stdout,"LOAD=%c\n", bLoading ? '1' : '0');
+        fprintf( stdout, "LOAD=%c\n", bLoading ? '1' : '0' );
+        fflush( stdout );
     }
 
     if (bStopped != ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE))
     {
         bStopped  = ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE);
-        gui_fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
+        fprintf( stdout, "MAN=%c\n", bStopped ? '1' : '0' );
+        fflush( stdout );
     }
 
     if((next_debug_call = hdl_next( &gui_debug_cpu_state )))
@@ -1982,24 +2069,9 @@ void *(*next_debug_call)(REGS *);
 void* gui_debug_cd_cmd( char* pszCWD )
 {
     ASSERT( pszCWD );
-    if (gui_version >= 1.12)
-        gui_fprintf( fStatusStream, "]CWD=%s\n", pszCWD );
+    if (GNUM() >= VNUM( 1.12.0 ))
+        EXTGUIMSG( "]CWD=%s\n", pszCWD );
     return NULL;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Streams 'fprintf' function to prevent interleaving collision problem...
-
-LOCK gui_fprintf_lock;
-
-void gui_fprintf( FILE* stream, const char* pszFormat, ... )
-{
-    va_list vl;
-    va_start( vl, pszFormat );
-    obtain_lock ( &gui_fprintf_lock );
-    vfprintf( stream, pszFormat, vl );
-    fflush( stream );
-    release_lock( &gui_fprintf_lock );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2018,7 +2090,6 @@ void  Initialize ()
     // Initialize streams...
 
     fOutputStream = OUTPUT_STREAM_FILE_PTR;
-    fStatusStream = STATUS_STREAM_FILE_PTR;
 
     nInputStreamFileNum = fileno( INPUT_STREAM_FILE_PTR );
 
@@ -2074,6 +2145,7 @@ void gui_panel_display ()
     SET_THREAD_NAME( "dyngui" );    // (for debugging)
     WRMSG( HHC01541,"I" );          // "Dyngui.dll initiated"
     Initialize();                   // (acquire resources)
+    tell_gui_our_version();         // Do this as soon as possible...
 
     ProcessingLoop();               // PRIMARY PROCESSING LOOP... (does not
                                     // return until Hercules is terminated)
@@ -2101,7 +2173,7 @@ void gui_panel_display ()
 // was when Hercules was built MUST MATCH the layout as it was when THIS DLL
 // was built)
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )
@@ -2136,7 +2208,6 @@ HDL_REGISTER_SECTION            // ("Register" our entry-points)
     // Perform static module initialization...
 
     gui_nounload = 1;                       // (reject any unload attempt)
-    initialize_lock( &gui_fprintf_lock );   // (initialize GUI fprintf LOCK)
 
     // Register all of our override entry-points...
 
@@ -2203,3 +2274,5 @@ HDL_FINAL_SECTION
 END_FINAL_SECTION
 
 ///////////////////////////////////////////////////////////////////////////////
+
+POP_GCC_WARNINGS()

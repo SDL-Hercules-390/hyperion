@@ -17,7 +17,7 @@ The Hercules "Threading and locking trace debugger" is not just for thread and l
 
 Early in Hercules development when threading and locks were introduced, we had a lot of trouble with incorrect lock management, resulting in deadlocks and other thread related problems.  We're better at it now, but we still have problems with it from time to time.  (Programmers are not perfect creatures and sometimes make mistakes, Hercules developers included.)
 
-Greg Smith was the one that took up the challenge and created our basic PTT tracing facility to try and help identify such threading/locking problems. (The `PTT` orignally stood for "POSIX Thread Tracing".)
+Greg Smith was the one that took up the challenge and created our basic PTT tracing facility to try and help identify such threading/locking problems. (The `PTT` originally stood for "POSIX Thread Tracing".)
 
 It was primarily written to intercept lock and condition variable calls and add a table entry to an internal wraparound event table which could then be dumped (displayed) on demand whenever it appeared a deadlock had occurred.
 

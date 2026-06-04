@@ -38,7 +38,7 @@
 /* The macro that we export is                                       */
 /*    H_ATOMIC_OP(ptr, imm, op, Op, fallback)                        */
 /*    ptr      Pointer to the [byte] to update                       */
-/*    imm      The immeditate field from the instruction (i2)        */
+/*    imm      The immediate field from the instruction (i2)         */
 /*    op       The actual logical operation to perform (lowercase)   */
 /*             Use and/or/xor.  For gcc intrinsic.                   */
 /*    Op       The actual logical operation to perform (leading      */
@@ -67,7 +67,7 @@
 /* In my view this is not a lock free operation, but apparently the  */
 /* compiler writers have decided otherwise.                          */
 /*                                                                   */
-/* Rejected altrnatives:                                             */
+/* Rejected alternatives:                                             */
 /* =====================                                             */
 /*                                                                   */
 /* An  attempt  was  made to map the three non C11 cases into macros */

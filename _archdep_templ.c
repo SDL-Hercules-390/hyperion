@@ -144,7 +144,7 @@ int ARCH_DEP( foobar_func )( REGS* regs, xxx... )
   // Now we need to build the same architecture dependent "ARCH_DEP"
   // functions for all of the OTHER build architectures that remain
   // (usually S/390 and z/Arch), so we #include ourselves again but
-  // with the next build archiecture #defined instead...
+  // with the next build architecture #defined instead...
 
   #if defined(              _ARCH_NUM_1 )     // (usually 390)
     #define   _GEN_ARCH     _ARCH_NUM_1
@@ -191,7 +191,7 @@ static int  non_arch_dep_static_helper_two( xxx... )
 //-------------------------------------------------------------------
 //                      _FEATURE_XXX code
 //-------------------------------------------------------------------
-// Place any _FEATURE_XXX depdendent functions (WITH the underscore)
+// Place any _FEATURE_XXX dependent functions (WITH the underscore)
 // here. You may need to define such functions whenever one or more
 // build architectures has a given FEATURE_XXX (WITHOUT underscore)
 // defined for it. The underscore means AT LEAST ONE of the build
@@ -212,7 +212,7 @@ static int  non_arch_dep_static_helper_two( xxx... )
 /* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
 /*                                                                   */
 /* Basically you MUST NOT use any architecture dependent macro that  */
-/* is #defined in the "feature.h" header.  If you you need to use    */
+/* is #defined in the "feature.h" header.  If you need to use        */
 /* any of them, then your function MUST be an "ARCH_DEP" function    */
 /* that is placed within the ARCH_DEP section at the beginning of    */
 /* this module where it can be compiled multiple times, once for     */

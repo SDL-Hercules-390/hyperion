@@ -2769,7 +2769,7 @@ ac_config_guess="$SHELL $ac_aux_dir/config.guess"  # Please don't use this var.
 ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
 ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
-   # (directory containing auxillary build tools)
+   # (directory containing auxiliary build tools)
 
 # -----------------------------------------------------------------------------
 #  PROGRAMMING NOTE: The below VERS_MAJ, VERS_INT and VERS_MIN assignment
@@ -2785,10 +2785,10 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 # -----------------------------------------------------------------------------
 
 VERS_MAJ=4                    # first  digit of version
-VERS_INT=8                    # second digit of version
+VERS_INT=10                   # second digit of version
 VERS_MIN=0                    # third  digit of version
-VERS_DEV=1                    # flag: 1 = between releases development version
-                              #       0 = official formal release version
+VERS_DEV=1                    # flag: 1 = between releases DEVELOPMENT version
+                              #       0 = formal OFFICIAL RELEASE version
 
 am__api_version='1.16'
 
@@ -3558,7 +3558,7 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-         # (sets $target_cpu, $target_vendor, and $target_os)
 
 # FORTRAN detection scanning can goof up our shared libraries.
-# So we diable checking for it.  And C++, too, while we're at it.
+# So we disable checking for it.  And C++, too, while we're at it.
 #
 # Idea from https://stackoverflow.com/questions/4292683
 #
@@ -12282,7 +12282,7 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # Ideally, we could use ldconfig to report *all* directores which are
+  # Ideally, we could use ldconfig to report *all* directories which are
   # searched for libraries, however this is still not possible.  Aside from not
   # being certain /sbin/ldconfig is available, command
   # 'ldconfig -N -X -v | grep ^/' on 64bit Fedora does not report /usr/lib64,
@@ -15180,7 +15180,7 @@ done
 #
 #  in6_*.h files are strictly for library separation and should not normally
 #  be directly #included. This is enforced on FreeBSD and to a lesser degree
-#  on OS/X where you you can get away with it by #including netinet/in_var.h
+#  on OS/X where you can get away with it by #including netinet/in_var.h
 #  first.
 
 for ac_header in linux/ipv6.h
@@ -17525,6 +17525,18 @@ _ACEOF
 fi
 done
 
+
+for ac_func in vasprintf
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+done
 
 for ac_func in vsscanf
 do :
@@ -19972,7 +19984,7 @@ fi
 #    for Apple's GCC 3.3 compiler, the standard GNU
 #    meaning of -traditional-cpp has been restored. By
 #    default, the GCC 3.3 preprocessor conforms to the
-#    ISO C standard. Using the -tradtional-cpp option
+#    ISO C standard. Using the -traditional-cpp option
 #    means the C preprocessor should instead try to
 #    emulate the old "K&R C".
 #
@@ -24539,7 +24551,7 @@ See \`config.log' for more details" "$LINENO" 5; }
 
 # GNU Libtool is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of of the License, or
+# the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
 # As a special exception to the GNU General Public License, if you

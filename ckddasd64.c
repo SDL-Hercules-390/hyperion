@@ -1,4 +1,5 @@
 /* CKDDASD64.C  (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2023                             */
 /*              ESA/390 CKD Direct Access Storage Device Handler     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -15,6 +16,9 @@
 /* GA32-0099 IBM 3990 Storage Control Reference (Models 1, 2, and 3) */
 /* GA32-0274 IBM 3990,9390 Storage Control Reference                 */
 /* GC26-7006 IBM RAMAC Array Subsystem Reference                     */
+/* SA22-1025 IBM Subsystem Reference Guide        (E7 Prefix CCW)    */
+/* SC26-7298 Enterprise Storage Server Command Reference:            */
+/*           2105 Models E10, E20, F10, and F20                      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -25,6 +29,8 @@
 /*        Pogonchenko                                                */
 /*      Track overflow write fix by Roger Bowler, thanks to Valery   */
 /*        Pogonchenko and Volker Bandke             V1.71 16/01/2001 */
+/*      More historically accurate Dasd Control Unit and             */
+/*       CCW support -- Anders Edlund.                               */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -465,14 +471,8 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         return -1;
     }
 
-    /* Log the device geometry */
-    if (!dev->quiet)
-        // "%1d:%04X %s file %s: model %s cyls %d heads %d tracks %d trklen %d"
-        WRMSG( HHC00470, "I", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename, dev->ckdtab->name,
-               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
-
     /* Locate the CKD control unit dasd table entry */
-    dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
+    dev->ckdcu = dasd_lookup( DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0 );
     if (dev->ckdcu == NULL)
     {
         // "%1d:%04X %s file %s: control unit %s not found in dasd table"
@@ -480,6 +480,13 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
                filename, cu ? cu : dev->ckdtab->cu );
         return -1;
     }
+
+    /* Log the device geometry */
+    if (!dev->quiet)
+        // "%1d:%04X %s file %s: model %s cu %s cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00470, "I", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename,
+            dev->ckdtab->name, dev->ckdcu->name,
+            dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Set number of sense bytes according to controller specification */
     dev->numsense = dev->ckdcu->senselength;

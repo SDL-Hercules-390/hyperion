@@ -138,7 +138,7 @@ merge( SLLABEL *lab )
     int i;
 
     /*
-    || Make the label more managable
+    || Make the label more manageable
     */
     sl_fmtlab( &fmt, lab );
 
@@ -500,7 +500,7 @@ getfile( FILE *outf )
         }
 
         /*
-        || Make the label more managable
+        || Make the label more manageable
         */
         sl_fmtlab( &fmt, &lab );
         // "File Info:  DSN=%-17.17s"

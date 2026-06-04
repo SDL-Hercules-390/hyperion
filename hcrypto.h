@@ -1,5 +1,5 @@
 /* HCRYPTO.H    (C) Copyright "Fish" (David B. Trout), 2018-2019     */
-/*                  Cryptograhically Secure Random Number Generator  */
+/*                  Cryptographically Secure Random Number Generator */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */

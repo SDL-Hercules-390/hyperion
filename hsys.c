@@ -18,6 +18,11 @@
 DLL_EXPORT SYSBLK  sysblk  = {0};   /* Hercules-wide SYSBLK struct   */
 DLL_EXPORT int     extgui  =  0;    /* 1 == External GUI is active   */
 
+#ifdef HG_GH_DEBUG
+DLL_EXPORT FILE*   H_to_G = NULL;   /* herc --> GUI stream debugging */
+DLL_EXPORT FILE*   H_fr_G = NULL;   /* herc <-- GUI stream debugging */
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                      PROGRAMMING NOTE                             */
 /*                                                                   */

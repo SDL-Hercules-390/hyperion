@@ -21,7 +21,7 @@
 /*      HMC system console functions by Jan Jaeger 2000-02-08        */
 /*      Expanded storage support by Jan Jaeger                       */
 /*      Dynamic CPU reconfiguration - Jan Jaeger                     */
-/*      Suppress superflous HHC701I/HHC702I messages - Jan Jaeger    */
+/*      Suppress superfluous HHC701I/HHC702I messages - Jan Jaeger   */
 /*      Break syscons output if too long - Jan Jaeger                */
 /*      Added CPI - Control Program Information ev. - JJ 2001-11-19  */
 /*-------------------------------------------------------------------*/
@@ -319,7 +319,7 @@ static void* sclp_attn_thread( void* arg )
     OBTAIN_INTLOCK( NULL );
     {
         // The VM boys appear to have made an error in not
-        // allowing for asyncronous attentions to be merged
+        // allowing for asynchronous attentions to be merged
         // with pending interrupts. As such, we will wait here
         // until the pending interrupt has been cleared. *JJ
 
@@ -459,7 +459,7 @@ static void sclp_opcmd_event( SCCB_HEADER* sccb, U16 type )
                   0x03,0x01,0x00,       /* Net ID                    */
                   0x03,0x02,0x00,       /* NAU Name                  */
                   0x06,0x03,0x00,0x00,0x00,0x00,  /* Appl id         */
-             0x0E,0x82,                 /* Destinition location name */
+             0x0E,0x82,                 /* Destination location name */
                   0x03,0x01,0x00,       /* Net ID                    */
                   0x03,0x02,0x00,       /* NAU Name                  */
                   0x06,0x03,0x00,0x00,0x00,0x00,  /* Appl id         */
@@ -809,22 +809,66 @@ BYTE         cmdcode;                   /* 3270 read/write command   */
         sccb->resp = SCCB_RESP_COMPLETE;
         return;
     }
-    else
+    else // (write a message to the SYSG console terminal)
     {
+        /* For writes, trace the CCW *before* issuing the I/O */
+
+        if (dev->ccwtrace)
+        {
+            BYTE* data     =  sysg_data + 1;
+            U16   count    =  sysg_len  - 1;
+            U32   addr     =  (data - dev->mainstor);
+            bool  didtrace =  false;
+            BYTE  ccw[8]   =  {0};
+
+            /* Construct what WOULD have been the CCW
+               had the guest issued an actual I/O. */
+
+            ccw[0] = cmdcode;
+            ccw[1] = CCW_FLAGS_SLI;
+            ccw[2] = (count >>  8) & 0xFF;
+            ccw[3] = (count >>  0) & 0xFF;;
+            ccw[4] = (addr  >> 24) & 0xFF;
+            ccw[5] = (addr  >> 16) & 0xFF;
+            ccw[6] = (addr  >>  8) & 0xFF;
+            ccw[7] = (addr  >>  0) & 0xFF;
+
+            /* Trace to File? (not to console? */
+
+            if (sysblk.traceFILE)
+            {
+                tf_1315( dev, ccw, addr, count, dev->mainstor + addr, 80 );
+            }
+            else // (normal trace Hercules HMC console...)
+            {
+                DISPLAY_CCW( &didtrace, dev, ccw, addr, count, CCW_FLAGS_SLI );
+            }
+        }
+
         servc_sysg_cmdcode = 0x00;
 
         /* Execute the 3270 command in data block */
         /* dev->hnd->exec points to loc3270_execute_ccw */
-        (dev->hnd->exec)( dev, /*ccw opcode*/ cmdcode,
-            /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
-            /*count*/ sysg_len - 1,
-            /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data+1,
-            &more, &unitstat, &residual );
+
+        (dev->hnd->exec)
+        (
+            dev,                // DEVBLK
+            cmdcode,            // ccw opcode
+            CCW_FLAGS_SLI,      // flags
+            0,                  // chained
+            sysg_len - 1,       // count
+            0,                  // prevcode
+            0,                  // ccwseq
+            sysg_data + 1,      // iobuf
+            &more,              // MORE flag
+            &unitstat,          // unit status
+            &residual           // residual
+        );
 
         /* Indicate Event Processed */
         evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
 
-        /* If unit check occured, set response code X'0040' */
+        /* If unit check occurred, set response code X'0040' */
         if (unitstat & CSW_UC)
         {
             PTT_ERR("*SERVC", (U32)more, (U32)unitstat, residual );
@@ -891,11 +935,55 @@ U32            residual;                /* Residual data count       */
 
             /* Execute a 3270 read-modified command */
             /* dev->hnd->exec points to loc3270_execute_ccw */
-            (dev->hnd->exec) (dev, /*ccw opcode*/ servc_sysg_cmdcode,
-                /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
-                /*count*/ sysg_len,
-                /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data,
-                &more, &unitstat, &residual );
+
+            (dev->hnd->exec)
+            (
+                dev,                    // DEVBLK
+                servc_sysg_cmdcode,     // ccw opcode
+                CCW_FLAGS_SLI,          // flags
+                0,                      // chained
+                sysg_len,               // count
+                0,                      // prevcode
+                0,                      // ccwseq
+                sysg_data,              // iobuf
+                &more,                  // MORE flag
+                &unitstat,              // unit status
+                &residual               // residual
+            );
+
+            /* For reads, trace the CCW *after* issuing the I/O */
+
+            if (dev->ccwtrace)
+            {
+                BYTE* data     =  sysg_data;
+                U16   count    =  sysg_len;
+                U32   addr     =  (data - dev->mainstor);
+                bool  didtrace =  false;
+                BYTE  ccw[8]   =  {0};
+
+                /* Construct what WOULD have been the CCW
+                   had the guest issued an actual I/O. */
+
+                ccw[0] = servc_sysg_cmdcode;
+                ccw[1] = CCW_FLAGS_SLI;
+                ccw[2] = (count >>  8) & 0xFF;
+                ccw[3] = (count >>  0) & 0xFF;;
+                ccw[4] = (addr  >> 24) & 0xFF;
+                ccw[5] = (addr  >> 16) & 0xFF;
+                ccw[6] = (addr  >>  8) & 0xFF;
+                ccw[7] = (addr  >>  0) & 0xFF;
+
+                /* Trace to File? (not to console? */
+
+                if (sysblk.traceFILE)
+                {
+                    tf_1315( dev, ccw, addr, count, dev->mainstor + addr, 80 );
+                }
+                else // (normal trace Hercules HMC console...)
+                {
+                    DISPLAY_CCW( &didtrace, dev, ccw, addr, count, CCW_FLAGS_SLI );
+                }
+            }
 
             servc_sysg_cmdcode = 0;
 
@@ -1608,7 +1696,7 @@ BYTE*           xstmap;                 /* Xstore bitmap, zero means
          * up to slightly less than 16 EB (16384 PB = 16777216 TB),
          * even if the host operating system cannot.
          *
-         * The guest architecural limit however is constrained by the
+         * The guest architectural limit however is constrained by the
          * width of the realinum and realiszm SCCB fields (number of
          * increments and increment size in MB) which are only 16 bits
          * and 8 bits wide respectively. Thus the guest's maximum
@@ -1690,7 +1778,7 @@ BYTE*           xstmap;                 /* Xstore bitmap, zero means
         if (!FACILITY_ENABLED( 009_SENSE_RUN_STATUS, regs ))
             sccbscp->cfg[5] &= ~SCCB_CFG5_SENSE_RUNNING_STATUS;
 
-        /* Turn on additioal bits for facilities that ARE enabled */
+        /* Turn on additional bits for facilities that ARE enabled */
         if (0
 #if defined( _FEATURE_HYPERVISOR )
             || FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs )
@@ -2184,7 +2272,7 @@ fflush( efile );
         /* Get length of single mask field */
         FETCH_HW( masklen, evd_mask->length );
 
-        /* Save old mask settings in order to suppress superflous messages */
+        /* Save old mask settings in order to suppress superfluous messages */
         old_cp_recv_mask = servc_cp_recv_mask & ARCH_DEP( sclp_send_mask ) & SCCB_EVENT_CONS_RECV_MASK;
         old_cp_send_mask = servc_cp_send_mask & ARCH_DEP( sclp_recv_mask ) & SCCB_EVENT_CONS_SEND_MASK;
 

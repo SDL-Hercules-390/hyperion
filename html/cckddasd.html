@@ -1226,26 +1226,26 @@ the <b>cckd</b> command explained below.
     </td>
 
 <tr><td valign="top"><b>dhint=</b>n</td><td> &nbsp; </td>
-    <td>Number of seconds the Dasd Hardener thread waits during an interval.
+    <td>Number of seconds the Dasd Hardener thread waits between hardening intervals.
         At the end of an interval, the Dasd Hardener
-        flushes the cache, hardens the dasd emulation file,
-        and optionally <em>fsync</em>s the emulation file.
+        flushes Hercules's internal cache, hardens the dasd emulation file,
+        and, optionally <em>fsync</em>s the emulation file.
         <p>
-        The default is <b>0</b>, meaning automatic Dasd Hardener is disabled.
-        <p>
-        You can specify a number between <b>0</b> and <b>999</b>.
+        You can specify any number between <b>0</b> and <b>999</b>.
+        The default interval is <b>10</b> seconds.
         <p>
         A value of 0
         disables the default automatic behavior of the Dasd Hardener,
-        converting it to as-needed mode. When in as-needed mode,
-        data written to dasd by the guest OS will be written to the emulation
-        files as necessary when the cache approaches full, or at
-        Hercules termination.
+        converting it to "as-needed" mode. When in as-needed mode,
+        data written to dasd by the guest OS will be written to the
+        emulation files <i>only</i> when absolutely necessary (i.e. only when Hercules's
+        internal cache approaches full or always at Hercules termination).
+        <i>"As-needed" mode is <b>NOT</b> recommended.</i>
         <p>
-        In automatic mode <i>(<code>dhint</code> > 0)</i>, the Dasd Hardener will start itself
-        automatically and remain idle (but still running) between each dasd
-        hardening cycle, automatically starting the next cycle every <code>dhint</code>
-        seconds.
+        In automatic mode <i>(i.e. when using the default <code>dhint</code> interval
+        of 10 seconds for example)</i>, the Dasd Hardener will start itself automatically
+        and remain idle <i>(but still running!)</i> between each dasd hardening cycle,
+        automatically starting the next cycle every <code>dhint</code> seconds.
         <p>
         <i>
             <b>Note!</b> It is highly recommended that this parameter be <u>set
@@ -1258,17 +1258,16 @@ the <b>cckd</b> command explained below.
     </td>
 
 <tr><td valign="top"><b>dhstart=</b>n</td><td> &nbsp; </td>
-    <td>If set to 1, then the Dasd Hardener will immediately become active as long
-        as the above <code>dhint=</code> value is set to a non-zero value.
+    <td>When set to 1 (the default), the Dasd Hardener will immediately become active
+        as long as the above <code>dhint=</code> interval is set to a non-zero value.
+        If the above <code>dhint</code> value is set to 0 however, then setting the
+        <code>dhstart</code> value to 1 accomplishes absolutely nothing.
         <p>
-        If the above <code>dhint</code> value is set to 0, then setting <code>dhstart</code>
-        to 1 accomplishes absolutely nothing.
+        Similarly, setting <code>dhstart</code> to 0 will <i>not</i> stop the Dasd Hardener
+        once it has been started either. The only way to stop the Hardener once it has been
+        started is to set the above <code>dhint</code> interval to 0.
         <p>
-        Conversely, setting <code>dhstart</code> to 0 will <i>not</i> stop the Dasd Hardener
-        once it has been started. The only way to stop the Hardener once it has been started
-        is to reset the above <code>dhint</code> value back to 0.
-        <p>
-        The default is <b>0</b>.
+        The default is <b>1</b>, meaning the Dasd Hardener will be started automatically.
         <br /><br />
     </td>
 

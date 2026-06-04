@@ -283,7 +283,7 @@ int finish_scsitape_open( DEVBLK *dev, BYTE *unitstat, BYTE code )
 
     /*  Determine maximum I/O size and set the tape device to variable
         length block mode. We must do this regardless of whether we'll
-        be writing to to tape or not.
+        be writing to tape or not.
     */
     rc = get_max_blocksize( dev, &dev->bufsize );
 
@@ -847,7 +847,7 @@ struct mtget starting_mtget;
     ** Thus, we have absolutely no choice here but to retrieve the
     ** status BEFORE we attempt the i/o to see if we're ALREADY at
     ** loadpoint. If we are, then we immediately return an error
-    ** ("backspaced-into-loadpoint") *without* even attemting the
+    ** ("backspaced-into-loadpoint") *without* even attempting the
     ** i/o at all. If we're *not* already sitting at loadpoint how-
     ** ever, then we go ahead an attempt the i/o and then check for
     ** an error afterwards.
@@ -922,7 +922,7 @@ struct mtget starting_mtget;
     ** "are not always used". The best that I can tell however, is
     ** most *nix operating systems *do* seem to maintain them. Thus,
     ** for now, we're going to rely on their accuracy since without
-    ** them there's really no way whatsoever to distingish between
+    ** them there's really no way whatsoever to distinguish between
     ** a normal backspacing over a tapemark unit exception condition
     ** and a bonafide i/o error (other than doing our own SCSI i/o
     ** of course (which we don't support (yet))). -- Fish, May 2008
@@ -1083,7 +1083,7 @@ struct mtop opblk;
     ** Thus, we have absolutely no choice here but to retrieve the
     ** status BEFORE we attempt the i/o to see if we're ALREADY at
     ** loadpoint. If we are, then we immediately return an error
-    ** ("backspaced-into-loadpoint") *without* even attemting the
+    ** ("backspaced-into-loadpoint") *without* even attempting the
     ** i/o at all. If we're *not* already sitting at loadpoint how-
     ** ever, then we go ahead an attempt the i/o and then check for
     ** an error afterwards.
@@ -1710,7 +1710,7 @@ static void* get_stape_status_thread( void* notused )
     // is HIGHER than what the device-threads are currently set to
     // in order to prevent their request for new/updated status from
     // erroneously timing out (thereby misleading them to mistakenly
-    // believe no tape is mounted when in acuality there is!). The
+    // believe no tape is mounted when in actuality there is!). The
     // issue is, the caller only waits for so long for us to return
     // the status to them so we better ensure we return it to them
     // in a timely fashion else they be mislead to believe there's

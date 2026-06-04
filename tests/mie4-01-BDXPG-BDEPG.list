@@ -1,0 +1,1891 @@
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *
+                                                     5 *   Miscellaneous-instruction-extensions facility 4 instruction
+                                                     6 *   tests for RRF-a encoded:
+                                                     7 *
+                                                     8 *   B96C  BEXTG - Bit Extract
+                                                     9 *   B96D  BDEPG - Bit Deposit
+                                                    10 *
+                                                    11 *        James Wekel March 2026
+                                                    12 ***********************************************************************
+
+
+                                                    14 ***********************************************************************
+                                                    15 *
+                                                    16 *        basic instruction tests
+                                                    17 *
+                                                    18 ***********************************************************************
+                                                    19 *  This program tests proper functioning of the Miscellaneous
+                                                    20 *  Instruction Extensions facility 4 RRF-a Bit Depost and Bit Extract
+                                                    21 *  instructions.
+                                                    22 *  Exceptions are not tested.
+                                                    23 *
+                                                    24 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    25 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    26 *  NOT designed to test all aspects of any of the instructions.
+                                                    27 *
+                                                    28 ***********************************************************************
+                                                    29 *
+                                                    30 *    *Testcase mie4-BDEPG-BDEPG
+                                                    31 *    *
+                                                    32 *    *   Miscellaneous-instruction-extensions facility 4 instruction
+                                                    33 *    *   tests for RRF-a encoded:
+                                                    34 *    *
+                                                    35 *    *   B96C  BEXTG - Bit Extract
+                                                    36 *    *   B96D  BDEPG - Bit Deposit
+                                                    37 *    *
+                                                    38 *    *   # ------------------------------------------------------------
+                                                    39 *    *   #  This tests only the basic function of the instruction.
+                                                    40 *    *   #  Exceptions are NOT tested.
+                                                    41 *    *   # ------------------------------------------------------------
+                                                    42 *    *
+                                                    43 *    mainsize    2
+                                                    44 *    numcpu      1
+                                                    45 *    sysclear
+                                                    46 *    archlvl     z/Arch
+                                                    47 *
+                                                    48 *    loadcore    "$(testpath)/mie4-BDEPG-BDEPG.core" 0x0
+                                                    49 *
+                                                    50 *    diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    51 *    runtest     5         #
+                                                    52 *    diag8cmd    disable   # (reset back to default)
+                                                    53 *
+                                                    54 *    *Done
+                                                    55 *
+                                                    56 *
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    57 ***********************************************************************
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    59 ***********************************************************************
+                                                    60 *        FCHECK Macro - Is a Facility Bit set?
+                                                    61 *
+                                                    62 *        If the facility bit is NOT set, an message is issued and
+                                                    63 *        the test is skipped.
+                                                    64 *
+                                                    65 *        Fcheck uses R0, R1 and R2
+                                                    66 *
+                                                    67 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    68 ***********************************************************************
+                                                    69          MACRO
+                                                    70          FCHECK &BITNO,&NOTSETMSG
+                                                    71 .*                        &BITNO : facility bit number to check
+                                                    72 .*                        &NOTSETMSG : 'facility name'
+                                                    73          LCLA  &FBBYTE           Facility bit in Byte
+                                                    74          LCLA  &FBBIT            Facility bit within Byte
+                                                    75
+                                                    76          LCLA  &L(8)
+                                                    77 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    78
+                                                    79 &FBBYTE  SETA  &BITNO/8
+                                                    80 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    81 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    82
+                                                    83          B     X&SYSNDX
+                                                    84 *                                      Fcheck data area
+                                                    85 *                                      skip messgae
+                                                    86 SKT&SYSNDX DC  C'    Skipping tests: '
+                                                    87          DC    C&NOTSETMSG
+                                                    88          DC    C' (bit &BITNO) is not installed.'
+                                                    89 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    90 *                                      facility bits
+                                                    91          DS    FD                      gap
+                                                    92 FB&SYSNDX DS   4FD
+                                                    93          DS    FD                      gap
+                                                    94 *
+                                                    95 X&SYSNDX EQU *
+                                                    96          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    97          STFLE FB&SYSNDX               get facility bits
+                                                    98
+                                                    99          XGR   R0,R0
+                                                   100          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                   101          N     R0,=F'&FBBIT'           is bit set?
+                                                   102          BNZ   XC&SYSNDX
+                                                   103 *
+                                                   104 * facility bit not set, issue message and exit
+                                                   105 *
+                                                   106          LA    R0,SKL&SYSNDX           message length
+                                                   107          LA    R1,SKT&SYSNDX           message address
+                                                   108          BAL   R2,MSG
+                                                   109
+                                                   110          B     EOJ
+                                                   111 XC&SYSNDX EQU *
+                                                   112          MEND
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   114 ***********************************************************************
+                                                   115 * (pending     B96C  BEXTG - Bit Extract
+                                                   116 *  inclusion in SATK ASAM)
+                                                   117 *
+                                                   118 *     BEXTG Macro to help build BEXTG instruction
+                                                   119 *        BEXTG
+                                                   120 *
+                                                   121 *        Note: R1, R2 are fixed registers:
+                                                   122 *                         r1 = 1; r2 = 2; R3 = 3
+                                                   123 ***********************************************************************
+                                                   124          MACRO
+                                                   125        BEXTG
+                                                   126                                                                SPACE 1
+                                                   127          DS    0H
+                                                   128          DC    XL4'B96C3012'           BEXTG r1,r2,R3
+                                                   129                                                                SPACE 1
+                                                   130          MEND
+                                                   131
+                                                   132 ***********************************************************************
+                                                   133 * (pending     B96D  BDEPG - Bit Deposit
+                                                   134 *  inclusion in SATK ASAM)
+                                                   135 *
+                                                   136 *     BDEPG Macro to help build BDEPG instruction
+                                                   137 *        BDEPG
+                                                   138 *
+                                                   139 *        Note: R1, R2 are fixed registers:
+                                                   140 *                         r1 = 1; r2 = 2; R3 = 3
+                                                   141 ***********************************************************************
+                                                   142          MACRO
+                                                   143          BDEPG
+                                                   144                                                                SPACE 1
+                                                   145          DS    0H
+                                                   146          DC    XL4'B96D3012'           BDEPG r1,r2,R3
+                                                   147                                                                SPACE 1
+                                                   148          MEND
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   150 ***********************************************************************
+                                                   151 *        Low core PSWs
+                                                   152 ***********************************************************************
+                              00000000  00001C1F   153 MIE4TST  START 0
+00000000                      00000000             154          USING MIE4TST,R0            Low core addressability
+                                                   155
+                              00000140  00000000   156 SVOLDPSW EQU   MIE4TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   158          ORG   MIE4TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        159          DC    X'0000000180000000'
+000001A8  00000000 00000200                        160          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   162          ORG   MIE4TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        163          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        164          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   166          ORG   MIE4TST+X'200'        Start of actual test program...
+
+
+                                                   168 ***********************************************************************
+                                                   169 *               The actual "MIE4TST" program itself...
+                                                   170 ***********************************************************************
+                                                   171 *
+                                                   172 *  Architecture Mode: z/Arch
+                                                   173 *  Register Usage:
+                                                   174 *
+                                                   175 *   R0       (work)
+                                                   176 *   R1-4     (work)
+                                                   177 *   R5       Testing control table - current test base
+                                                   178 *   R6-R7    (work)
+                                                   179 *   R8       First base register
+                                                   180 *   R9       Second base register
+                                                   181 *   R10      Third base register
+                                                   182 *   R11      M4TEST call return
+                                                   183 *   R12      M4TESTS register
+                                                   184 *   R13      (work)
+                                                   185 *   R14      Subroutine call
+                                                   186 *   R15      Secondary Subroutine call or work
+                                                   187 *
+                                                   188 ***********************************************************************
+
+00000200                      00000200             190          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             191          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             192          USING  BEGIN+8192,R10  THIRD Base Register
+
+00000200  0580                                     194 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     195          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     196          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800   198          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   199          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   200
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000020E  41A0 9800                     00000800   201          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   202          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   203
+00000216  B600 8284                     00000484   204          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 8285                     00000485   205          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 8285                     00000485   206          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 8284                     00000484   207          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   208
+                                                   209 ***********************************************************************
+                                                   210 * Is Miscellaneous-instruction-extensions facility 4  (bit 84)
+                                                   211 ***********************************************************************
+                                                   212
+                                                   213          FCHECK 84,'Miscellaneous-instruction-extensions facility 4'
+00000226  47F0 80B8                     000002B8   214+         B     X0001
+                                                   215+*                                      Fcheck data area
+                                                   216+*                                      skip messgae
+0000022A  40404040 E2928997                        217+SKT0001  DC    C'    Skipping tests: '
+0000023E  D489A283 85939381                        218+         DC    C'Miscellaneous-instruction-extensions facility 4'
+0000026D  404D8289 A340F8F4                        219+         DC    C' (bit 84) is not installed.'
+                              0000005E  00000001   220+SKL0001  EQU   *-SKT0001
+                                                   221+*                                      facility bits
+00000288  00000000 00000000                        222+         DS    FD                      gap
+00000290  00000000 00000000                        223+FB0001   DS    4FD
+000002B0  00000000 00000000                        224+         DS    FD                      gap
+                                                   225+*
+                              000002B8  00000001   226+X0001    EQU   *
+000002B8  4100 0004                     00000004   227+         LA    R0,((X0001-FB0001)/8)-1
+000002BC  B2B0 8090                     00000290   228+         STFLE FB0001                  get facility bits
+000002C0  B982 0000                                229+         XGR   R0,R0
+000002C4  4300 809A                     0000029A   230+         IC    R0,FB0001+10            get fbit byte
+000002C8  5400 828C                     0000048C   231+         N     R0,=F'8'                is bit set?
+000002CC  4770 80E0                     000002E0   232+         BNZ   XC0001
+                                                   233+*
+                                                   234+* facility bit not set, issue message and exit
+                                                   235+*
+000002D0  4100 005E                     0000005E   236+         LA    R0,SKL0001              message length
+000002D4  4110 802A                     0000022A   237+         LA    R1,SKT0001              message address
+000002D8  4520 81A0                     000003A0   238+         BAL   R2,MSG
+000002DC  47F0 8268                     00000468   239+         B     EOJ
+                              000002E0  00000001   240+XC0001   EQU   *
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   242 ***********************************************************************
+                                                   243 *              Do tests in the M4TESTS table
+                                                   244 ***********************************************************************
+                                                   245
+000002E0  58C0 8290                     00000490   246          L     R12,=A(M4TESTS)       get table of test addresses
+                                                   247
+                              000002E4  00000001   248 NEXTM4   EQU   *
+000002E4  5850 C000                     00000000   249          L     R5,0(0,R12)       get test address
+000002E8  1255                                     250          LTR   R5,R5                have a test?
+000002EA  4780 812E                     0000032E   251          BZ    ENDTEST                 done?
+                                                   252
+000002EE                      00000000             253          USING M4TEST,R5
+                                                   254
+000002EE  4800 5004                     00000004   255          LH    R0,TNUM           save current test number
+000002F2  5000 8E04                     00001004   256          ST    R0,TESTING        for easy reference
+                                                   257
+000002F6  E310 8E88 0004                00001088   258          LG    R1,R1FUDGE
+000002FC  58B0 5000                     00000000   259          L     R11,TSUB          get address of test routine
+00000300  05BB                                     260          BALR  R11,R11           do test
+                                                   261
+00000302  E310 501C 0014                0000001C   262          LGF   R1,READDR         get address of expected result
+00000308  D507 5028 1000      00000028  00000000   263          CLC   R1OUTPUT,0(R1)    valid?
+0000030E  4770 811A                     0000031A   264          BNE   FAILMSG              no, issue failed message
+                                                   265
+00000312  41C0 C004                     00000004   266          LA    R12,4(0,R12)      next test address
+00000316  47F0 80E4                     000002E4   267          B     NEXTM4
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   269 ***********************************************************************
+                                                   270 * result not as expected:
+                                                   271 *        issue message with test number, instruction under test
+                                                   272 *              and instruction m4
+                                                   273 ***********************************************************************
+                              0000031A  00000001   274 FAILMSG  EQU   *
+0000031A  45F0 813C                     0000033C   275          BAL   R15,RPTERROR
+
+
+                                                   277 ***********************************************************************
+                                                   278 * continue after a failed test
+                                                   279 ***********************************************************************
+                              0000031E  00000001   280 FAILCONT EQU   *
+0000031E  5800 8294                     00000494   281          L     R0,=F'1'          set failed test indicator
+00000322  5000 8E00                     00001000   282          ST    R0,FAILED
+                                                   283
+00000326  41C0 C004                     00000004   284          LA    R12,4(0,R12)      next test address
+0000032A  47F0 80E4                     000002E4   285          B     NEXTM4
+
+
+                                                   287 ***********************************************************************
+                                                   288 * end of testing; set ending psw
+                                                   289 ***********************************************************************
+                              0000032E  00000001   290 ENDTEST  EQU   *
+0000032E  5810 8E00                     00001000   291          L     R1,FAILED         did a test fail?
+00000332  1211                                     292          LTR   R1,R1
+00000334  4780 8268                     00000468   293          BZ    EOJ                  No, exit
+00000338  47F0 8280                     00000480   294          B     FAILTEST             Yes, exit with BAD PSW
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   296 ***********************************************************************
+                                                   297 *        RPTERROR                 Report instruction test in error
+                                                   298 ***********************************************************************
+
+0000033C  50F0 8184                     00000384   300 RPTERROR ST    R15,RPTSAVE          Save return address
+00000340  5050 8188                     00000388   301          ST    R5,RPTSVR5           Save R5
+                                                   302 *
+00000344  4820 5004                     00000004   303          LH    R2,TNUM              get test number and convert
+00000348  4E20 8E67                     00001067   304          CVD   R2,DECNUM
+0000034C  D211 8E51 8E3B      00001051  0000103B   305          MVC   PRT3,EDIT
+00000352  DE11 8E51 8E67      00001051  00001067   306          ED    PRT3,DECNUM
+00000358  D202 8E18 8E5E      00001018  0000105E   307          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   308
+0000035E  D207 8E33 5007      00001033  00000007   309          MVC   PRTNAME,OPNAME       fill in message with instruction
+
+                                                   311 *
+                                                   312 *        Use Hercules Diagnose for Message to console
+                                                   313 *
+00000364  9002 8190                     00000390   314          STM   R0,R2,RPTDWSAV       save regs used by MSG
+00000368  4100 0033                     00000033   315          LA    R0,PRTLNG            message length
+0000036C  4110 8E08                     00001008   316          LA    R1,PRTLINE           messagfe address
+00000370  4520 81A0                     000003A0   317          BAL   R2,MSG               call Hercules console MSG display
+00000374  9802 8190                     00000390   318          LM    R0,R2,RPTDWSAV       restore regs
+
+
+00000378  5850 8188                     00000388   320          L     R5,RPTSVR5         Restore R5
+0000037C  58F0 8184                     00000384   321          L     R15,RPTSAVE        Restore return address
+00000380  07FF                                     322          BR    R15                Return to caller
+
+00000384  00000000                                 324 RPTSAVE  DC    F'0'               R15 save area
+00000388  00000000                                 325 RPTSVR5  DC    F'0'               R5 save area
+
+00000390  00000000 00000000                        327 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   329 ***********************************************************************
+                                                   330 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   331 *              R2 = return address
+                                                   332 ***********************************************************************
+
+000003A0  4900 8298                     00000498   334 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000003A4  07D2                                     335          BNHR  R2                     No, ignore
+
+000003A6  9002 81DC                     000003DC   337          STM   R0,R2,MSGSAVE          Save registers
+
+000003AA  4900 829A                     0000049A   339          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000003AE  47D0 81B6                     000003B6   340          BNH   MSGOK                  Yes, continue
+000003B2  4100 005F                     0000005F   341          LA    R0,L'MSGMSG            No, set to maximum
+
+000003B6  1820                                     343 MSGOK    LR    R2,R0                  Copy length to work register
+000003B8  0620                                     344          BCTR  R2,0                   Minus-1 for execute
+000003BA  4420 81E8                     000003E8   345          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000003BE  4120 200A                     0000000A   347          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000003C2  4110 81EE                     000003EE   348          LA    R1,MSGCMD              Point to true command
+
+000003C6  83120008                                 350          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000003CA  4780 81D6                     000003D6   351          BZ    MSGRET                 Return if successful
+                                                   352
+000003CE  1222                                     353          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+000003D0  4780 81D6                     000003D6   354          BZ    MSGRET                   an error occurred but coninue
+                                                   355
+000003D4  0000                                     356          DC    H'0'                   CRASH for debugging purposes
+
+000003D6  9802 81DC                     000003DC   358 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000003DA  07F2                                     359          BR    R2                     Return to caller
+
+
+
+
+
+
+000003DC  00000000 00000000                        361 MSGSAVE  DC    3F'0'                  Registers save area
+000003E8  D200 81F7 1000      000003F7  00000000   362 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+000003EE  D4E2C7D5 D6C8405C                        364 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+000003F7  40404040 40404040                        365 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   366
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   368 ***********************************************************************
+                                                   369 *        Normal completion or Abnormal termination PSWs
+                                                   370 ***********************************************************************
+
+
+
+
+
+00000458  00020001 80000000                        372 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+00000468  B2B2 8258                     00000458   374 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+00000470  00020001 80000000                        376 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+00000480  B2B2 8270                     00000470   378 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   380 ***********************************************************************
+                                                   381 *        Working Storage
+                                                   382 ***********************************************************************
+
+
+00000484  00000000                                 384 CTLR0    DS    F                CR0
+00000488  00000000                                 385          DS    F
+
+0000048C                                           387          LTORG ,                Literals pool
+0000048C  00000008                                 388                =F'8'
+00000490  00001BB8                                 389                =A(M4TESTS)
+00000494  00000001                                 390                =F'1'
+00000498  0000                                     391                =H'0'
+0000049A  005F                                     392                =AL2(L'MSGMSG)
+                                                   393
+                                                   394 *        some constants
+                                                   395
+                              00000400  00000001   396 K        EQU   1024             One KB
+                              00001000  00000001   397 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   398 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   399 MB       EQU   (K*K)             1 MB
+                                                   400
+                              AABBCCDD  00000001   401 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   402 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   404 *======================================================================
+                                                   405 *
+                                                   406 *  NOTE: start data on an address that is easy to display
+                                                   407 *        within Hercules
+                                                   408 *
+                                                   409 *======================================================================
+                                                   410
+0000049C                      0000049C  00001000   411          ORG   MIE4TST+X'1000'
+00001000  00000000                                 412 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 413 TESTING  DC    F'0'                     current test number
+
+
+                                                   415 *
+                                                   416 *        failed message and associated editting
+                                                   417 *
+00001008  40404040 40404040                        418 PRTLINE  DC    C'         Test # '
+00001018  A7A7A7                                   419 PRTNUM   DC    C'xxx'
+0000101B  40868189 93858440                        420          DC    c' failed for instruction '
+00001033  A7A7A7A7 A7A7A7A7                        421 PRTNAME  DC    CL8'xxxxxxxx'
+                              00000033  00000001   422 PRTLNG   EQU   *-PRTLINE
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   424 ***********************************************************************
+                                                   425 *        TEST failed : message working storge
+                                                   426 ***********************************************************************
+0000103B  40212020 20202020                        427 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   428
+0000104D  7E7E7E6E                                 429          DC    C'===>'
+00001051  40404040 40404040                        430 PRT3     DC    CL18' '
+00001063  4C7E7E7E                                 431          DC    C'<==='
+00001067  00000000 00000000                        432 DECNUM   DS    CL16
+
+
+                                                   434 ***********************************************************************
+                                                   435 *        pollution
+                                                   436 ***********************************************************************
+00001078                                           437          DS    0F
+00001078  00000000 00000000                        438          DS    XL16                        gap
+00001088  C6A48487 85C6A484                        439 R1FUDGE  DC    CL16'FudgeFudgeFudge-'
+00001098  00000000 00000000                        440          DS    XL16                        gap
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   442 ***********************************************************************
+                                                   443 *        M4TEST DSECT
+                                                   444 ***********************************************************************
+
+
+                                                   446 M4TEST   DSECT ,
+00000000  00000000                                 447 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     448 TNUM     DC    H'00'          Test Number
+00000006  00                                       449          DC    X'00'
+                                                   450
+00000007  40404040 40404040                        451 OPNAME   DC    CL8' '         E7 name
+00000010  00000000                                 452 R2ADDR   DC    A(0)           address of R2 source
+00000014  00000000                                 453 R3ADDR   DC    A(0)           address of R3 source
+00000018  00000000                                 454 RELEN    DC    A(0)           RESULT LENGTH
+0000001C  00000000                                 455 READDR   DC    A(0)           result (expected) address
+00000020  00000000 00000000                        456          DS    FD                gap
+00000028  00000000 00000000                        457 R1OUTPUT DS    D              r1 Output
+00000030  00000000 00000000                        458          DS    FD                gap
+                                                   459
+                                                   460 *        test routine will be here (from RRF-a macro)
+                                                   461 *
+                                                   462 *        followed by
+                                                   463 *              EXPECTED RESULT
+
+
+                              00000000  00001C1F   465 MIE4TST  CSECT ,
+000010A8                                           466          DS    0F
+
+
+                                                   468 ***********************************************************************
+                                                   469 *     Macros to help build test tables
+                                                   470 ***********************************************************************
+
+
+
+                                                   472 *
+                                                   473 * macro to generate individual test
+                                                   474 *
+                                                   475          MACRO
+                                                   476          RRF_A   &INST
+                                                   477 .*                               &INST   - RRF_A instruction under test
+                                                   478
+                                                   479
+                                                   480          GBLA  &TNUM
+                                                   481 &TNUM    SETA  &TNUM+1
+                                                   482
+                                                   483          DS    0FD
+                                                   484          USING *,R5              base for test data and test routine
+                                                   485
+                                                   486 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   487          DC    H'&TNUM'          test number
+                                                   488          DC    X'00'
+                                                   489          DC    CL8'&INST'        instruction name
+                                                   490          DC    A(RE&TNUM+8)      address of R2 source
+                                                   491          DC    A(RE&TNUM+16)     address of R3 source
+                                                   492          DC    A(8)              result length
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   493 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   494          DS    FD                gap
+                                                   495 R1O&TNUM DS    D                 R1 output
+                                                   496          DS    FD                gap
+                                                   497 .*
+                                                   498 *
+                                                   499 X&TNUM   DS    0F
+                                                   500          LG    R1,R1FUDGE
+                                                   501
+                                                   502          XGR   R2,R2
+                                                   503          L     R2,R2ADDR         load r2 source address
+                                                   504          LG    R2,0(R2)          load source
+                                                   505
+                                                   506          XGR   R3,R3
+                                                   507          L     R3,R3ADDR         load r3 source address
+                                                   508          LG    R3,0(R3)          load source
+                                                   509
+                                                   510          &INST                test instruction
+                                                   511          STG   R1,R1O&TNUM       save R1 output
+                                                   512
+                                                   513          BR    R11               return
+                                                   514
+                                                   515 RE&TNUM  DC    0F                xl16 expected result
+                                                   516
+                                                   517          DROP  R5
+                                                   518          MEND
+
+
+
+                                                   520 *
+                                                   521 * macro to generate table of pointers to individual tests
+                                                   522 *
+                                                   523          MACRO
+                                                   524          PTTABLE
+                                                   525          GBLA  &TNUM
+                                                   526          LCLA  &CUR
+                                                   527 &CUR     SETA  1
+                                                   528 .*
+                                                   529 TTABLE   DS    0F
+                                                   530 .LOOP    ANOP
+                                                   531 .*
+                                                   532          DC    A(T&CUR)
+                                                   533 .*
+                                                   534 &CUR     SETA  &CUR+1
+                                                   535          AIF   (&CUR LE &TNUM).LOOP
+                                                   536 *
+                                                   537          DC    A(0)              END OF TABLE
+                                                   538          DC    A(0)
+                                                   539 .*
+                                                   540          MEND
+                                                   541
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   543 ***********************************************************************
+                                                   544 *        MIE4  RRF_A tests
+                                                   545 ***********************************************************************
+                                                   546          PRINT DATA
+000010A8  00000000 00000000                        547          DS    FD
+                                                   548 *
+                                                   549 *   B96C  BEXTG - Bit Extract
+                                                   550 *   B96D  BDEPG - Bit Deposit
+                                                   551 *
+                                                   552 *        RRF_A instruction
+                                                   553 *              followed by
+                                                   554 *                 8 byte expected result (R1)
+                                                   555 *                 8 byte R2 source
+                                                   556 *                 8 byte R3 source
+                                                   557 *---------------------------------------------------------------------
+                                                   558 *  BEXTG - Bit Extract
+                                                   559 *---------------------------------------------------------------------
+                                                   560 *
+                                                   561
+                                                   562          RRF_A BEXTG
+000010B0                                           563+         DS    0FD
+000010B0                      000010B0             564+         USING *,R5              base for test data and test routine
+000010B0  000010E8                                 565+T1       DC    A(X1)             address of test routine
+000010B4  0001                                     566+         DC    H'1'              test number
+000010B6  00                                       567+         DC    X'00'
+000010B7  C2C5E7E3 C7404040                        568+         DC    CL8'BEXTG'        instruction name
+000010C0  00001120                                 569+         DC    A(RE1+8)          address of R2 source
+000010C4  00001128                                 570+         DC    A(RE1+16)         address of R3 source
+000010C8  00000008                                 571+         DC    A(8)              result length
+000010CC  00001118                                 572+REA1     DC    A(RE1)            result address
+000010D0  00000000 00000000                        573+         DS    FD                gap
+000010D8  00000000 00000000                        574+R1O1     DS    D                 R1 output
+000010E0  00000000 00000000                        575+         DS    FD                gap
+                                                   576+*
+000010E8                                           577+X1       DS    0F
+000010E8  E310 8E88 0004                00001088   578+         LG    R1,R1FUDGE
+000010EE  B982 0022                                579+         XGR   R2,R2
+000010F2  5820 5010                     00000010   580+         L     R2,R2ADDR         load r2 source address
+000010F6  E322 0000 0004                00000000   581+         LG    R2,0(R2)          load source
+000010FC  B982 0033                                582+         XGR   R3,R3
+00001100  5830 5014                     00000014   583+         L     R3,R3ADDR         load r3 source address
+00001104  E333 0000 0004                00000000   584+         LG    R3,0(R3)          load source
+
+0000110A                                           587+         DS    0H
+0000110A  B96C3012                                 588+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000110E  E310 5028 0024                000010D8   590+         STG   R1,R1O1           save R1 output
+00001114  07FB                                     591+         BR    R11               return
+00001118                                           592+RE1      DC    0F                xl16 expected result
+00001118                                           593+         DROP  R5
+00001118  00000000 00000000                        594          DC    XL8'0000 0000 0000 0000'   result
+00001120  AAAAAAAA AAAAAAAA                        595          DC    XL8'AAAA AAAA AAAA AAAA'   R2
+00001128  00000000 00000000                        596          DC    XL8'0000 0000 0000 0000'   R3
+                                                   597
+                                                   598          RRF_A BEXTG
+00001130                                           599+         DS    0FD
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001130                      00001130             600+         USING *,R5              base for test data and test routine
+00001130  00001168                                 601+T2       DC    A(X2)             address of test routine
+00001134  0002                                     602+         DC    H'2'              test number
+00001136  00                                       603+         DC    X'00'
+00001137  C2C5E7E3 C7404040                        604+         DC    CL8'BEXTG'        instruction name
+00001140  000011A0                                 605+         DC    A(RE2+8)          address of R2 source
+00001144  000011A8                                 606+         DC    A(RE2+16)         address of R3 source
+00001148  00000008                                 607+         DC    A(8)              result length
+0000114C  00001198                                 608+REA2     DC    A(RE2)            result address
+00001150  00000000 00000000                        609+         DS    FD                gap
+00001158  00000000 00000000                        610+R1O2     DS    D                 R1 output
+00001160  00000000 00000000                        611+         DS    FD                gap
+                                                   612+*
+00001168                                           613+X2       DS    0F
+00001168  E310 8E88 0004                00001088   614+         LG    R1,R1FUDGE
+0000116E  B982 0022                                615+         XGR   R2,R2
+00001172  5820 5010                     00000010   616+         L     R2,R2ADDR         load r2 source address
+00001176  E322 0000 0004                00000000   617+         LG    R2,0(R2)          load source
+0000117C  B982 0033                                618+         XGR   R3,R3
+00001180  5830 5014                     00000014   619+         L     R3,R3ADDR         load r3 source address
+00001184  E333 0000 0004                00000000   620+         LG    R3,0(R3)          load source
+
+0000118A                                           623+         DS    0H
+0000118A  B96C3012                                 624+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000118E  E310 5028 0024                00001158   626+         STG   R1,R1O2           save R1 output
+00001194  07FB                                     627+         BR    R11               return
+00001198                                           628+RE2      DC    0F                xl16 expected result
+00001198                                           629+         DROP  R5
+00001198  00000000 00000000                        630          DC    XL8'0000 0000 0000 0000'   result
+000011A0  00000000 00000000                        631          DC    XL8'0000 0000 0000 0000'   R2
+000011A8  AAAAAAAA AAAAAAAA                        632          DC    XL8'AAAA AAAA AAAA AAAA'   R3
+                                                   633
+                                                   634          RRF_A BEXTG
+000011B0                                           635+         DS    0FD
+000011B0                      000011B0             636+         USING *,R5              base for test data and test routine
+000011B0  000011E8                                 637+T3       DC    A(X3)             address of test routine
+000011B4  0003                                     638+         DC    H'3'              test number
+000011B6  00                                       639+         DC    X'00'
+000011B7  C2C5E7E3 C7404040                        640+         DC    CL8'BEXTG'        instruction name
+000011C0  00001220                                 641+         DC    A(RE3+8)          address of R2 source
+000011C4  00001228                                 642+         DC    A(RE3+16)         address of R3 source
+000011C8  00000008                                 643+         DC    A(8)              result length
+000011CC  00001218                                 644+REA3     DC    A(RE3)            result address
+000011D0  00000000 00000000                        645+         DS    FD                gap
+000011D8  00000000 00000000                        646+R1O3     DS    D                 R1 output
+000011E0  00000000 00000000                        647+         DS    FD                gap
+                                                   648+*
+000011E8                                           649+X3       DS    0F
+000011E8  E310 8E88 0004                00001088   650+         LG    R1,R1FUDGE
+000011EE  B982 0022                                651+         XGR   R2,R2
+000011F2  5820 5010                     00000010   652+         L     R2,R2ADDR         load r2 source address
+000011F6  E322 0000 0004                00000000   653+         LG    R2,0(R2)          load source
+000011FC  B982 0033                                654+         XGR   R3,R3
+00001200  5830 5014                     00000014   655+         L     R3,R3ADDR         load r3 source address
+00001204  E333 0000 0004                00000000   656+         LG    R3,0(R3)          load source
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+0000120A                                           659+         DS    0H
+0000120A  B96C3012                                 660+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000120E  E310 5028 0024                000011D8   662+         STG   R1,R1O3           save R1 output
+00001214  07FB                                     663+         BR    R11               return
+00001218                                           664+RE3      DC    0F                xl16 expected result
+00001218                                           665+         DROP  R5
+00001218  B8000000 00000000                        666          DC    XL8'B800 0000 0000 0000'   result
+00001220  00089000 000AB000                        667          DC    XL8'0008 9000 000A B000'   R2
+00001228  00080001 000A8000                        668          DC    XL8'0008 0001 000A 8000'   R3
+                                                   669
+                                                   670          RRF_A BEXTG
+00001230                                           671+         DS    0FD
+00001230                      00001230             672+         USING *,R5              base for test data and test routine
+00001230  00001268                                 673+T4       DC    A(X4)             address of test routine
+00001234  0004                                     674+         DC    H'4'              test number
+00001236  00                                       675+         DC    X'00'
+00001237  C2C5E7E3 C7404040                        676+         DC    CL8'BEXTG'        instruction name
+00001240  000012A0                                 677+         DC    A(RE4+8)          address of R2 source
+00001244  000012A8                                 678+         DC    A(RE4+16)         address of R3 source
+00001248  00000008                                 679+         DC    A(8)              result length
+0000124C  00001298                                 680+REA4     DC    A(RE4)            result address
+00001250  00000000 00000000                        681+         DS    FD                gap
+00001258  00000000 00000000                        682+R1O4     DS    D                 R1 output
+00001260  00000000 00000000                        683+         DS    FD                gap
+                                                   684+*
+00001268                                           685+X4       DS    0F
+00001268  E310 8E88 0004                00001088   686+         LG    R1,R1FUDGE
+0000126E  B982 0022                                687+         XGR   R2,R2
+00001272  5820 5010                     00000010   688+         L     R2,R2ADDR         load r2 source address
+00001276  E322 0000 0004                00000000   689+         LG    R2,0(R2)          load source
+0000127C  B982 0033                                690+         XGR   R3,R3
+00001280  5830 5014                     00000014   691+         L     R3,R3ADDR         load r3 source address
+00001284  E333 0000 0004                00000000   692+         LG    R3,0(R3)          load source
+
+0000128A                                           695+         DS    0H
+0000128A  B96C3012                                 696+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000128E  E310 5028 0024                00001258   698+         STG   R1,R1O4           save R1 output
+00001294  07FB                                     699+         BR    R11               return
+00001298                                           700+RE4      DC    0F                xl16 expected result
+00001298                                           701+         DROP  R5
+00001298  9A000000 00000000                        702          DC    XL8'9A00 0000 0000 0000'   result
+000012A0  00089000 000AB000                        703          DC    XL8'0008 9000 000A B000'   R2
+000012A8  0008000C 000A6006                        704          DC    XL8'0008 000C 000A 6006'   R3
+                                                   705
+                                                   706          RRF_A BEXTG
+000012B0                                           707+         DS    0FD
+000012B0                      000012B0             708+         USING *,R5              base for test data and test routine
+000012B0  000012E8                                 709+T5       DC    A(X5)             address of test routine
+000012B4  0005                                     710+         DC    H'5'              test number
+000012B6  00                                       711+         DC    X'00'
+000012B7  C2C5E7E3 C7404040                        712+         DC    CL8'BEXTG'        instruction name
+000012C0  00001320                                 713+         DC    A(RE5+8)          address of R2 source
+000012C4  00001328                                 714+         DC    A(RE5+16)         address of R3 source
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000012C8  00000008                                 715+         DC    A(8)              result length
+000012CC  00001318                                 716+REA5     DC    A(RE5)            result address
+000012D0  00000000 00000000                        717+         DS    FD                gap
+000012D8  00000000 00000000                        718+R1O5     DS    D                 R1 output
+000012E0  00000000 00000000                        719+         DS    FD                gap
+                                                   720+*
+000012E8                                           721+X5       DS    0F
+000012E8  E310 8E88 0004                00001088   722+         LG    R1,R1FUDGE
+000012EE  B982 0022                                723+         XGR   R2,R2
+000012F2  5820 5010                     00000010   724+         L     R2,R2ADDR         load r2 source address
+000012F6  E322 0000 0004                00000000   725+         LG    R2,0(R2)          load source
+000012FC  B982 0033                                726+         XGR   R3,R3
+00001300  5830 5014                     00000014   727+         L     R3,R3ADDR         load r3 source address
+00001304  E333 0000 0004                00000000   728+         LG    R3,0(R3)          load source
+
+0000130A                                           731+         DS    0H
+0000130A  B96C3012                                 732+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000130E  E310 5028 0024                000012D8   734+         STG   R1,R1O5           save R1 output
+00001314  07FB                                     735+         BR    R11               return
+00001318                                           736+RE5      DC    0F                xl16 expected result
+00001318                                           737+         DROP  R5
+00001318  9B000000 00000000                        738          DC    XL8'9B00 0000 0000 0000'   result
+00001320  00089000 000AB004                        739          DC    XL8'0008 9000 000A B004'   R2
+00001328  0008000C 000A6006                        740          DC    XL8'0008 000C 000A 6006'   R3
+                                                   741
+                                                   742          RRF_A BEXTG
+00001330                                           743+         DS    0FD
+00001330                      00001330             744+         USING *,R5              base for test data and test routine
+00001330  00001368                                 745+T6       DC    A(X6)             address of test routine
+00001334  0006                                     746+         DC    H'6'              test number
+00001336  00                                       747+         DC    X'00'
+00001337  C2C5E7E3 C7404040                        748+         DC    CL8'BEXTG'        instruction name
+00001340  000013A0                                 749+         DC    A(RE6+8)          address of R2 source
+00001344  000013A8                                 750+         DC    A(RE6+16)         address of R3 source
+00001348  00000008                                 751+         DC    A(8)              result length
+0000134C  00001398                                 752+REA6     DC    A(RE6)            result address
+00001350  00000000 00000000                        753+         DS    FD                gap
+00001358  00000000 00000000                        754+R1O6     DS    D                 R1 output
+00001360  00000000 00000000                        755+         DS    FD                gap
+                                                   756+*
+00001368                                           757+X6       DS    0F
+00001368  E310 8E88 0004                00001088   758+         LG    R1,R1FUDGE
+0000136E  B982 0022                                759+         XGR   R2,R2
+00001372  5820 5010                     00000010   760+         L     R2,R2ADDR         load r2 source address
+00001376  E322 0000 0004                00000000   761+         LG    R2,0(R2)          load source
+0000137C  B982 0033                                762+         XGR   R3,R3
+00001380  5830 5014                     00000014   763+         L     R3,R3ADDR         load r3 source address
+00001384  E333 0000 0004                00000000   764+         LG    R3,0(R3)          load source
+
+0000138A                                           767+         DS    0H
+0000138A  B96C3012                                 768+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000138E  E310 5028 0024                00001358   770+         STG   R1,R1O6           save R1 output
+00001394  07FB                                     771+         BR    R11               return
+00001398                                           772+RE6      DC    0F                xl16 expected result
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001398                                           773+         DROP  R5
+00001398  9B800000 00000000                        774          DC    XL8'9B80 0000 0000 0000'   result
+000013A0  00089000 000AB006                        775          DC    XL8'0008 9000 000A B006'   R2
+000013A8  0008000C 000A6006                        776          DC    XL8'0008 000C 000A 6006'   R3
+                                                   777
+                                                   778          RRF_A BEXTG
+000013B0                                           779+         DS    0FD
+000013B0                      000013B0             780+         USING *,R5              base for test data and test routine
+000013B0  000013E8                                 781+T7       DC    A(X7)             address of test routine
+000013B4  0007                                     782+         DC    H'7'              test number
+000013B6  00                                       783+         DC    X'00'
+000013B7  C2C5E7E3 C7404040                        784+         DC    CL8'BEXTG'        instruction name
+000013C0  00001420                                 785+         DC    A(RE7+8)          address of R2 source
+000013C4  00001428                                 786+         DC    A(RE7+16)         address of R3 source
+000013C8  00000008                                 787+         DC    A(8)              result length
+000013CC  00001418                                 788+REA7     DC    A(RE7)            result address
+000013D0  00000000 00000000                        789+         DS    FD                gap
+000013D8  00000000 00000000                        790+R1O7     DS    D                 R1 output
+000013E0  00000000 00000000                        791+         DS    FD                gap
+                                                   792+*
+000013E8                                           793+X7       DS    0F
+000013E8  E310 8E88 0004                00001088   794+         LG    R1,R1FUDGE
+000013EE  B982 0022                                795+         XGR   R2,R2
+000013F2  5820 5010                     00000010   796+         L     R2,R2ADDR         load r2 source address
+000013F6  E322 0000 0004                00000000   797+         LG    R2,0(R2)          load source
+000013FC  B982 0033                                798+         XGR   R3,R3
+00001400  5830 5014                     00000014   799+         L     R3,R3ADDR         load r3 source address
+00001404  E333 0000 0004                00000000   800+         LG    R3,0(R3)          load source
+
+0000140A                                           803+         DS    0H
+0000140A  B96C3012                                 804+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000140E  E310 5028 0024                000013D8   806+         STG   R1,R1O7           save R1 output
+00001414  07FB                                     807+         BR    R11               return
+00001418                                           808+RE7      DC    0F                xl16 expected result
+00001418                                           809+         DROP  R5
+00001418  89AB0000 00000000                        810          DC    XL8'89AB 0000 0000 0000'   result
+00001420  00089000 000AB000                        811          DC    XL8'0008 9000 000A B000'   R2
+00001428  000FF000 000FF000                        812          DC    XL8'000F F000 000F F000'   R3
+                                                   813
+                                                   814          RRF_A BEXTG
+00001430                                           815+         DS    0FD
+00001430                      00001430             816+         USING *,R5              base for test data and test routine
+00001430  00001468                                 817+T8       DC    A(X8)             address of test routine
+00001434  0008                                     818+         DC    H'8'              test number
+00001436  00                                       819+         DC    X'00'
+00001437  C2C5E7E3 C7404040                        820+         DC    CL8'BEXTG'        instruction name
+00001440  000014A0                                 821+         DC    A(RE8+8)          address of R2 source
+00001444  000014A8                                 822+         DC    A(RE8+16)         address of R3 source
+00001448  00000008                                 823+         DC    A(8)              result length
+0000144C  00001498                                 824+REA8     DC    A(RE8)            result address
+00001450  00000000 00000000                        825+         DS    FD                gap
+00001458  00000000 00000000                        826+R1O8     DS    D                 R1 output
+00001460  00000000 00000000                        827+         DS    FD                gap
+                                                   828+*
+00001468                                           829+X8       DS    0F
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001468  E310 8E88 0004                00001088   830+         LG    R1,R1FUDGE
+0000146E  B982 0022                                831+         XGR   R2,R2
+00001472  5820 5010                     00000010   832+         L     R2,R2ADDR         load r2 source address
+00001476  E322 0000 0004                00000000   833+         LG    R2,0(R2)          load source
+0000147C  B982 0033                                834+         XGR   R3,R3
+00001480  5830 5014                     00000014   835+         L     R3,R3ADDR         load r3 source address
+00001484  E333 0000 0004                00000000   836+         LG    R3,0(R3)          load source
+
+0000148A                                           839+         DS    0H
+0000148A  B96C3012                                 840+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000148E  E310 5028 0024                00001458   842+         STG   R1,R1O8           save R1 output
+00001494  07FB                                     843+         BR    R11               return
+00001498                                           844+RE8      DC    0F                xl16 expected result
+00001498                                           845+         DROP  R5
+00001498  FFFF0000 00000000                        846          DC    XL8'FFFF 0000 0000 0000'   result
+000014A0  000FF000 000FF000                        847          DC    XL8'000F F000 000F F000'   R2
+000014A8  000FF000 000FF000                        848          DC    XL8'000F F000 000F F000'   R3
+                                                   849
+                                                   850          RRF_A BEXTG
+000014B0                                           851+         DS    0FD
+000014B0                      000014B0             852+         USING *,R5              base for test data and test routine
+000014B0  000014E8                                 853+T9       DC    A(X9)             address of test routine
+000014B4  0009                                     854+         DC    H'9'              test number
+000014B6  00                                       855+         DC    X'00'
+000014B7  C2C5E7E3 C7404040                        856+         DC    CL8'BEXTG'        instruction name
+000014C0  00001520                                 857+         DC    A(RE9+8)          address of R2 source
+000014C4  00001528                                 858+         DC    A(RE9+16)         address of R3 source
+000014C8  00000008                                 859+         DC    A(8)              result length
+000014CC  00001518                                 860+REA9     DC    A(RE9)            result address
+000014D0  00000000 00000000                        861+         DS    FD                gap
+000014D8  00000000 00000000                        862+R1O9     DS    D                 R1 output
+000014E0  00000000 00000000                        863+         DS    FD                gap
+                                                   864+*
+000014E8                                           865+X9       DS    0F
+000014E8  E310 8E88 0004                00001088   866+         LG    R1,R1FUDGE
+000014EE  B982 0022                                867+         XGR   R2,R2
+000014F2  5820 5010                     00000010   868+         L     R2,R2ADDR         load r2 source address
+000014F6  E322 0000 0004                00000000   869+         LG    R2,0(R2)          load source
+000014FC  B982 0033                                870+         XGR   R3,R3
+00001500  5830 5014                     00000014   871+         L     R3,R3ADDR         load r3 source address
+00001504  E333 0000 0004                00000000   872+         LG    R3,0(R3)          load source
+
+0000150A                                           875+         DS    0H
+0000150A  B96C3012                                 876+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000150E  E310 5028 0024                000014D8   878+         STG   R1,R1O9           save R1 output
+00001514  07FB                                     879+         BR    R11               return
+00001518                                           880+RE9      DC    0F                xl16 expected result
+00001518                                           881+         DROP  R5
+00001518  00000000 00000000                        882          DC    XL8'0000 0000 0000 0000'   result
+00001520  00000000 00000000                        883          DC    XL8'0000 0000 0000 0000'   R2
+00001528  FFFFFFFF FFFFFFFF                        884          DC    XL8'FFFF FFFF FFFF FFFF'   R3
+                                                   885
+                                                   886          RRF_A BEXTG
+00001530                                           887+         DS    0FD
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001530                      00001530             888+         USING *,R5              base for test data and test routine
+00001530  00001568                                 889+T10      DC    A(X10)            address of test routine
+00001534  000A                                     890+         DC    H'10'             test number
+00001536  00                                       891+         DC    X'00'
+00001537  C2C5E7E3 C7404040                        892+         DC    CL8'BEXTG'        instruction name
+00001540  000015A0                                 893+         DC    A(RE10+8)         address of R2 source
+00001544  000015A8                                 894+         DC    A(RE10+16)        address of R3 source
+00001548  00000008                                 895+         DC    A(8)              result length
+0000154C  00001598                                 896+REA10    DC    A(RE10)           result address
+00001550  00000000 00000000                        897+         DS    FD                gap
+00001558  00000000 00000000                        898+R1O10    DS    D                 R1 output
+00001560  00000000 00000000                        899+         DS    FD                gap
+                                                   900+*
+00001568                                           901+X10      DS    0F
+00001568  E310 8E88 0004                00001088   902+         LG    R1,R1FUDGE
+0000156E  B982 0022                                903+         XGR   R2,R2
+00001572  5820 5010                     00000010   904+         L     R2,R2ADDR         load r2 source address
+00001576  E322 0000 0004                00000000   905+         LG    R2,0(R2)          load source
+0000157C  B982 0033                                906+         XGR   R3,R3
+00001580  5830 5014                     00000014   907+         L     R3,R3ADDR         load r3 source address
+00001584  E333 0000 0004                00000000   908+         LG    R3,0(R3)          load source
+
+0000158A                                           911+         DS    0H
+0000158A  B96C3012                                 912+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000158E  E310 5028 0024                00001558   914+         STG   R1,R1O10          save R1 output
+00001594  07FB                                     915+         BR    R11               return
+00001598                                           916+RE10     DC    0F                xl16 expected result
+00001598                                           917+         DROP  R5
+00001598  10001000 10000001                        918          DC    XL8'1000 1000 1000 0001'   result
+000015A0  10001000 10000001                        919          DC    XL8'1000 1000 1000 0001'   R2
+000015A8  FFFFFFFF FFFFFFFF                        920          DC    XL8'FFFF FFFF FFFF FFFF'   R3
+                                                   921
+                                                   922          RRF_A BEXTG
+000015B0                                           923+         DS    0FD
+000015B0                      000015B0             924+         USING *,R5              base for test data and test routine
+000015B0  000015E8                                 925+T11      DC    A(X11)            address of test routine
+000015B4  000B                                     926+         DC    H'11'             test number
+000015B6  00                                       927+         DC    X'00'
+000015B7  C2C5E7E3 C7404040                        928+         DC    CL8'BEXTG'        instruction name
+000015C0  00001620                                 929+         DC    A(RE11+8)         address of R2 source
+000015C4  00001628                                 930+         DC    A(RE11+16)        address of R3 source
+000015C8  00000008                                 931+         DC    A(8)              result length
+000015CC  00001618                                 932+REA11    DC    A(RE11)           result address
+000015D0  00000000 00000000                        933+         DS    FD                gap
+000015D8  00000000 00000000                        934+R1O11    DS    D                 R1 output
+000015E0  00000000 00000000                        935+         DS    FD                gap
+                                                   936+*
+000015E8                                           937+X11      DS    0F
+000015E8  E310 8E88 0004                00001088   938+         LG    R1,R1FUDGE
+000015EE  B982 0022                                939+         XGR   R2,R2
+000015F2  5820 5010                     00000010   940+         L     R2,R2ADDR         load r2 source address
+000015F6  E322 0000 0004                00000000   941+         LG    R2,0(R2)          load source
+000015FC  B982 0033                                942+         XGR   R3,R3
+00001600  5830 5014                     00000014   943+         L     R3,R3ADDR         load r3 source address
+00001604  E333 0000 0004                00000000   944+         LG    R3,0(R3)          load source
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+0000160A                                           947+         DS    0H
+0000160A  B96C3012                                 948+         DC    XL4'B96C3012'           BEXTG r1,r2,R3
+
+0000160E  E310 5028 0024                000015D8   950+         STG   R1,R1O11          save R1 output
+00001614  07FB                                     951+         BR    R11               return
+00001618                                           952+RE11     DC    0F                xl16 expected result
+00001618                                           953+         DROP  R5
+00001618  AAAAAAAA AAAAAAAA                        954          DC    XL8'AAAA AAAA AAAA AAAA'   result
+00001620  AAAAAAAA AAAAAAAA                        955          DC    XL8'AAAA AAAA AAAA AAAA'   R2
+00001628  FFFFFFFF FFFFFFFF                        956          DC    XL8'FFFF FFFF FFFF FFFF'   R3
+                                                   957
+                                                   958 *---------------------------------------------------------------------
+                                                   959 * BDEPG - Bit Deposit
+                                                   960 *---------------------------------------------------------------------
+                                                   961 *
+                                                   962          RRF_A BDEPG
+00001630                                           963+         DS    0FD
+00001630                      00001630             964+         USING *,R5              base for test data and test routine
+00001630  00001668                                 965+T12      DC    A(X12)            address of test routine
+00001634  000C                                     966+         DC    H'12'             test number
+00001636  00                                       967+         DC    X'00'
+00001637  C2C4C5D7 C7404040                        968+         DC    CL8'BDEPG'        instruction name
+00001640  000016A0                                 969+         DC    A(RE12+8)         address of R2 source
+00001644  000016A8                                 970+         DC    A(RE12+16)        address of R3 source
+00001648  00000008                                 971+         DC    A(8)              result length
+0000164C  00001698                                 972+REA12    DC    A(RE12)           result address
+00001650  00000000 00000000                        973+         DS    FD                gap
+00001658  00000000 00000000                        974+R1O12    DS    D                 R1 output
+00001660  00000000 00000000                        975+         DS    FD                gap
+                                                   976+*
+00001668                                           977+X12      DS    0F
+00001668  E310 8E88 0004                00001088   978+         LG    R1,R1FUDGE
+0000166E  B982 0022                                979+         XGR   R2,R2
+00001672  5820 5010                     00000010   980+         L     R2,R2ADDR         load r2 source address
+00001676  E322 0000 0004                00000000   981+         LG    R2,0(R2)          load source
+0000167C  B982 0033                                982+         XGR   R3,R3
+00001680  5830 5014                     00000014   983+         L     R3,R3ADDR         load r3 source address
+00001684  E333 0000 0004                00000000   984+         LG    R3,0(R3)          load source
+
+0000168A                                           987+         DS    0H
+0000168A  B96D3012                                 988+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+0000168E  E310 5028 0024                00001658   990+         STG   R1,R1O12          save R1 output
+00001694  07FB                                     991+         BR    R11               return
+00001698                                           992+RE12     DC    0F                xl16 expected result
+00001698                                           993+         DROP  R5
+00001698  00000000 00000000                        994          DC    XL8'0000 0000 0000 0000'   result
+000016A0  AAAAAAAA AAAAAAAA                        995          DC    XL8'AAAA AAAA AAAA AAAA'   R2
+000016A8  00000000 00000000                        996          DC    XL8'0000 0000 0000 0000'   R3
+                                                   997
+                                                   998          RRF_A BDEPG
+000016B0                                           999+         DS    0FD
+000016B0                      000016B0            1000+         USING *,R5              base for test data and test routine
+000016B0  000016E8                                1001+T13      DC    A(X13)            address of test routine
+000016B4  000D                                    1002+         DC    H'13'             test number
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016B6  00                                      1003+         DC    X'00'
+000016B7  C2C4C5D7 C7404040                       1004+         DC    CL8'BDEPG'        instruction name
+000016C0  00001720                                1005+         DC    A(RE13+8)         address of R2 source
+000016C4  00001728                                1006+         DC    A(RE13+16)        address of R3 source
+000016C8  00000008                                1007+         DC    A(8)              result length
+000016CC  00001718                                1008+REA13    DC    A(RE13)           result address
+000016D0  00000000 00000000                       1009+         DS    FD                gap
+000016D8  00000000 00000000                       1010+R1O13    DS    D                 R1 output
+000016E0  00000000 00000000                       1011+         DS    FD                gap
+                                                  1012+*
+000016E8                                          1013+X13      DS    0F
+000016E8  E310 8E88 0004                00001088  1014+         LG    R1,R1FUDGE
+000016EE  B982 0022                               1015+         XGR   R2,R2
+000016F2  5820 5010                     00000010  1016+         L     R2,R2ADDR         load r2 source address
+000016F6  E322 0000 0004                00000000  1017+         LG    R2,0(R2)          load source
+000016FC  B982 0033                               1018+         XGR   R3,R3
+00001700  5830 5014                     00000014  1019+         L     R3,R3ADDR         load r3 source address
+00001704  E333 0000 0004                00000000  1020+         LG    R3,0(R3)          load source
+
+0000170A                                          1023+         DS    0H
+0000170A  B96D3012                                1024+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+0000170E  E310 5028 0024                000016D8  1026+         STG   R1,R1O13          save R1 output
+00001714  07FB                                    1027+         BR    R11               return
+00001718                                          1028+RE13     DC    0F                xl16 expected result
+00001718                                          1029+         DROP  R5
+00001718  00000000 00000000                       1030          DC    XL8'0000 0000 0000 0000'   result
+00001720  00000000 00000000                       1031          DC    XL8'0000 0000 0000 0000'   R2
+00001728  AAAAAAAA AAAAAAAA                       1032          DC    XL8'AAAA AAAA AAAA AAAA'   R3
+                                                  1033
+                                                  1034          RRF_A BDEPG
+00001730                                          1035+         DS    0FD
+00001730                      00001730            1036+         USING *,R5              base for test data and test routine
+00001730  00001768                                1037+T14      DC    A(X14)            address of test routine
+00001734  000E                                    1038+         DC    H'14'             test number
+00001736  00                                      1039+         DC    X'00'
+00001737  C2C4C5D7 C7404040                       1040+         DC    CL8'BDEPG'        instruction name
+00001740  000017A0                                1041+         DC    A(RE14+8)         address of R2 source
+00001744  000017A8                                1042+         DC    A(RE14+16)        address of R3 source
+00001748  00000008                                1043+         DC    A(8)              result length
+0000174C  00001798                                1044+REA14    DC    A(RE14)           result address
+00001750  00000000 00000000                       1045+         DS    FD                gap
+00001758  00000000 00000000                       1046+R1O14    DS    D                 R1 output
+00001760  00000000 00000000                       1047+         DS    FD                gap
+                                                  1048+*
+00001768                                          1049+X14      DS    0F
+00001768  E310 8E88 0004                00001088  1050+         LG    R1,R1FUDGE
+0000176E  B982 0022                               1051+         XGR   R2,R2
+00001772  5820 5010                     00000010  1052+         L     R2,R2ADDR         load r2 source address
+00001776  E322 0000 0004                00000000  1053+         LG    R2,0(R2)          load source
+0000177C  B982 0033                               1054+         XGR   R3,R3
+00001780  5830 5014                     00000014  1055+         L     R3,R3ADDR         load r3 source address
+00001784  E333 0000 0004                00000000  1056+         LG    R3,0(R3)          load source
+
+0000178A                                          1059+         DS    0H
+0000178A  B96D3012                                1060+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+0000178E  E310 5028 0024                00001758  1062+         STG   R1,R1O14          save R1 output
+00001794  07FB                                    1063+         BR    R11               return
+00001798                                          1064+RE14     DC    0F                xl16 expected result
+00001798                                          1065+         DROP  R5
+00001798  00080000 000A8000                       1066          DC    XL8'0008 0000 000A 8000'   result
+000017A0  B8000000 00000000                       1067          DC    XL8'B800 0000 0000 0000'   R2
+000017A8  00080001 000A8000                       1068          DC    XL8'0008 0001 000A 8000'   R3
+                                                  1069
+                                                  1070          RRF_A BDEPG
+000017B0                                          1071+         DS    0FD
+000017B0                      000017B0            1072+         USING *,R5              base for test data and test routine
+000017B0  000017E8                                1073+T15      DC    A(X15)            address of test routine
+000017B4  000F                                    1074+         DC    H'15'             test number
+000017B6  00                                      1075+         DC    X'00'
+000017B7  C2C4C5D7 C7404040                       1076+         DC    CL8'BDEPG'        instruction name
+000017C0  00001820                                1077+         DC    A(RE15+8)         address of R2 source
+000017C4  00001828                                1078+         DC    A(RE15+16)        address of R3 source
+000017C8  00000008                                1079+         DC    A(8)              result length
+000017CC  00001818                                1080+REA15    DC    A(RE15)           result address
+000017D0  00000000 00000000                       1081+         DS    FD                gap
+000017D8  00000000 00000000                       1082+R1O15    DS    D                 R1 output
+000017E0  00000000 00000000                       1083+         DS    FD                gap
+                                                  1084+*
+000017E8                                          1085+X15      DS    0F
+000017E8  E310 8E88 0004                00001088  1086+         LG    R1,R1FUDGE
+000017EE  B982 0022                               1087+         XGR   R2,R2
+000017F2  5820 5010                     00000010  1088+         L     R2,R2ADDR         load r2 source address
+000017F6  E322 0000 0004                00000000  1089+         LG    R2,0(R2)          load source
+000017FC  B982 0033                               1090+         XGR   R3,R3
+00001800  5830 5014                     00000014  1091+         L     R3,R3ADDR         load r3 source address
+00001804  E333 0000 0004                00000000  1092+         LG    R3,0(R3)          load source
+
+0000180A                                          1095+         DS    0H
+0000180A  B96D3012                                1096+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+0000180E  E310 5028 0024                000017D8  1098+         STG   R1,R1O15          save R1 output
+00001814  07FB                                    1099+         BR    R11               return
+00001818                                          1100+RE15     DC    0F                xl16 expected result
+00001818                                          1101+         DROP  R5
+00001818  00080000 000A2000                       1102          DC    XL8'0008 0000 000A 2000'   result
+00001820  9A000000 00000000                       1103          DC    XL8'9A00 0000 0000 0000'   R2
+00001828  0008000C 000A6006                       1104          DC    XL8'0008 000C 000A 6006'   R3
+                                                  1105
+                                                  1106          RRF_A BDEPG
+00001830                                          1107+         DS    0FD
+00001830                      00001830            1108+         USING *,R5              base for test data and test routine
+00001830  00001868                                1109+T16      DC    A(X16)            address of test routine
+00001834  0010                                    1110+         DC    H'16'             test number
+00001836  00                                      1111+         DC    X'00'
+00001837  C2C4C5D7 C7404040                       1112+         DC    CL8'BDEPG'        instruction name
+00001840  000018A0                                1113+         DC    A(RE16+8)         address of R2 source
+00001844  000018A8                                1114+         DC    A(RE16+16)        address of R3 source
+00001848  00000008                                1115+         DC    A(8)              result length
+0000184C  00001898                                1116+REA16    DC    A(RE16)           result address
+00001850  00000000 00000000                       1117+         DS    FD                gap
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001858  00000000 00000000                       1118+R1O16    DS    D                 R1 output
+00001860  00000000 00000000                       1119+         DS    FD                gap
+                                                  1120+*
+00001868                                          1121+X16      DS    0F
+00001868  E310 8E88 0004                00001088  1122+         LG    R1,R1FUDGE
+0000186E  B982 0022                               1123+         XGR   R2,R2
+00001872  5820 5010                     00000010  1124+         L     R2,R2ADDR         load r2 source address
+00001876  E322 0000 0004                00000000  1125+         LG    R2,0(R2)          load source
+0000187C  B982 0033                               1126+         XGR   R3,R3
+00001880  5830 5014                     00000014  1127+         L     R3,R3ADDR         load r3 source address
+00001884  E333 0000 0004                00000000  1128+         LG    R3,0(R3)          load source
+
+0000188A                                          1131+         DS    0H
+0000188A  B96D3012                                1132+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+0000188E  E310 5028 0024                00001858  1134+         STG   R1,R1O16          save R1 output
+00001894  07FB                                    1135+         BR    R11               return
+00001898                                          1136+RE16     DC    0F                xl16 expected result
+00001898                                          1137+         DROP  R5
+00001898  00080000 000A2004                       1138          DC    XL8'0008 0000 000A 2004'   result
+000018A0  9B000000 00000000                       1139          DC    XL8'9B00 0000 0000 0000'   R2
+000018A8  0008000C 000A6006                       1140          DC    XL8'0008 000C 000A 6006'   R3
+                                                  1141
+                                                  1142          RRF_A BDEPG
+000018B0                                          1143+         DS    0FD
+000018B0                      000018B0            1144+         USING *,R5              base for test data and test routine
+000018B0  000018E8                                1145+T17      DC    A(X17)            address of test routine
+000018B4  0011                                    1146+         DC    H'17'             test number
+000018B6  00                                      1147+         DC    X'00'
+000018B7  C2C4C5D7 C7404040                       1148+         DC    CL8'BDEPG'        instruction name
+000018C0  00001920                                1149+         DC    A(RE17+8)         address of R2 source
+000018C4  00001928                                1150+         DC    A(RE17+16)        address of R3 source
+000018C8  00000008                                1151+         DC    A(8)              result length
+000018CC  00001918                                1152+REA17    DC    A(RE17)           result address
+000018D0  00000000 00000000                       1153+         DS    FD                gap
+000018D8  00000000 00000000                       1154+R1O17    DS    D                 R1 output
+000018E0  00000000 00000000                       1155+         DS    FD                gap
+                                                  1156+*
+000018E8                                          1157+X17      DS    0F
+000018E8  E310 8E88 0004                00001088  1158+         LG    R1,R1FUDGE
+000018EE  B982 0022                               1159+         XGR   R2,R2
+000018F2  5820 5010                     00000010  1160+         L     R2,R2ADDR         load r2 source address
+000018F6  E322 0000 0004                00000000  1161+         LG    R2,0(R2)          load source
+000018FC  B982 0033                               1162+         XGR   R3,R3
+00001900  5830 5014                     00000014  1163+         L     R3,R3ADDR         load r3 source address
+00001904  E333 0000 0004                00000000  1164+         LG    R3,0(R3)          load source
+
+0000190A                                          1167+         DS    0H
+0000190A  B96D3012                                1168+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+0000190E  E310 5028 0024                000018D8  1170+         STG   R1,R1O17          save R1 output
+00001914  07FB                                    1171+         BR    R11               return
+00001918                                          1172+RE17     DC    0F                xl16 expected result
+00001918                                          1173+         DROP  R5
+00001918  00080000 000A2006                       1174          DC    XL8'0008 0000 000A 2006'   result
+00001920  9B800000 00000000                       1175          DC    XL8'9B80 0000 0000 0000'   R2
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001928  0008000C 000A6006                       1176          DC    XL8'0008 000C 000A 6006'   R3
+                                                  1177
+                                                  1178          RRF_A BDEPG
+00001930                                          1179+         DS    0FD
+00001930                      00001930            1180+         USING *,R5              base for test data and test routine
+00001930  00001968                                1181+T18      DC    A(X18)            address of test routine
+00001934  0012                                    1182+         DC    H'18'             test number
+00001936  00                                      1183+         DC    X'00'
+00001937  C2C4C5D7 C7404040                       1184+         DC    CL8'BDEPG'        instruction name
+00001940  000019A0                                1185+         DC    A(RE18+8)         address of R2 source
+00001944  000019A8                                1186+         DC    A(RE18+16)        address of R3 source
+00001948  00000008                                1187+         DC    A(8)              result length
+0000194C  00001998                                1188+REA18    DC    A(RE18)           result address
+00001950  00000000 00000000                       1189+         DS    FD                gap
+00001958  00000000 00000000                       1190+R1O18    DS    D                 R1 output
+00001960  00000000 00000000                       1191+         DS    FD                gap
+                                                  1192+*
+00001968                                          1193+X18      DS    0F
+00001968  E310 8E88 0004                00001088  1194+         LG    R1,R1FUDGE
+0000196E  B982 0022                               1195+         XGR   R2,R2
+00001972  5820 5010                     00000010  1196+         L     R2,R2ADDR         load r2 source address
+00001976  E322 0000 0004                00000000  1197+         LG    R2,0(R2)          load source
+0000197C  B982 0033                               1198+         XGR   R3,R3
+00001980  5830 5014                     00000014  1199+         L     R3,R3ADDR         load r3 source address
+00001984  E333 0000 0004                00000000  1200+         LG    R3,0(R3)          load source
+
+0000198A                                          1203+         DS    0H
+0000198A  B96D3012                                1204+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+0000198E  E310 5028 0024                00001958  1206+         STG   R1,R1O18          save R1 output
+00001994  07FB                                    1207+         BR    R11               return
+00001998                                          1208+RE18     DC    0F                xl16 expected result
+00001998                                          1209+         DROP  R5
+00001998  00089000 000AB000                       1210          DC    XL8'0008 9000 000A B000'   result
+000019A0  89AB0000 00000000                       1211          DC    XL8'89AB 0000 0000 0000'   R2
+000019A8  000FF000 000FF000                       1212          DC    XL8'000F F000 000F F000'   R3
+                                                  1213
+                                                  1214          RRF_A BDEPG
+000019B0                                          1215+         DS    0FD
+000019B0                      000019B0            1216+         USING *,R5              base for test data and test routine
+000019B0  000019E8                                1217+T19      DC    A(X19)            address of test routine
+000019B4  0013                                    1218+         DC    H'19'             test number
+000019B6  00                                      1219+         DC    X'00'
+000019B7  C2C4C5D7 C7404040                       1220+         DC    CL8'BDEPG'        instruction name
+000019C0  00001A20                                1221+         DC    A(RE19+8)         address of R2 source
+000019C4  00001A28                                1222+         DC    A(RE19+16)        address of R3 source
+000019C8  00000008                                1223+         DC    A(8)              result length
+000019CC  00001A18                                1224+REA19    DC    A(RE19)           result address
+000019D0  00000000 00000000                       1225+         DS    FD                gap
+000019D8  00000000 00000000                       1226+R1O19    DS    D                 R1 output
+000019E0  00000000 00000000                       1227+         DS    FD                gap
+                                                  1228+*
+000019E8                                          1229+X19      DS    0F
+000019E8  E310 8E88 0004                00001088  1230+         LG    R1,R1FUDGE
+000019EE  B982 0022                               1231+         XGR   R2,R2
+000019F2  5820 5010                     00000010  1232+         L     R2,R2ADDR         load r2 source address
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000019F6  E322 0000 0004                00000000  1233+         LG    R2,0(R2)          load source
+000019FC  B982 0033                               1234+         XGR   R3,R3
+00001A00  5830 5014                     00000014  1235+         L     R3,R3ADDR         load r3 source address
+00001A04  E333 0000 0004                00000000  1236+         LG    R3,0(R3)          load source
+
+00001A0A                                          1239+         DS    0H
+00001A0A  B96D3012                                1240+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+00001A0E  E310 5028 0024                000019D8  1242+         STG   R1,R1O19          save R1 output
+00001A14  07FB                                    1243+         BR    R11               return
+00001A18                                          1244+RE19     DC    0F                xl16 expected result
+00001A18                                          1245+         DROP  R5
+00001A18  000FF000 000FF000                       1246          DC    XL8'000F F000 000F F000'   result
+00001A20  FFFF0000 00000000                       1247          DC    XL8'FFFF 0000 0000 0000'   R2
+00001A28  000FF000 000FF000                       1248          DC    XL8'000F F000 000F F000'   R3
+                                                  1249
+                                                  1250          RRF_A BDEPG
+00001A30                                          1251+         DS    0FD
+00001A30                      00001A30            1252+         USING *,R5              base for test data and test routine
+00001A30  00001A68                                1253+T20      DC    A(X20)            address of test routine
+00001A34  0014                                    1254+         DC    H'20'             test number
+00001A36  00                                      1255+         DC    X'00'
+00001A37  C2C4C5D7 C7404040                       1256+         DC    CL8'BDEPG'        instruction name
+00001A40  00001AA0                                1257+         DC    A(RE20+8)         address of R2 source
+00001A44  00001AA8                                1258+         DC    A(RE20+16)        address of R3 source
+00001A48  00000008                                1259+         DC    A(8)              result length
+00001A4C  00001A98                                1260+REA20    DC    A(RE20)           result address
+00001A50  00000000 00000000                       1261+         DS    FD                gap
+00001A58  00000000 00000000                       1262+R1O20    DS    D                 R1 output
+00001A60  00000000 00000000                       1263+         DS    FD                gap
+                                                  1264+*
+00001A68                                          1265+X20      DS    0F
+00001A68  E310 8E88 0004                00001088  1266+         LG    R1,R1FUDGE
+00001A6E  B982 0022                               1267+         XGR   R2,R2
+00001A72  5820 5010                     00000010  1268+         L     R2,R2ADDR         load r2 source address
+00001A76  E322 0000 0004                00000000  1269+         LG    R2,0(R2)          load source
+00001A7C  B982 0033                               1270+         XGR   R3,R3
+00001A80  5830 5014                     00000014  1271+         L     R3,R3ADDR         load r3 source address
+00001A84  E333 0000 0004                00000000  1272+         LG    R3,0(R3)          load source
+
+00001A8A                                          1275+         DS    0H
+00001A8A  B96D3012                                1276+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+00001A8E  E310 5028 0024                00001A58  1278+         STG   R1,R1O20          save R1 output
+00001A94  07FB                                    1279+         BR    R11               return
+00001A98                                          1280+RE20     DC    0F                xl16 expected result
+00001A98                                          1281+         DROP  R5
+00001A98  00000000 00000000                       1282          DC    XL8'0000 0000 0000 0000'   result
+00001AA0  00000000 00000000                       1283          DC    XL8'0000 0000 0000 0000'   R2
+00001AA8  FFFFFFFF FFFFFFFF                       1284          DC    XL8'FFFF FFFF FFFF FFFF'   R3
+                                                  1285
+                                                  1286          RRF_A BDEPG
+00001AB0                                          1287+         DS    0FD
+00001AB0                      00001AB0            1288+         USING *,R5              base for test data and test routine
+00001AB0  00001AE8                                1289+T21      DC    A(X21)            address of test routine
+00001AB4  0015                                    1290+         DC    H'21'             test number
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001AB6  00                                      1291+         DC    X'00'
+00001AB7  C2C4C5D7 C7404040                       1292+         DC    CL8'BDEPG'        instruction name
+00001AC0  00001B20                                1293+         DC    A(RE21+8)         address of R2 source
+00001AC4  00001B28                                1294+         DC    A(RE21+16)        address of R3 source
+00001AC8  00000008                                1295+         DC    A(8)              result length
+00001ACC  00001B18                                1296+REA21    DC    A(RE21)           result address
+00001AD0  00000000 00000000                       1297+         DS    FD                gap
+00001AD8  00000000 00000000                       1298+R1O21    DS    D                 R1 output
+00001AE0  00000000 00000000                       1299+         DS    FD                gap
+                                                  1300+*
+00001AE8                                          1301+X21      DS    0F
+00001AE8  E310 8E88 0004                00001088  1302+         LG    R1,R1FUDGE
+00001AEE  B982 0022                               1303+         XGR   R2,R2
+00001AF2  5820 5010                     00000010  1304+         L     R2,R2ADDR         load r2 source address
+00001AF6  E322 0000 0004                00000000  1305+         LG    R2,0(R2)          load source
+00001AFC  B982 0033                               1306+         XGR   R3,R3
+00001B00  5830 5014                     00000014  1307+         L     R3,R3ADDR         load r3 source address
+00001B04  E333 0000 0004                00000000  1308+         LG    R3,0(R3)          load source
+
+00001B0A                                          1311+         DS    0H
+00001B0A  B96D3012                                1312+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+
+00001B0E  E310 5028 0024                00001AD8  1314+         STG   R1,R1O21          save R1 output
+00001B14  07FB                                    1315+         BR    R11               return
+00001B18                                          1316+RE21     DC    0F                xl16 expected result
+00001B18                                          1317+         DROP  R5
+00001B18  00010001 00010001                       1318          DC    XL8'0001 0001 0001 0001'   result
+00001B20  00010001 00010001                       1319          DC    XL8'0001 0001 0001 0001'   R2
+00001B28  FFFFFFFF FFFFFFFF                       1320          DC    XL8'FFFF FFFF FFFF FFFF'   R3
+                                                  1321
+                                                  1322          RRF_A BDEPG
+00001B30                                          1323+         DS    0FD
+00001B30                      00001B30            1324+         USING *,R5              base for test data and test routine
+00001B30  00001B68                                1325+T22      DC    A(X22)            address of test routine
+00001B34  0016                                    1326+         DC    H'22'             test number
+00001B36  00                                      1327+         DC    X'00'
+00001B37  C2C4C5D7 C7404040                       1328+         DC    CL8'BDEPG'        instruction name
+00001B40  00001BA0                                1329+         DC    A(RE22+8)         address of R2 source
+00001B44  00001BA8                                1330+         DC    A(RE22+16)        address of R3 source
+00001B48  00000008                                1331+         DC    A(8)              result length
+00001B4C  00001B98                                1332+REA22    DC    A(RE22)           result address
+00001B50  00000000 00000000                       1333+         DS    FD                gap
+00001B58  00000000 00000000                       1334+R1O22    DS    D                 R1 output
+00001B60  00000000 00000000                       1335+         DS    FD                gap
+                                                  1336+*
+00001B68                                          1337+X22      DS    0F
+00001B68  E310 8E88 0004                00001088  1338+         LG    R1,R1FUDGE
+00001B6E  B982 0022                               1339+         XGR   R2,R2
+00001B72  5820 5010                     00000010  1340+         L     R2,R2ADDR         load r2 source address
+00001B76  E322 0000 0004                00000000  1341+         LG    R2,0(R2)          load source
+00001B7C  B982 0033                               1342+         XGR   R3,R3
+00001B80  5830 5014                     00000014  1343+         L     R3,R3ADDR         load r3 source address
+00001B84  E333 0000 0004                00000000  1344+         LG    R3,0(R3)          load source
+
+00001B8A                                          1347+         DS    0H
+00001B8A  B96D3012                                1348+         DC    XL4'B96D3012'           BDEPG r1,r2,R3
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+00001B8E  E310 5028 0024                00001B58  1350+         STG   R1,R1O22          save R1 output
+00001B94  07FB                                    1351+         BR    R11               return
+00001B98                                          1352+RE22     DC    0F                xl16 expected result
+00001B98                                          1353+         DROP  R5
+00001B98  AAAAAAAA AAAAAAAA                       1354          DC    XL8'AAAA AAAA AAAA AAAA'   result
+00001BA0  AAAAAAAA AAAAAAAA                       1355          DC    XL8'AAAA AAAA AAAA AAAA'   R2
+00001BA8  FFFFFFFF FFFFFFFF                       1356          DC    XL8'FFFF FFFF FFFF FFFF'   R3
+                                                  1357
+                                                  1358
+                                                  1359
+                                                  1360
+00001BB0  00000000                                1361          DC    F'0'     END OF TABLE
+00001BB4  00000000                                1362          DC    F'0'
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1364 *
+                                                  1365 * table of pointers to individual load test
+                                                  1366 *
+00001BB8                                          1367 M4TESTS  DS    0F
+                                                  1368          PTTABLE
+00001BB8                                          1369+TTABLE   DS    0F
+00001BB8  000010B0                                1370+         DC    A(T1)
+00001BBC  00001130                                1371+         DC    A(T2)
+00001BC0  000011B0                                1372+         DC    A(T3)
+00001BC4  00001230                                1373+         DC    A(T4)
+00001BC8  000012B0                                1374+         DC    A(T5)
+00001BCC  00001330                                1375+         DC    A(T6)
+00001BD0  000013B0                                1376+         DC    A(T7)
+00001BD4  00001430                                1377+         DC    A(T8)
+00001BD8  000014B0                                1378+         DC    A(T9)
+00001BDC  00001530                                1379+         DC    A(T10)
+00001BE0  000015B0                                1380+         DC    A(T11)
+00001BE4  00001630                                1381+         DC    A(T12)
+00001BE8  000016B0                                1382+         DC    A(T13)
+00001BEC  00001730                                1383+         DC    A(T14)
+00001BF0  000017B0                                1384+         DC    A(T15)
+00001BF4  00001830                                1385+         DC    A(T16)
+00001BF8  000018B0                                1386+         DC    A(T17)
+00001BFC  00001930                                1387+         DC    A(T18)
+00001C00  000019B0                                1388+         DC    A(T19)
+00001C04  00001A30                                1389+         DC    A(T20)
+00001C08  00001AB0                                1390+         DC    A(T21)
+00001C0C  00001B30                                1391+         DC    A(T22)
+                                                  1392+*
+00001C10  00000000                                1393+         DC    A(0)              END OF TABLE
+00001C14  00000000                                1394+         DC    A(0)
+                                                  1395
+00001C18  00000000                                1396          DC    F'0'     END OF TABLE
+00001C1C  00000000                                1397          DC    F'0'
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    32
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1399 ***********************************************************************
+                                                  1400 *        Register equates
+                                                  1401 ***********************************************************************
+
+
+                              00000000  00000001  1403 R0       EQU   0
+                              00000001  00000001  1404 R1       EQU   1
+                              00000002  00000001  1405 R2       EQU   2
+                              00000003  00000001  1406 R3       EQU   3
+                              00000004  00000001  1407 R4       EQU   4
+                              00000005  00000001  1408 R5       EQU   5
+                              00000006  00000001  1409 R6       EQU   6
+                              00000007  00000001  1410 R7       EQU   7
+                              00000008  00000001  1411 R8       EQU   8
+                              00000009  00000001  1412 R9       EQU   9
+                              0000000A  00000001  1413 R10      EQU   10
+                              0000000B  00000001  1414 R11      EQU   11
+                              0000000C  00000001  1415 R12      EQU   12
+                              0000000D  00000001  1416 R13      EQU   13
+                              0000000E  00000001  1417 R14      EQU   14
+                              0000000F  00000001  1418 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  1420 ***********************************************************************
+                                                  1421 *        Register equates
+                                                  1422 ***********************************************************************
+
+
+                              00000000  00000001  1424 V0       EQU   0
+                              00000001  00000001  1425 V1       EQU   1
+                              00000002  00000001  1426 V2       EQU   2
+                              00000003  00000001  1427 V3       EQU   3
+                              00000004  00000001  1428 V4       EQU   4
+                              00000005  00000001  1429 V5       EQU   5
+                              00000006  00000001  1430 V6       EQU   6
+                              00000007  00000001  1431 V7       EQU   7
+                              00000008  00000001  1432 V8       EQU   8
+                              00000009  00000001  1433 V9       EQU   9
+                              0000000A  00000001  1434 V10      EQU   10
+                              0000000B  00000001  1435 V11      EQU   11
+                              0000000C  00000001  1436 V12      EQU   12
+                              0000000D  00000001  1437 V13      EQU   13
+                              0000000E  00000001  1438 V14      EQU   14
+                              0000000F  00000001  1439 V15      EQU   15
+                              00000010  00000001  1440 V16      EQU   16
+                              00000011  00000001  1441 V17      EQU   17
+                              00000012  00000001  1442 V18      EQU   18
+                              00000013  00000001  1443 V19      EQU   19
+                              00000014  00000001  1444 V20      EQU   20
+                              00000015  00000001  1445 V21      EQU   21
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    33
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001  1446 V22      EQU   22
+                              00000017  00000001  1447 V23      EQU   23
+                              00000018  00000001  1448 V24      EQU   24
+                              00000019  00000001  1449 V25      EQU   25
+                              0000001A  00000001  1450 V26      EQU   26
+                              0000001B  00000001  1451 V27      EQU   27
+                              0000001C  00000001  1452 V28      EQU   28
+                              0000001D  00000001  1453 V29      EQU   29
+                              0000001E  00000001  1454 V30      EQU   30
+                              0000001F  00000001  1455 V31      EQU   31
+                                                  1456
+                                                  1457          END
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    34
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   194   160   190   191   192
+CTLR0               F    00000484           4   384   204   205   206   207
+DECNUM              C    00001067          16   432   304   306
+EDIT                X    0000103B          18   427   305
+ENDTEST             U    0000032E           1   290   251
+EOJ                 I    00000468           4   374   239   293
+EOJPSW              D    00000458           8   372   374
+FAILCONT            U    0000031E           1   280
+FAILED              F    00001000           4   412   282   291
+FAILMSG             U    0000031A           1   274   264
+FAILPSW             D    00000470           8   376   378
+FAILTEST            I    00000480           4   378   294
+FB0001              F    00000290           8   223   227   228   230
+IMAGE               1    00000000        7200     0
+K                   U    00000400           1   396   397   398   399
+K64                 U    00010000           1   398
+M4TEST              4    00000000          56   446   253
+M4TESTS             F    00001BB8           4  1367   246
+MB                  U    00100000           1   399
+MIE4TST             J    00000000        7200   153   156   158   162   166   411   154
+MSG                 I    000003A0           4   334   238   317
+MSGCMD              C    000003EE           9   364   347   348
+MSGMSG              C    000003F7          95   365   341   362   339
+MSGMVC              I    000003E8           6   362   345
+MSGOK               I    000003B6           2   343   340
+MSGRET              I    000003D6           4   358   351   354
+MSGSAVE             F    000003DC           4   361   337   358
+NEXTM4              U    000002E4           1   248   267   285
+OPNAME              C    00000007           8   451   309
+PAGE                U    00001000           1   397
+PRT3                C    00001051          18   430   305   306   307
+PRTLINE             C    00001008          16   418   422   316
+PRTLNG              U    00000033           1   422   315
+PRTNAME             C    00001033           8   421   309
+PRTNUM              C    00001018           3   419   307
+R0                  U    00000000           1  1403   154   204   207   227   229   230   231   236   255   256   281   282   314
+                                                      315   318   334   337   339   341   343   358
+R1                  U    00000001           1  1404   237   258   262   263   291   292   316   348   362   578   590   614   626
+                                                      650   662   686   698   722   734   758   770   794   806   830   842   866
+                                                      878   902   914   938   950   978   990  1014  1026  1050  1062  1086  1098
+                                                     1122  1134  1158  1170  1194  1206  1230  1242  1266  1278  1302  1314  1338
+                                                     1350
+R10                 U    0000000A           1  1413   192   201   202
+R11                 U    0000000B           1  1414   259   260   591   627   663   699   735   771   807   843   879   915   951
+                                                      991  1027  1063  1099  1135  1171  1207  1243  1279  1315  1351
+R12                 U    0000000C           1  1415   246   249   266   284
+R13                 U    0000000D           1  1416
+R14                 U    0000000E           1  1417
+R15                 U    0000000F           1  1418   275   300   321   322
+R1FUDGE             C    00001088          16   439   258   578   614   650   686   722   758   794   830   866   902   938   978
+                                                     1014  1050  1086  1122  1158  1194  1230  1266  1302  1338
+R1O1                D    000010D8           8   574   590
+R1O10               D    00001558           8   898   914
+R1O11               D    000015D8           8   934   950
+R1O12               D    00001658           8   974   990
+R1O13               D    000016D8           8  1010  1026
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    35
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R1O14               D    00001758           8  1046  1062
+R1O15               D    000017D8           8  1082  1098
+R1O16               D    00001858           8  1118  1134
+R1O17               D    000018D8           8  1154  1170
+R1O18               D    00001958           8  1190  1206
+R1O19               D    000019D8           8  1226  1242
+R1O2                D    00001158           8   610   626
+R1O20               D    00001A58           8  1262  1278
+R1O21               D    00001AD8           8  1298  1314
+R1O22               D    00001B58           8  1334  1350
+R1O3                D    000011D8           8   646   662
+R1O4                D    00001258           8   682   698
+R1O5                D    000012D8           8   718   734
+R1O6                D    00001358           8   754   770
+R1O7                D    000013D8           8   790   806
+R1O8                D    00001458           8   826   842
+R1O9                D    000014D8           8   862   878
+R1OUTPUT            D    00000028           8   457   263
+R2                  U    00000002           1  1405   238   303   304   314   317   318   335   337   343   344   345   347   353
+                                                      358   359   579   580   581   615   616   617   651   652   653   687   688
+                                                      689   723   724   725   759   760   761   795   796   797   831   832   833
+                                                      867   868   869   903   904   905   939   940   941   979   980   981  1015
+                                                     1016  1017  1051  1052  1053  1087  1088  1089  1123  1124  1125  1159  1160
+                                                     1161  1195  1196  1197  1231  1232  1233  1267  1268  1269  1303  1304  1305
+                                                     1339  1340  1341
+R2ADDR              A    00000010           4   452   580   616   652   688   724   760   796   832   868   904   940   980  1016
+                                                     1052  1088  1124  1160  1196  1232  1268  1304  1340
+R3                  U    00000003           1  1406   582   583   584   618   619   620   654   655   656   690   691   692   726
+                                                      727   728   762   763   764   798   799   800   834   835   836   870   871
+                                                      872   906   907   908   942   943   944   982   983   984  1018  1019  1020
+                                                     1054  1055  1056  1090  1091  1092  1126  1127  1128  1162  1163  1164  1198
+                                                     1199  1200  1234  1235  1236  1270  1271  1272  1306  1307  1308  1342  1343
+                                                     1344
+R3ADDR              A    00000014           4   453   583   619   655   691   727   763   799   835   871   907   943   983  1019
+                                                     1055  1091  1127  1163  1199  1235  1271  1307  1343
+R4                  U    00000004           1  1407
+R5                  U    00000005           1  1408   249   250   253   301   320   564   593   600   629   636   665   672   701
+                                                      708   737   744   773   780   809   816   845   852   881   888   917   924
+                                                      953   964   993  1000  1029  1036  1065  1072  1101  1108  1137  1144  1173
+                                                     1180  1209  1216  1245  1252  1281  1288  1317  1324  1353
+R6                  U    00000006           1  1409
+R7                  U    00000007           1  1410
+R8                  U    00000008           1  1411   190   194   195   196   198
+R9                  U    00000009           1  1412   191   198   199   201
+RE1                 F    00001118           4   592   569   570   572
+RE10                F    00001598           4   916   893   894   896
+RE11                F    00001618           4   952   929   930   932
+RE12                F    00001698           4   992   969   970   972
+RE13                F    00001718           4  1028  1005  1006  1008
+RE14                F    00001798           4  1064  1041  1042  1044
+RE15                F    00001818           4  1100  1077  1078  1080
+RE16                F    00001898           4  1136  1113  1114  1116
+RE17                F    00001918           4  1172  1149  1150  1152
+RE18                F    00001998           4  1208  1185  1186  1188
+RE19                F    00001A18           4  1244  1221  1222  1224
+RE2                 F    00001198           4   628   605   606   608
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    36
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+RE20                F    00001A98           4  1280  1257  1258  1260
+RE21                F    00001B18           4  1316  1293  1294  1296
+RE22                F    00001B98           4  1352  1329  1330  1332
+RE3                 F    00001218           4   664   641   642   644
+RE4                 F    00001298           4   700   677   678   680
+RE5                 F    00001318           4   736   713   714   716
+RE6                 F    00001398           4   772   749   750   752
+RE7                 F    00001418           4   808   785   786   788
+RE8                 F    00001498           4   844   821   822   824
+RE9                 F    00001518           4   880   857   858   860
+REA1                A    000010CC           4   572
+REA10               A    0000154C           4   896
+REA11               A    000015CC           4   932
+REA12               A    0000164C           4   972
+REA13               A    000016CC           4  1008
+REA14               A    0000174C           4  1044
+REA15               A    000017CC           4  1080
+REA16               A    0000184C           4  1116
+REA17               A    000018CC           4  1152
+REA18               A    0000194C           4  1188
+REA19               A    000019CC           4  1224
+REA2                A    0000114C           4   608
+REA20               A    00001A4C           4  1260
+REA21               A    00001ACC           4  1296
+REA22               A    00001B4C           4  1332
+REA3                A    000011CC           4   644
+REA4                A    0000124C           4   680
+REA5                A    000012CC           4   716
+REA6                A    0000134C           4   752
+REA7                A    000013CC           4   788
+REA8                A    0000144C           4   824
+REA9                A    000014CC           4   860
+READDR              A    0000001C           4   455   262
+REG2LOW             U    000000DD           1   402
+REG2PATT            U    AABBCCDD           1   401
+RELEN               A    00000018           4   454
+RPTDWSAV            D    00000390           8   327   314   318
+RPTERROR            I    0000033C           4   300   275
+RPTSAVE             F    00000384           4   324   300   321
+RPTSVR5             F    00000388           4   325   301   320
+SKL0001             U    0000005E           1   220   236
+SKT0001             C    0000022A          20   217   220   237
+SVOLDPSW            U    00000140           0   156
+T1                  A    000010B0           4   565  1370
+T10                 A    00001530           4   889  1379
+T11                 A    000015B0           4   925  1380
+T12                 A    00001630           4   965  1381
+T13                 A    000016B0           4  1001  1382
+T14                 A    00001730           4  1037  1383
+T15                 A    000017B0           4  1073  1384
+T16                 A    00001830           4  1109  1385
+T17                 A    000018B0           4  1145  1386
+T18                 A    00001930           4  1181  1387
+T19                 A    000019B0           4  1217  1388
+T2                  A    00001130           4   601  1371
+T20                 A    00001A30           4  1253  1389
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    37
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+T21                 A    00001AB0           4  1289  1390
+T22                 A    00001B30           4  1325  1391
+T3                  A    000011B0           4   637  1372
+T4                  A    00001230           4   673  1373
+T5                  A    000012B0           4   709  1374
+T6                  A    00001330           4   745  1375
+T7                  A    000013B0           4   781  1376
+T8                  A    00001430           4   817  1377
+T9                  A    000014B0           4   853  1378
+TESTING             F    00001004           4   413   256
+TNUM                H    00000004           2   448   255   303
+TSUB                A    00000000           4   447   259
+TTABLE              F    00001BB8           4  1369
+V0                  U    00000000           1  1424
+V1                  U    00000001           1  1425
+V10                 U    0000000A           1  1434
+V11                 U    0000000B           1  1435
+V12                 U    0000000C           1  1436
+V13                 U    0000000D           1  1437
+V14                 U    0000000E           1  1438
+V15                 U    0000000F           1  1439
+V16                 U    00000010           1  1440
+V17                 U    00000011           1  1441
+V18                 U    00000012           1  1442
+V19                 U    00000013           1  1443
+V2                  U    00000002           1  1426
+V20                 U    00000014           1  1444
+V21                 U    00000015           1  1445
+V22                 U    00000016           1  1446
+V23                 U    00000017           1  1447
+V24                 U    00000018           1  1448
+V25                 U    00000019           1  1449
+V26                 U    0000001A           1  1450
+V27                 U    0000001B           1  1451
+V28                 U    0000001C           1  1452
+V29                 U    0000001D           1  1453
+V3                  U    00000003           1  1427
+V30                 U    0000001E           1  1454
+V31                 U    0000001F           1  1455
+V4                  U    00000004           1  1428
+V5                  U    00000005           1  1429
+V6                  U    00000006           1  1430
+V7                  U    00000007           1  1431
+V8                  U    00000008           1  1432
+V9                  U    00000009           1  1433
+X0001               U    000002B8           1   226   214   227
+X1                  F    000010E8           4   577   565
+X10                 F    00001568           4   901   889
+X11                 F    000015E8           4   937   925
+X12                 F    00001668           4   977   965
+X13                 F    000016E8           4  1013  1001
+X14                 F    00001768           4  1049  1037
+X15                 F    000017E8           4  1085  1073
+X16                 F    00001868           4  1121  1109
+X17                 F    000018E8           4  1157  1145
+X18                 F    00001968           4  1193  1181
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    38
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+X19                 F    000019E8           4  1229  1217
+X2                  F    00001168           4   613   601
+X20                 F    00001A68           4  1265  1253
+X21                 F    00001AE8           4  1301  1289
+X22                 F    00001B68           4  1337  1325
+X3                  F    000011E8           4   649   637
+X4                  F    00001268           4   685   673
+X5                  F    000012E8           4   721   709
+X6                  F    00001368           4   757   745
+X7                  F    000013E8           4   793   781
+X8                  F    00001468           4   829   817
+X9                  F    000014E8           4   865   853
+XC0001              U    000002E0           1   240   232
+=A(M4TESTS)         A    00000490           4   389   246
+=AL2(L'MSGMSG)      R    0000049A           2   392   339
+=F'1'               F    00000494           4   390   281
+=F'8'               F    0000048C           4   388   231
+=H'0'               H    00000498           2   391   334
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    39
+
+ MACRO   DEFN  REFERENCES
+
+BDEPG     143    985   1021   1057   1093   1129   1165   1201   1237   1273   1309   1345
+BEXTG     125    585    621    657    693    729    765    801    837    873    909    945
+FCHECK     70    213
+PTTABLE   524   1368
+RRF_A     476    562    598    634    670    706    742    778    814    850    886    922    962    998   1034   1070   1106   1142
+                1178   1214   1250   1286   1322
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    40
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    7200  0000-1C1F  0000-1C1F
+  Region            7200  0000-1C1F  0000-1C1F
+    CSECT  MIE4TST  7200  0000-1C1F  0000-1C1F
+ASMA Ver. 0.7.0  mie4-01-BDXPG-BDEPG                                                                09 Mar 2026 12:32:54  Page    41
+
+   STMT                     FILE NAME
+
+1     /devstor/sharedvfp/tests/mie4-01-BDXPG-BDEPG.asm
+
+
+** NO ERRORS FOUND **
+
+

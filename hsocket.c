@@ -18,7 +18,7 @@ NAME:      read_socket - read a passed number of bytes from a socket.
 
 PURPOSE:   This routine is used in place of read to read a passed number
            of bytes from a socket.  A read on a socket will return less
-           than the number of bytes requested if there are less currenly
+           than the number of bytes requested if there are less currently
            available.  Thus we read in a loop till we get all we want.
 
 PARAMETERS:
@@ -138,7 +138,7 @@ int  nleft, nwritten;
   NAME:     disable_nagle - disable Nagle's algorithm for the socket.
 
   PURPOSE:  This routine is used to disable Nagle's algorithm for those
-            sockets which need to send their data with miminum delay,
+            sockets which need to send their data with minimum delay,
             such as notification pipes or telnet console devices, etc.
 
   RETURNS:  Returns 0 if successful or -1 if unsuccessful.

@@ -38,7 +38,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Herculess Rexx implementation equivalents for Regina Rexx types   */
+/* Hercules Rexx implementation equivalents for Regina Rexx types    */
 /*-------------------------------------------------------------------*/
 #define HR_REXXRC_T         APIRET            // (API return code)
 #define HR_ENTRY            APIENTRY          // (calling convention)

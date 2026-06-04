@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
@@ -434,6 +434,10 @@
 								RelativePath=".\cnsllogo.h"
 								>
 							</File>
+							<File
+								RelativePath=".\wscnsl.h"
+								>
+							</File>
 						</Filter>
 						<Filter
 							Name="Source Files"
@@ -444,6 +448,10 @@
 							</File>
 							<File
 								RelativePath=".\console.c"
+								>
+							</File>
+							<File
+								RelativePath=".\wscnsl.c"
 								>
 							</File>
 						</Filter>
@@ -1243,6 +1251,10 @@
 							RelativePath=".\zvector2.c"
 							>
 						</File>
+						<File
+							RelativePath=".\zvector3.c"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Header Files"
@@ -1625,6 +1637,10 @@
 						</File>
 						<File
 							RelativePath=".\x75.h"
+							>
+						</File>
+						<File
+							RelativePath=".\zvector.h"
 							>
 						</File>
 					</Filter>
@@ -2250,6 +2266,10 @@
                         RelativePath=".\readme\README.VMHANDSHAKE.md"
                         >
                     </File>
+					<File
+						RelativePath=".\readme\README.WebSocket.md"
+						>
+					</File>
 					<File
 						RelativePath=".\readme\README.WIN64.md"
 						>
@@ -3499,6 +3519,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\cff-01-CompareAndLoad.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\CLCL-et-al.core"
 						>
 					</File>
@@ -3584,6 +3608,18 @@
 					</File>
 					<File
 						RelativePath=".\tests\mhi.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\mie4-01-BDXPG-BDEPG.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\mie4-02-CLZG-CTZG.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\mie4-03-IndexedAddress.core"
 						>
 					</File>
 					<File
@@ -3775,6 +3811,18 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\zvector-e6-22-VTZ.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e6-23-VCVBQ.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e6-24-VCVDQ.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\zvector-e7-01-MinMaxAvg.core"
 						>
 					</File>
@@ -3808,91 +3856,107 @@
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-09-multiply.core"
-					    >
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-10-multiplyAdd.core"
-			    		>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-11-logical.core"
-				    	>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-12-elementShift.core"
-					    >
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-13-UnpackMisc.core"
-    					>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-14-MergePack.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-15-ShiftByByte.core"
-		    			>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-16-PackCompare.core"
-			    		>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-17-AddSub.core"
-    					>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-18-VBPERM.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-19-VPERM.core"
-		    			>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-20-VSLDB.core"
-			    		>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-21-VREPI.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-22-VREP.core"
-		    			>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-23-VLREP.core"
-			    		>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-24-SumAcross.core"
-				    	>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-25-VSTRS.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-26-VGM.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-27-VERIM.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-28-ShiftVector.core"
-	    				>
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.core"
-	    				>
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-30-DivideRem.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-31-VBLEND.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-32-VGEM.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\zvector-e7-33-VEVAL.core"
+						>
 					</File>
 					<File
 						RelativePath=".\tests\zvector-e7-99-performance.core"
-	    				>
+						>
 					</File>
 				</Filter>
 				<Filter
@@ -4786,6 +4850,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\cff-01-CompareAndLoad.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\cipher.tst"
 							>
 						</File>
@@ -4947,6 +5015,18 @@
 						</File>
 						<File
 							RelativePath=".\tests\mhi.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-01-BDXPG-BDEPG.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-02-CLZG-CTZG.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-03-IndexedAddress.tst"
 							>
 						</File>
 						<File
@@ -5190,6 +5270,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\zvector-e6-22-VTZ.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-23-VCVBQ.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-24-VCVDQ.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\zvector-e7-01-MinMaxAvg.tst"
 							>
 						</File>
@@ -5303,6 +5395,22 @@
 						</File>
 						<File
 							RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-30-DivideRem.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-31-VBLEND.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-32-VGEM.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-33-VEVAL.tst"
 							>
 						</File>
 						<File
@@ -5486,6 +5594,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\cff-01-CompareAndLoad.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CLCL-et-al.asm"
 							>
 						</File>
@@ -5575,6 +5687,18 @@
 						</File>
 						<File
 							RelativePath=".\tests\mhi.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-01-BDXPG-BDEPG.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-02-CLZG-CTZG.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-03-IndexedAddress.asm"
 							>
 						</File>
 						<File
@@ -5762,6 +5886,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\zvector-e6-22-VTZ.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-23-VCVBQ.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e6-24-VCVDQ.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\zvector-e7-01-MinMaxAvg.asm"
 							>
 						</File>
@@ -5793,7 +5929,6 @@
 							RelativePath=".\tests\zvector-e7-08-VISTR.asm"
 							>
 						</File>
-
 						<File
 							RelativePath=".\tests\zvector-e7-09-multiply.asm"
 							>
@@ -5876,6 +6011,22 @@
 						</File>
 						<File
 							RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-30-DivideRem.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-31-VBLEND.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-32-VGEM.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zvector-e7-33-VEVAL.asm"
 							>
 						</File>
 						<File
@@ -6114,6 +6265,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\cff-01-CompareAndLoad.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cff-01-CompareAndLoad.pdf"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\CLCL-et-al.list"
 								>
 							</File>
@@ -6275,6 +6434,30 @@
 							</File>
 							<File
 								RelativePath=".\tests\mhi.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-01-BDXPG-BDEPG.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-01-BDXPG-BDEPG.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-02-CLZG-CTZG.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-02-CLZG-CTZG.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-03-IndexedAddress.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-03-IndexedAddress.pdf"
 								>
 							</File>
 							<File
@@ -6634,6 +6817,30 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\zvector-e6-22-VTZ.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e6-22-VTZ.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e6-23-VCVBQ.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e6-23-VCVBQ.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e6-24-VCVDQ.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e6-24-VCVDQ.pdf"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\zvector-e7-01-MinMaxAvg.list"
 								>
 							</File>
@@ -6863,6 +7070,38 @@
 							</File>
 							<File
 								RelativePath=".\tests\zvector-e7-29-ShiftDoubleByBit.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-30-DivideRem.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-30-DivideRem.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-31-VBLEND.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-31-VBLEND.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-32-VGEM.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-32-VGEM.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-33-VEVAL.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zvector-e7-33-VEVAL.pdf"
 								>
 							</File>
 							<File

@@ -238,7 +238,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Extract the access key from register 0 bits 24-27 */
         akey = regs->GR_L(0) & GR0_MVPG_KEY;
 
-        /* Priviliged operation exception if in problem state, and
+        /* Privileged operation exception if in problem state, and
            the specified key is not permitted by the PSW key mask */
         if ( PROBSTATE(&regs->psw)
             && ((regs->CR(3) << (akey >> 4)) & 0x80000000) == 0 )

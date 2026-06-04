@@ -35,7 +35,7 @@ typedef struct HOST_INFO
 
         int     num_procs;              /* #of processors            */
         int     num_physical_cpu;       /* #of cores                 */
-        int     num_logical_cpu;        /* #of of hyperthreads       */
+        int     num_logical_cpu;        /* #of hyperthreads          */
         int     num_packages;           /* #of physical CPUS         */
 
         int     vector_unit;            /* CPU has vector processor  */

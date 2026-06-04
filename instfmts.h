@@ -116,6 +116,9 @@
 #undef VRI_G
 #undef VRI_H
 #undef VRI_I
+#undef VRI_J
+#undef VRI_K
+#undef VRI_L
 #undef VRR_A
 #undef VRR_B
 #undef VRR_C
@@ -298,7 +301,7 @@
 // 24-27, but for the RRF-a and -b formats they are in the complete
 // opposite position: in RRF-a and -b "r1" is in bit position 24-27
 // and "r3" is in bit positions 16-19 (i.e. r1 and r3 operands are
-// in the oppsoite position in the RRD and RRF formats).
+// in the opposite position in the RRD and RRF formats).
 //
 // This is confusing since Hercules's ORIGINAL "RRF_R" format decoder
 // was originally written to decode the S/390 "RRF" format which is
@@ -345,7 +348,7 @@
 /*                     Programming Note                              */
 /*-------------------------------------------------------------------*/
 //
-// Altough there are only two basic RRF instruction formats (RRF_RM
+// Although there are only two basic RRF instruction formats (RRF_RM
 // and RRF_MM), z/Architecture defines 5 variations (RRF-a and RRF-b,
 // and RRF-c to RRF-e) because of the different assembler-language
 // syntaxes that are used for the many different RRF instructions:
@@ -922,6 +925,43 @@
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
 #endif /* defined( OPTION_OPTINST ) */
+
+/*-------------------------------------------------------------------*/
+/*  RXY - register & indexed storage w/ext.opcode and long displ.    */
+/*-------------------------------------------------------------------*/
+// This is z/Arch RXY-c.
+// Note: Normal address arithmetic is not used, the address
+// computation is performed by the instruction.
+
+#define RXY_C( _inst, _regs, _r1, _x2, _b2, _dx2 )  RXY_DECODER_C( _inst, _regs, _r1, _x2, _b2, _dx2, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | r1  | x2  | b2  |       dl2       |    dh2    |    XOP    |    RXY-c
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28    32    36    40    44   47
+
+#define RXY_DECODER_C( _inst, _regs, _r1, _x2, _b2, _dx2, _len, _ilc ) \
+{                                                                   \
+    S32 disp2; U32 temp = fetch_fw( _inst );                        \
+                                                                    \
+    disp2 = (temp >>  0) & 0xfff;                                   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
+    (_x2) = (temp >> 16) & 0xf;                                     \
+    (_r1) = (temp >> 20) & 0xf;                                     \
+                                                                    \
+    if (unlikely((_inst)[4]))       /* long displacement?  */       \
+    {                                                               \
+        disp2 |= (_inst[4] << 12);                                  \
+                                                                    \
+        if (disp2 & 0x80000)        /* high order bit on?  */       \
+            disp2 |= 0xfff00000;    /* make disp2 negative */       \
+    }                                                               \
+                                                                    \
+    (_dx2) = disp2;                                                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
 
 /*-------------------------------------------------------------------*/
 /*    RS - register and storage with additional R3 or M3 field       */
@@ -2079,6 +2119,82 @@
 
 
 /*-------------------------------------------------------------------*/
+/*       VRI_J - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_J( _inst, _regs, _v1, _v2, _i3, _m4 )  VRI_J_DECODER( _inst, _regs, _v1, _v2, _i3, _m4, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | ////////  | m4  |    i3     | rxb |    XOP    |    VRI_J
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24    28          36    40         47
+
+#define VRI_J_DECODER( _inst, _regs, _v1, _v2, _i3, _m4, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_i3) = (temp >>  4) & 0x0ff;                                   \
+    (_m4) = (temp >> 12) & 0xf;                                     \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       VRI_K - vector register-and-immediate operation             */
+/*               and an extended opcode field.                       */
+/*-------------------------------------------------------------------*/
+
+#define VRI_K( _inst, _regs, _v1, _v2, _v3, _v4, _i5 )  VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _v4, _i5, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    | v1  | v2  | v3  | /// |     i5    | v4  | rxb |    XOP    |    VRI_K
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20    24          32    36    40         47
+
+#define VRI_K_DECODER( _inst, _regs, _v1, _v2, _v3, _v4, _i5, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 28) & 0xf) | ((_rxb & 0x8) << 1);             \
+    (_v2) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v3) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_v4) = ((temp >>  4) & 0xf) | ((_rxb & 0x1) << 4);             \
+    (_i5) = (temp >> 8) & 0xff;                                     \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+#define VRI_L( _inst, _regs, _v1, _v2, _i3 )  VRI_L_DECODER( _inst, _regs, _v1, _v2, _i3, 6, 6 )
+
+//  0           1           2           3           4           5           6
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  |     OP    |//// | v1  | v2  |           i3          | rxb |    XOP    |    VRI_L
+//  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+//  0     4     8     12    16    20                      36    40         47
+
+#define VRI_L_DECODER( _inst, _regs, _v1, _v2, _i3, _len, _ilc )    \
+{                                                                   \
+    U32 temp = fetch_fw( (_inst) + 1);                              \
+                                                                    \
+    U32 _rxb = (temp >> 0) & 0xf;                                   \
+    (_v1) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_v2) = ((temp >> 20) & 0xf) | ((_rxb & 0x2) << 3);             \
+    (_i3) = (temp >>  4) & 0x0ffff;                                 \
+                                                                    \
+    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
+}
+
+
+/*-------------------------------------------------------------------*/
 /*       VRR_A - vector register-and-immediate operation             */
 /*               and an extended opcode field.                       */
 /*-------------------------------------------------------------------*/
@@ -2249,20 +2365,21 @@
 /*               and an extended opcode field.                       */
 /*-------------------------------------------------------------------*/
 
-#define VRR_G( _inst, _regs, _v1 )  VRR_G_DECODER( _inst, _regs, _v1, 6, 6 )
+#define VRR_G( _inst, _regs, _v1, _i2 )  VRR_G_DECODER( _inst, _regs, _v1, _i2, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    | /// | v1  | /// | /// | /// | /// | /// | rxb |    XOP    |    VRR_G
+//  |     OP    | /// | v1  | /// |           i2          | rxb |    XOP    |    VRR_G
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40         47
 
-#define VRR_G_DECODER( _inst, _regs, _v1, _len, _ilc )    \
+#define VRR_G_DECODER( _inst, _regs, _v1, _i2, _len, _ilc )    \
 {                                                                   \
     U32 temp = fetch_fw( (_inst) + 1);                              \
                                                                     \
     U32 _rxb = (temp >> 0) & 0xf;                                   \
     (_v1) = ((temp >> 24) & 0xf) | ((_rxb & 0x4) << 2);             \
+    (_i2) = (temp >>  4) & 0x0ffff;                                 \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }

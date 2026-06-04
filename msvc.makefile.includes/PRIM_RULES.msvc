@@ -15,6 +15,15 @@
 all: allzlib alllibbz2 allpcre allrexx allHercules
     if exist $(EXEDIR)\*.manifest del /f /q $(EXEDIR)\*.manifest
     echo.
+    if not exist "$(EXEDIR)\LICENSES" MKDIR  "$(EXEDIR)\LICENSES"
+    if not exist "$(EXEDIR)\readme"   MKDIR  "$(EXEDIR)\readme"
+    if not exist "$(EXEDIR)\tests"    MKDIR "$(EXEDIR)\tests"
+    echo.
+    if     exist LICENSES             XCOPY  "LICENSES"       "$(EXEDIR)\LICENSES" /V /C /F /H /R /K /Y /S /I
+    if     exist readme               XCOPY  "readme"         "$(EXEDIR)\readme"   /V /C /F /H /R /K /Y /S /I
+    if     exist README.md            XCOPY  README.md        "$(EXEDIR)"          /V /C /F /H /R /K /Y
+    if     exist tests\README.md      XCOPY  tests\README.md  "$(EXEDIR)\tests"    /V /C /F /H /R /K /Y
+    echo.
     echo -- Hercules build complete --
 
 allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) \

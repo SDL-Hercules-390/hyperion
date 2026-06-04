@@ -76,7 +76,7 @@ etc.).
 Note that you will also need to build and install all of the Hercules
 External Packages for your CPU architecture before attempting to build
 Hercules if your CPU architecture is not x86 (or x86_64) or you have
-a non-mainstream Linux/Unix distribution. Refer the the README.EXTPKG
+a non-mainstream Linux/Unix distribution. Refer the README.EXTPKG
 document for more information.
 
 

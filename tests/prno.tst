@@ -19,5 +19,6 @@
 sysclear
 archlvl z/Arch
 loadcore "$(testpath)/prno.core"
+*Program 5
 runtest 2.0
 *Done

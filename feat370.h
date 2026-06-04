@@ -75,7 +75,7 @@
 
 #if defined( FEATURE_370_EXTENSION )
 
-    // (facility-bit features needed by S/390 and z/Architetcure)
+    // (facility-bit features needed by S/390 and z/Architecture)
 
     #define FEATURE_000_N3_INSTR_FACILITY
     #define FEATURE_016_EXT_TRANSL_FACILITY_2
@@ -112,7 +112,7 @@
     #define FEATURE_077_MSA_EXTENSION_FACILITY_4
     #define DYNINST_077_MSA_EXTENSION_FACILITY_4         /* dyncrypt */
 
-    // (non-facility-bit features needed by S/390 and z/Architetcure)
+    // (non-facility-bit features needed by S/390 and z/Architecture)
 
     #define FEATURE_BASIC_FP_EXTENSIONS
     #define FEATURE_BINARY_FLOATING_POINT

@@ -8,7 +8,8 @@
 1. [About CCKD64](#About-CCKD64)
 2. [Conversion to CCKD64](#Conversion-to-CCKD64)
 3. [Procedure](#Procedure)
-4. [Additional Information](#Additional-Information)
+4. [Defragmenting CCKD64 images](#Defragmenting-CCKD64-images)
+5. [Additional Information](#Additional-Information)
   
 ## About CCKD64
 
@@ -38,7 +39,7 @@ Using the **`convto64`** utility to convert existing CCKD files to the CCKD64 fo
 
 The **`convto64`** utility however, directly converts base images _-OR-_ shadow files _<u>individually</u>_, resulting in a new CCKD64 format base image or shadow file.  It does _not_ "merge" them together. Plus, as previously mentioned, it is _significantly_ faster than `dasdcopy64` too.  It is therefore the recommended way to convert existing CCKD dasd images (and shadow files) to the new CCKD64 format.
 
-Also note that `convto64` is also able to copy a dasd image file that is <i>already</i> in CCKD64 format to a new CCKD64 format dasd image file, thus turning `convto64` into a <i>fast</i> and convenient (and <i>safe!</i>) way to "compress" (remove <i>all</i> free space from) an existing CCKD64 dasd image should it ever become excessively fragmented. `convto64` is thus considered to be a much faster and safer alternative free-space removal utility than `dasdcopy64`.
+_**Also note**_ that `convto64` is also able to copy a dasd image file that is <i>already</i> in CCKD64 format to a new CCKD64 format dasd image file, thus turning `convto64` into a <i>fast</i> and convenient (and <i>safe!</i>) way to "compress" (remove <i>all</i> free space from) an existing CCKD64 dasd image should it ever become excessively fragmented. `convto64` is thus considered to be a much faster and safer alternative free-space removal utility than `dasdcopy64`. Refer to the "_**Defragmenting CCKD64 images**_" section further below for details.
 
 ## Procedure
 
@@ -47,6 +48,31 @@ Also note that `convto64` is also able to copy a dasd image file that is <i>alre
 2. Use **`convto64`** to individually convert all 32-bit CCKD base images _and associated shadow files_ to the new 64-bit CCKD64 format. _**Please note**_ that _each_ shadow file and base image must _each_ be converted separately. _(required!)_
 
 3. Run **`cckdcdsk64 -3 -ro`** on all of the newly converted 64-bit CCKD64 dasd images to verify the conversion was successful and that no errors exist on any of the images. _(optional)_
+
+## Defragmenting CCKD64 images
+
+The `convto64` utility can also be used to defragment existing CCKD64 dasd images as well, by simply
+(re-)"converting" the fragmented dasd image to CCKD64 format again (even though it is already
+in CCKD64 format).
+
+Because of the way `convto64` works _(wherein it copies the specified input file in one image format
+to the specified output file always in CCKD64 image format)_, you can easily defragment any existing
+CCKD64 format base dasd image or shadow file by simply "converting" the fragmented image to a new
+unfragmeneted CCKD64 format output file, and then replacing the fragmented image with the new
+unfragmented "re-converted" image:
+
+```
+    convto64  fragmented-image-name  defragmeneted-image-name
+    delete    fragmented-image-name
+    rename    defragmeneted-image-name  fragmented-image-name
+```
+<u>**It is important to keep in mind**</u> that `convto64`'s specified output file _**must**_ be _different_
+from its specified input file. While changes have been made in Hercules 4.9 to prevent you from
+accidentally specifying the same input and output files, earlier versions of Hercules do not have such
+protections in place. If you accidentally specify the same output file as your input file, you will
+only end up _destroying_ (deleting) your input file! So be careful! Always have backups ready in case
+anything goes wrong.
+
 
 ## Additional Information
 

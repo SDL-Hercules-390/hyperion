@@ -97,6 +97,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270             Listening port for 3270 device connections
+    <a href="#WSCNSLPORT">WSCNSLPORT</a> 6080             Listening port for WebSocket console connections
     <a href="#SYSGPORT">SYSGPORT</a>   3278             Listening port for SYSG device connections
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
@@ -144,7 +145,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     0000      <a href="#SYSG">SYSG</a>    SYSGCONS
 
-    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>  <a href="#ckdser">ser=000000000001</a>  <a href="#cu">cu=3990-6</a>
+    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>  <a href="#ckdser">ser=000000000001</a>  <a href="#cu">cu=2107</a>
 
     0120      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5r.120
     0121      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5d.121
@@ -320,7 +321,11 @@ a real System/390.  The configuration file is an ASCII text file.
     absolute directory paths before being saved.
     <p>
     Refer to the description of the virtual tape device
-    '<a href="#noautomount">noautomount</a>' option for more information.
+    '<a href="#noautomount">noautomount</a>' option as well as the
+    <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.TAPE.md#AUTOMOUNT-support">"AUTOMOUNT support"</a>
+    section of our
+    <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.TAPE.md">README.TAPE</a>
+    document for more information.
     <p>
 
 <a name="CCKD"></a>
@@ -983,7 +988,7 @@ a real System/390.  The configuration file is an ASCII text file.
     or within the range 1024 - 65535 inclusive. The server is not started until a subsequent
     <code><a href="#HTTPSTRT">HTTP START</a></code> statement is found.
     <p>
-    <tt>AUTH</tt> indictates that a userid and password are required to access
+    <tt>AUTH</tt> indicates that a userid and password are required to access
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
     <p>
@@ -1039,7 +1044,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     Note that the included file may itself contain yet another
     <code>INCLUDE</code> statement as long as the maximum nesting depth
-    (current 8) is not exceeded.
+    (currently 8) is not exceeded.
     <p>
 
 <a name="IODELAY"></a>
@@ -1472,7 +1477,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     <b>Note:</b> neither the <code>MSGCOLOR=</code> nor the <code>TITLE=</code> option
     has any effect when Hercules is run under the control of an external GUI since
-    since Hercules's console window is hidden in favor of using the external GUI's
+    Hercules's console window is hidden in favor of using the external GUI's
     window instead (and the GUI is in control of its own colors). The <code>RATE=</code>
     option however, controls how often the external GUI will refresh its own window
     and other user-interface controls. Similarly, the <code>FULLPATH</code> and
@@ -1569,7 +1574,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     If the optional <code>NODIAG8</code> option is specified, then only the
-    programmatic execution of commands via the the Diagnose 8 interface are disabled,
+    programmatic execution of commands via the Diagnose 8 interface are disabled,
     but shell and <a href="rexx.html">Rexx commands</a> entered directly via the
     Hercules command line still work. This includes commands entered via the
     <a href="#HTTPROOT">HTTP server facility</a> as well as commands issued by
@@ -1720,6 +1725,39 @@ a real System/390.  The configuration file is an ASCII text file.
     For timezones east of Greenwich, specify a positive value
     (example: <code>+0100</code> for Central European Time,
     <code>+0930</code> for South Australian Time).
+    <p>
+
+<a name="WSCNSLPORT"></a>
+<dt><code>WSCNSLPORT &nbsp; <i><u>6080</u></i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i> &nbsp;<i>-or-</i> &nbsp;<code>NO</code></code>
+<dd><p>
+    Specifies the port number (in decimal) on which the WebSocket
+    console server should listen for incoming connections from
+    browser-based 3270 clients. If an invalid value is specified
+    Hercules defaults to port number <u>6080</u>.
+    Specifying <code>NO</code> disables the WebSocket console server.
+    <p>
+    The WebSocket console runs alongside the traditional telnet/tn3270
+    console controlled by <a href="#CNSLPORT"><code>CNSLPORT</code></a>;
+    it does <em>not</em> replace it. WebSocket clients use the same
+    3270 device pool, so the same restriction applies: no listening
+    port is opened unless at least one
+    <a href="#device_types_table">3270 device</a> is defined in your
+    configuration.
+    <p>
+    The <code>WSCNSLPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the WebSocket console server
+    should bind to. If not specified the server will accept
+    connections on the port from any host interface.
+    <p>
+    The chosen port must differ from
+    <a href="#CNSLPORT"><code>CNSLPORT</code></a> and
+    <a href="#SYSGPORT"><code>SYSGPORT</code></a>; valid range is
+    <code>0&ndash;65535</code>.
+    <p>
+    See the
+    <a href="../readme/README.WebSocket.md">WebSocket Console How-To</a>
+    for details on configuring and connecting browser-based clients.
     <p>
 
 <a name="XPNDSIZE"></a>
@@ -1882,7 +1920,7 @@ a real System/390.  The configuration file is an ASCII text file.
     defined) symbols separate from the host operating system's environment variable pool,
     whereas the enhanced symbol substitution does not and instead only allows read-only
     access to the host's environment variable pool with no support for modifying an already
-    defined symbol (environment variable) but a nonethless convenient means of defining
+    defined symbol (environment variable) but a nonetheless convenient means of defining
     a default value to be used should the specified host environment variable be currently
     undefined.
     <p>
@@ -2764,7 +2802,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <dd><p>
         Specifies that the file contains variable length lines of
         ASCII characters delimited by LF (line feed) sequences or CRLF
-        (carraige return line feed) sequences at the end of each line.
+        (carriage return line feed) sequences at the end of each line.
         <p>
 
         If neither EBCDIC nor ASCII is specified, then the device handler
@@ -3469,6 +3507,12 @@ a real System/390.  The configuration file is an ASCII text file.
             <code><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/util/TMOUNT.txt">TMOUNT</a></code>
             for the DOS/VSE operating system is provided in the
             <code>util</code> subdirectory of the distributed source code.
+            <p>
+            Refer to the
+            <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.TAPE.md#AUTOMOUNT-support">"AUTOMOUNT support"</a>
+            section of our
+            <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.TAPE.md">README.TAPE</a>
+            document for more information.
 
         </dl> <!-- end Additional AWS/HET/FAKE parameters -->
 
@@ -3505,7 +3549,7 @@ a real System/390.  The configuration file is an ASCII text file.
         initrd.debian    FIXED RECSIZE 80</pre>
 
         The filename on each record can be either absolute or relative and must be
-        enclosed within double quotes it it contains any spaces. If relative, the
+        enclosed within double quotes it contains any spaces. If relative, the
         name is appended to the path of the primary OMA (TDF) to create the full
         path filename of the file being referenced.
         <p>
@@ -3822,17 +3866,20 @@ a real System/390.  The configuration file is an ASCII text file.
                     prefix size parameter of the <code>ipaddr</code> option.
                     <p>
 
-                <dt><code>iface &nbsp;<em>device</em></code>
+                <dt><b><code>iface &nbsp;<em>device</em></code></b>
                 <dd><p>
+                    <b><i>Required on Windows</i></b><br>
                     Specifies, on Linux, the name of the host tunnel device to use. On
-                    Windows, this required option identifies your Windows system's actual
-                    network adapter.
+                    Windows, this <b>required option</b> identifies your Windows host
+                    system's actual physical network adapter to be used for Hercules
+                    networking.
+                    <br><br>
                     On Linux, the value should be specified by name (e.g. /dev/net/tun). On
                     Windows, the value should be specified by either IP or MAC address.
                     <p>
                     The default value for this option is the same value specified in your
-                    <a href="#netdev">NETDEV</a> configuration file statement (or the default
-                    value if not specified).
+                    <a href="#netdev">NETDEV</a> configuration file statement (or the
+                    CTCI-WIN default adapter if not specified).
                     <p>
 
                 <dt><code>ipaddr6 &nbsp;<em>address</em></code>
@@ -3850,7 +3897,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code>hwaddr &nbsp;<em>MAC</em></code>
                 <dd><p>
-                    Specifies the MAC address to be assigned to your OSA card.
+                    Specifies the cosmetic MAC address to be assigned to your guest's OSA card.
                     <p>
                     If not specified then one will be internally generated
                     in the range 02:00:5E:80:00:00 - 02:00:5E:FF:FF:FF using
@@ -4317,7 +4364,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd><p>
                     where <em>netmask</em> is the netmask to use for the
                     automatically added point-to-point route in standard
-                    dotted internet noitation (e.g. 255.255.255.0)
+                    dotted internet notation (e.g. 255.255.255.0)
                     <p>
 
                 <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
@@ -4452,7 +4499,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dt><code><em>delay</em></code>
                 <dd>The number of msec ATTN signals will be delayed for in order
                     to circumvent a VM/SP bug causing SIO timeout errors.
-                    Override the default of 0, e.g. with 200 or or some smaller value
+                    Override the default of 0, e.g. with 200 or some smaller value
                     for faster Hercules hosts, but only when needed.
 
                 <p>
@@ -4515,7 +4562,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
             <pre>
     0E40.4 CTCE       1=192.168.1.200        </pre>
             <p>
-            The above is axactly the same as this specification:
+            The above is exactly the same as this specification:
             <pre>
     0E40   CTCE    0E41=192.168.1.200
     0E41   CTCE    0E40=192.168.1.200
@@ -4922,31 +4969,67 @@ ROUTE  00  172.21.3.32  255.255.255.224
         Specifies the type of control unit to which this device is attached.
         The use of this parameter does not necessarily imply that
         all functions of the specified control unit are emulated.
-        Its sole purpose is to force a particular control unit type
+        Its primary purpose is to force a particular control unit type
         to be indicated in the data returned by SENSE ID and similar CCW's.
         <p>
-        The default value depends on the device type:
+        <b>Please note</b> that this option must be specified in lower case "<code>cu=</code>".
+        Using upper case "<code>CU=</code>" will <u><i>not</i></u> be recognized and will result in an error.
+        <p>
+        The <i><u>default</u></i> <code>cu=</code> value depends on the device type:
+
         <blockquote>
             <table border=1 cellpadding=3>
-            <tr align="center"><th>&nbsp;Dasd Device type&nbsp;</th><th>&nbsp;Default 'cu=' Control Unit Type&nbsp;</th></tr>
-            <tr align="center"><td>2311</td><td>2841</td></tr>
-            <tr align="center"><td>2314</td><td>2314</td></tr>
-            <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
-            <tr align="center"><td>3390</td><td>3990</td></tr>
-            <tr align="center"><td>9345</td><td>9343</td></tr>
+            <tr align="center"><th>&nbsp; DASD Device type &nbsp;</th><th>&nbsp; Default &nbsp;Control Unit Type &nbsp;</th></tr>
+            <tr align="center"><td> 2305 </td><td> 2835 </td></tr>
+            <tr align="center"><td> 2311 </td><td> 2841 </td></tr>
+            <tr align="center"><td> 2314 </td><td> 2314 </td></tr>
+            <tr align="center"><td> 3330 </td><td> 3830 </td></tr>
+            <tr align="center"><td> 3340 </td><td> 3830 </td></tr>
+            <tr align="center"><td> 3350 </td><td> 3830 </td></tr>
+            <tr align="center"><td> 3375 </td><td> 3880 </td></tr>
+            <tr align="center"><td> 3380 </td><td> 3880 </td></tr>
+            <tr align="center"><td> <b>3390</b> </td><td> <b>2107</b> </td></tr>
+            <tr align="center"><td> 9345 </td><td> 9343 </td></tr>
             </table>
         </blockquote>
+
         <p>
-        Other values which may be specified for 3390 dasd device types are
-        <code>3990-3</code> and <code>3990-6</code>.
+
+        Other supported <code>cu=</code> values, each with a different set of features, are:
+
         <p>
-        For modern "z" operating systems such as z/OS and z/VM using 3390 dasds,
-        <code>cu=3990-6</code> should be specified. For older legacy type operating
-        systems, <code>cu=3990-3</code> is probably what should be specified instead.
-        The default control unit type of <code>cu=3990</code> is rarely what you actually want.
+
+        <blockquote>
+            <table border=1 cellpadding=3>
+            <tr align="center"><th>&nbsp; Dasd Device type &nbsp;</th><th>&nbsp; Other Control Unit Types &nbsp;</th></tr>
+            <tr align="center"><td> 3375 </td><td> 3880-1 </td></tr>
+            <tr align="center"><td> 3380 </td><td> 3880-3 </td></tr>
+            <tr align="center"><td> 3390 </td><td> 3990<br> 3990-2<br> 3990-3<br> 3990-6</td></tr>
+            <tr align="center"><td> 9345 </td><td> 9343-0 </td></tr>
+            </table>
+        </blockquote>
+
         <p>
-        <i>Please note</i> that this option must be specified in lower case "<code>cu=</code>".
-        Using upper case "<code>CU=</code>" will not be recognized and will result in an error.
+
+        For modern "z" operating systems (such as z/OS and z/VM, etc) using 3390 dasds,
+        <code>'cu=2107'</code> should usually be specified <i>(which is the <b>new default</b>
+        for 3390 dasds).</i><br>
+        
+        <p>
+
+        The <i>old (prior)</i> default of <code>'cu=3990-6'</code> should still work for those
+        guest operating systems which do <i>not</i> require support for the E7 Prefix CCW,
+        but for those guest operating systems which <b><i><u>do</u></i></b> require support
+        for the E7 Prefix CCW <i>(such as <u><i><b>recent</b></i></u> versions of <b>z/VM</b> for
+        example)</i>, you should <i><u>no longer use</u></i> <code>'cu=3990-6'</code>.&nbsp;
+        &nbsp;Instead, you should use use the new <code>'cu=2107'</code> specification instead.
+
+        <p>
+
+        For <i><u>much older <b>legacy</b></u></i> type operating systems using 3390 dasd
+        (including older versions of z/VM such as z/VM 5.1 for example), <code>'cu=3990-3'</code>
+        (or <code>'cu=3990'</code>) is probably what should be used instead.
+
         <p>
 
 <a name="ckdser"></a>
@@ -5230,7 +5313,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
     <dt><code>KA=NO &#124; <em>(idle,intv,count)</em></code>
     <dd><p>
         Defines the TCP/IP keepalive settings for this line's connections.
-        Refer the the <a href="#CONKPALV">CONKPALV</a> statement for details.
+        Refer the <a href="#CONKPALV">CONKPALV</a> statement for details.
         <p>
 
     <dt><code>LNCTL=TELE2 &#124; IBM1 &#124; BSC</code>

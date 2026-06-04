@@ -1,4 +1,4 @@
- TITLE ' zvector-e6-16-VSRP-VPSOP (Zvector E6 VRI-g)'
+ TITLE 'zvector-e6-16-VSRP-VPSOP'
 ***********************************************************************
 *
 *        Zvector E6 instruction tests for VRI-g encoded:
@@ -7,6 +7,7 @@
 *        E65B VPSOP  - VECTOR PERFORM SIGN OPERATION DECIMAL
 *
 *        James Wekel June 2024
+*                   April 2026 - packed-decimal-enhancements facility 3
 ***********************************************************************
 
 ***********************************************************************
@@ -24,7 +25,7 @@
 *
 ***********************************************************************
 *
-*   *Testcase zvector-e6-16-VSRP-VPSOP: VECTOR E6 VRI-g instructions
+*   *Testcase zvector-e6-16-VSRP-VPSOP
 *   *
 *   *    Zvector E6 tests for VRI-g encoded instruction:
 *   *
@@ -75,7 +76,7 @@
 
          B     X&SYSNDX
 *                                      Fcheck data area
-*                                      skip messgae
+*                                      skip message
 SKT&SYSNDX DC  C'          Skipping tests: '
          DC    C&NOTSETMSG
          DC    C' facility (bit &BITNO) is not installed.'
@@ -113,11 +114,11 @@ ZVE6TST  START 0
 
 SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
                                                                 SPACE 2
-         ORG   ZVE6TST+X'1A0'        z/Architecure RESTART PSW
+         ORG   ZVE6TST+X'1A0'        z/Architecture RESTART PSW
          DC    X'0000000180000000'
          DC    AD(BEGIN)
                                                                 SPACE 2
-         ORG   ZVE6TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+         ORG   ZVE6TST+X'1D0'        z/Architecture PROGRAM CHECK PSW
          DC    X'0002000180000000'
          DC    AD(X'DEAD')
                                                                 SPACE 3
@@ -150,15 +151,15 @@ SVOLDPSW EQU   ZVE6TST+X'140'        z/Arch Supervisor call old PSW
          USING  BEGIN+4096,R9   SECOND Base Register
          USING  BEGIN+8192,R10  THIRD Base Register
 
-BEGIN    BALR  R8,0             Initalize FIRST base register
-         BCTR  R8,0             Initalize FIRST base register
-         BCTR  R8,0             Initalize FIRST base register
+BEGIN    BALR  R8,0             Initialize FIRST base register
+         BCTR  R8,0             Initialize FIRST base register
+         BCTR  R8,0             Initialize FIRST base register
 
-         LA    R9,2048(,R8)     Initalize SECOND base register
-         LA    R9,2048(,R9)     Initalize SECOND base register
+         LA    R9,2048(,R8)     Initialize SECOND base register
+         LA    R9,2048(,R9)     Initialize SECOND base register
 
-         LA    R10,2048(,R9)    Initalize THIRD base register
-         LA    R10,2048(,R10)   Initalize THIRD base register
+         LA    R10,2048(,R9)    Initialize THIRD base register
+         LA    R10,2048(,R10)   Initialize THIRD base register
 
          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
          OI    CTLR0+1,X'04'    Turn on AFP bit
@@ -172,10 +173,22 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
          FCHECK 134,'vector-packed-decimal'
                                                                 EJECT
 ***********************************************************************
+* Is Vector packed-decimal enhancement 1 facility installed  (bit 152)
+***********************************************************************
+
+         FCHECK 152,'packed-decimal-enhancement 1'
+
+***********************************************************************
+* Is Vector packed-decimal enhancement 3 facility installed  (bit 199)
+***********************************************************************
+
+         FCHECK 199,'packed-decimal-enhancement 3'
+                                                                EJECT
+***********************************************************************
 *              Do tests in the E6TESTS table
 ***********************************************************************
 
-         L     R12,=A(E6TESTS)       get table of test addressess
+         L     R12,=A(E6TESTS)       get table of test addresses
 
 NEXTE6   EQU   *
          L     R5,0(0,R12)       get test address
@@ -199,7 +212,7 @@ NEXTE6   EQU   *
 
 TESTREST EQU   *
          LGF   R1,READDR         get address of expected result
-         CLC   V1OUTPUT,0(R1)    valid?
+         CLC   V1OUT,0(R1)         valid?
          BNE   FAILMSG              no, issue failed message
 
          LA    R12,4(0,R12)      next test address
@@ -212,16 +225,16 @@ TESTCC   BC    0,CCMSG          (fail if unexpected condition code)
 ***********************************************************************
 CCMSG    EQU   *
          XG    R1,R1
-         LB    R1,M5          M5 has CS bit
-         N     R1,=F'1'       get CS (CC set) bit
-         BZ    TESTREST          ignore if not set
+         LB    R1,M5                   M5 has CS bit
+         N     R1,=F'1'                get CS (CC set) bit
+         BZ    TESTREST                    ignore if not set
 *
 * extract CC extracted PSW
 *
          L     R1,CCPSW
          SRL   R1,12
          N     R1,=XL4'3'
-         STC   R1,CCFOUND     save cc
+         STC   R1,CCFOUND              save cc
 *
 * FILL IN MESSAGE
 *
@@ -251,7 +264,7 @@ CCMSG    EQU   *
          LA    R1,CCPRTLINE            messagfe address
          BAL   R15,RPTERROR
 
-         B     FAILCONT
+         B     TESTREST
                                                                  EJECT
 ***********************************************************************
 * result not as expected:
@@ -468,7 +481,6 @@ DECNUM   DS    CL16
 *
 *        CC extrtaction
 *
-CCPSW    DS    2F          extract PSW after test (has CC)
 CCFOUND  DS    X           extracted cc
                                                                 SPACE 2
 ***********************************************************************
@@ -489,21 +501,23 @@ V1INPUT  DC    CL16'1234567890123456'                    V1 input
 ***********************************************************************
                                                                 SPACE 2
 E6TEST   DSECT ,
-TSUB     DC    A(0)           pointer  to test
-TNUM     DC    H'00'          Test Number
-         DC    X'00'
-I3       DC    HL1'00'        i3 used
-I4       DC    HL1'00'        i4 used
-M5       DC    HL1'00'        m5 used
-CC       DC    HL1'00'        cc
-CCMASK   DC    HL1'00'        not expected CC mask
+TSUB     DS    A(0)           pointer  to test
+TNUM     DS    H'00'          Test Number
+         DS    X'00'
+I3       DS    HL1'00'        i3 used
+I4       DS    HL1'00'        i4 used
+M5       DS    HL1'00'        m5 used
+CC       DS    HL1'00'        cc
+CCMASK   DS    HL1'00'        not expected CC mask
 
-V2VALUE  DC    A(0)
+V2VALUE  DS    A(0)
 
-OPNAME   DC    CL8' '         E6 name
+OPNAME   DS    CL8' '         E6 name
+V1OUT    DS    XL16
+CCPSW    DS    2F             extract PSW after test (has CC)
 
-RELEN    DC    A(0)           RESULT LENGTH
-READDR   DC    A(0)           expected result address
+RELEN    DS    A(0)           RESULT LENGTH
+READDR   DS    A(0)           expected result address
 
 *        EXPECTED RESULT
 **
@@ -544,6 +558,10 @@ T&TNUM   DC    A(X&TNUM)         address of test routine
          DC    HL1'&XCC(&CC+1)'  cc failed mask
 V2_&TNUM DC    A(RE&TNUM+16)     address of v2: 16-byte packed decimal
          DC    CL8'&INST'        instruction name
+
+V1O&TNUM DC    XL16'00'          V1 OUTPUT
+CC&TNUM  DC    2F'0'                after instruction PWS (ie CC)
+
          DC    A(16)             result length
 REA&TNUM DC    A(RE&TNUM)        result address
 .*
@@ -555,9 +573,9 @@ X&TNUM   DS    0F
 
          &INST V1,V2,&I3,&I4,&M5  test instruction
 
-         VST   V1,V1OUTPUT       save result
+         VST   V1,V1O&TNUM       save result
          EPSW  R2,R0             exptract psw
-         ST    R2,CCPSW              to save CC
+         ST    R2,CC&TNUM             to save CC
          BR    R11               return
 
 RE&TNUM  DC    0F
@@ -593,6 +611,7 @@ TTABLE   DS    0F
 ***********************************************************************
 
 ZVE6TST  CSECT ,
+         ORG   ZVE6TST+X'3000'
          DS    0F
                                                                 SPACE 2
          PRINT DATA
@@ -623,7 +642,9 @@ ZVE6TST  CSECT ,
 *                     i4= 14 (drd=0, shamt=14)  shift left
 *                     i4= 30 (drd=0, shamt=30)  shift left
 *                     i4= 31 (drd=0, shamt=31)  shift left
+*                     i4= 63 (drd=0, shamt=63)  shift left
 
+*                     i4=64  (drd=0, shamt=-64) shift right
 *                     i4=96  (drd=0, shamt=-32) shift right
 *                     i4=114 (drd=0, shamt=-14) shift right
 *                     i4=121 (drd=0, shamt=-7)  shift right
@@ -635,7 +656,9 @@ ZVE6TST  CSECT ,
 *                     i4=135 (drd=1, shamt=7)   shift left
 *                     i4=142 (drd=1, shamt=14)  shift left
 *                     i4=159 (drd=1, shamt=31)  shift left
+*                     i4=191 (drd=1, shamt=63)  shift left
 
+*                     i4=192 (drd=1, shamt=-64) shift right
 *                     i4=224 (drd=1, shamt=-32) shift right
 *                     i4=225 (drd=1, shamt=-31) shift right
 *                     i4=242 (drd=1, shamt=-14) shift right
@@ -670,6 +693,15 @@ ZVE6TST  CSECT ,
          DC    XL16'0000000000000000000000000000000C'    V1
          DC    XL16'0000000000000000000000000000022D'    V2
 
+         VRI_G VSRP,159,63,1,3            shamt=63 (left) (overflow)
+         DC    XL16'0000000000000000000000000000000C'    V1
+         DC    XL16'9000000000000000000000000000022C'    V2
+
+         VRI_G VSRP,159,191,1,3        shamt=63 (left) drd=1 (overflow)
+         DC    XL16'0000000000000000000000000000000C'    V1
+         DC    XL16'9000000000000000000000000000022C'    V2
+
+
          VRI_G VSRP,159,127,1,2           shamt=-1 (right)
          DC    XL16'0000000000000000000000000000002C'    V1
          DC    XL16'0000000000000000000000000000022C'    V2
@@ -693,6 +725,14 @@ ZVE6TST  CSECT ,
          VRI_G VSRP,159,224,1,0           shamt=-32 (right) drd=1
          DC    XL16'0000000000000000000000000000000C'    V1 (note: C)
          DC    XL16'9000000000000000000000000000028D'    V2
+
+         VRI_G VSRP,159,64,1,0            shamt=-64  (right) drd=0
+         DC    XL16'0000000000000000000000000000000C'    V1
+         DC    XL16'9000000000000000000000000000022C'    V2
+
+         VRI_G VSRP,159,192,1,0            shamt=-64  (right) drd=1
+         DC    XL16'0000000000000000000000000000000C'    V1
+         DC    XL16'9000000000000000000000000000022C'    V2
 
 * m5 tests (note: cs is always 1)
 *                                   m5=1  (p2=0, p1=0, cs=1)
@@ -1169,8 +1209,155 @@ ZVE6TST  CSECT ,
          DC    XL16'0000000000000000000000002000000D'    V1
          DC    XL16'0000000000000000000000222000000A'    V2
 
-*+++++++++++++++++++++++++++++++++++
-*test
+*---------------------------------------------------------------------
+* VPSOP - VECTOR PERFORM SIGN OPERATION DECIMAL
+*    packed-decimal-enhamcement facility 3
+*    Preserve Sign = 1
+*---------------------------------------------------------------------
+* VPSOP with some I3, I4 and M5's
+* I3 tests
+*                     i4=129 (iom=1, rdc=1)
+*                     i4=132 (iom=1, rdc=4)
+*                     i4=135 (iom=1, rdc=7)
+*                     i4=142 (iom=1, rdc=14)
+*                     i4=159 (iom=1, rdc=31)
+* I4 : so=00                                              (ps =  0)
+*        i4=144 (nv=1, nz=0, /, ps=1, so=00, pc=0, sv=0)  (was 128)
+*        i4=146 (nv=1, nz=0, /, ps=1, so=00, pc=1, sv=0)  (was 130)
+*
+*        i4=208 (nv=1, nz=1, /, ps=1, so=00, pc=0, sv=0)  (was 192)
+*        i4=210 (nv=1, nz=1, /, ps=1, so=00, pc=1, sv=0)  (was 194)
+*------------------------------------------------
+* SC=00 (maintain): nv=1 to avoid data exceptions
+*------------------------------------------------
+* V1:nonzero V2:positive   PC='0' NZ='–'              V1_sign=C  CC=2
+         VRI_G VPSOP,159,144,1,2         nz=0
+         DC    XL16'0000000000000000000000220000000F'    V1
+         DC    XL16'0000000000000000000000220000000F'    V2
+
+         VRI_G VPSOP,159,208,1,2        nz=1
+         DC    XL16'0000000000000000000000220000000F'    V1
+         DC    XL16'0000000000000000000000220000000F'    V2
+
+* V1:nonzero V2:positive   PC='1' NZ='–'              V1_sign=F  CC=2
+         VRI_G VPSOP,159,146,1,2         nz=0
+         DC    XL16'0000000000000000000000220000000A'    V1
+         DC    XL16'0000000000000000000000220000000A'    V2
+
+         VRI_G VPSOP,159,210,1,2        nz=1
+         DC    XL16'0000000000000000000000220000000A'    V1
+         DC    XL16'0000000000000000000000220000000A'    V2
+
+* V1:nonzero V2:negative   PC='-' NZ='–'              V1_sign=D  CC=1
+         VRI_G VPSOP,159,144,1,1         nz=0  pc=0
+         DC    XL16'0000000000000000000000220000000B'    V1
+         DC    XL16'0000000000000000000000220000000B'    V2
+
+         VRI_G VPSOP,159,146,1,1         nz=0  pc=1
+         DC    XL16'0000000000000000000000220000000B'    V1
+         DC    XL16'0000000000000000000000220000000B'    V2
+
+         VRI_G VPSOP,159,208,1,1         nz=1  pc=0
+         DC    XL16'0000000000000000000000220000000B'    V1
+         DC    XL16'0000000000000000000000220000000B'    V2
+
+         VRI_G VPSOP,159,210,1,1         nz=1  pc=1
+         DC    XL16'0000000000000000000000220000000B'    V1
+         DC    XL16'0000000000000000000000220000000B'    V2
+
+* V1:nonzero V2:invalid   PC='-' NZ='–'              V1_sign=V2  CC=2
+         VRI_G VPSOP,159,144,1,2         nz=0  pc=0
+         DC    XL16'00000000000000000000002200000009'    V1
+         DC    XL16'00000000000000000000002200000009'    V2
+
+         VRI_G VPSOP,159,146,1,2         nz=0  pc=1
+         DC    XL16'00000000000000000000002200000009'    V1
+         DC    XL16'00000000000000000000002200000009'    V2
+
+         VRI_G VPSOP,159,208,1,2         nz=1  pc=0
+         DC    XL16'00000000000000000000002200000009'    V1
+         DC    XL16'00000000000000000000002200000009'    V2
+
+         VRI_G VPSOP,159,210,1,2         nz=1  pc=1
+         DC    XL16'00000000000000000000002200000009'    V1
+         DC    XL16'00000000000000000000002200000009'    V2
+
+* V1:zero  V2:positive   PC='0' NZ='–'              V1_sign=C  CC=0
+         VRI_G VPSOP,159,144,1,0         nz=0  pc=0
+         DC    XL16'0000000000000000000000000000000F'    V1
+         DC    XL16'0000000000000000000000000000000F'    V2
+
+         VRI_G VPSOP,159,208,1,0         nz=1  pc=0
+         DC    XL16'0000000000000000000000000000000F'    V1
+         DC    XL16'0000000000000000000000000000000F'    V2
+
+* V1:zero  V2:positive   PC='1' NZ='–'              V1_sign=F  CC=0
+         VRI_G VPSOP,159,146,1,0         nz=0  pc=1
+         DC    XL16'0000000000000000000000000000000C'    V1
+         DC    XL16'0000000000000000000000000000000C'    V2
+
+         VRI_G VPSOP,159,210,1,0         nz=1  pc=1
+         DC    XL16'0000000000000000000000000000000C'    V1
+         DC    XL16'0000000000000000000000000000000C'    V2
+
+* V1:zero  V2:negative   PC='0' NZ='0'              V1_sign=C  CC=0
+         VRI_G VPSOP,159,144,1,0         nz=0  pc=0
+         DC    XL16'0000000000000000000000000000000D'    V1
+         DC    XL16'0000000000000000000000000000000D'    V2
+
+* V1:zero  V2:negative   PC='1' NZ='0'              V1_sign=F  CC=0
+         VRI_G VPSOP,159,146,1,0         nz=0  pc=1
+         DC    XL16'0000000000000000000000000000000D'    V1
+         DC    XL16'0000000000000000000000000000000D'    V2
+
+* V1:zero  V2:negative   PC='-' NZ='1'              V1_sign=D  CC=0
+         VRI_G VPSOP,159,208,1,0         nz=1  pc=0
+         DC    XL16'0000000000000000000000000000000B'    V1
+         DC    XL16'0000000000000000000000000000000B'    V2
+
+         VRI_G VPSOP,159,210,1,0         nz=1  pc=1
+         DC    XL16'0000000000000000000000000000000B'    V1
+         DC    XL16'0000000000000000000000000000000B'    V2
+
+* V1:zero  V2:invalid   PC='-' NZ='–'              V1_sign=V2  CC=0
+         VRI_G VPSOP,159,144,1,0         nz=0  pc=0
+         DC    XL16'00000000000000000000000000000009'    V1
+         DC    XL16'00000000000000000000000000000009'    V2
+
+         VRI_G VPSOP,159,146,1,0         nz=0  pc=1
+         DC    XL16'00000000000000000000000000000009'    V1
+         DC    XL16'00000000000000000000000000000009'    V2
+
+         VRI_G VPSOP,159,208,1,0         nz=1  pc=0
+         DC    XL16'00000000000000000000000000000009'    V1
+         DC    XL16'00000000000000000000000000000009'    V2
+
+         VRI_G VPSOP,159,210,1,0         nz=1  pc=1
+         DC    XL16'00000000000000000000000000000009'    V1
+         DC    XL16'00000000000000000000000000000009'    V2
+
+*--------------------------------------------------
+* cc=3 (overflow) tests with rdc=4
+*--------------------------------------------------
+* V1:zero  V2:positive   PC='0' NZ='–'             V1_sign=C  CC=0
+         VRI_G VPSOP,132,144,1,3         nz=0  pc=0
+         DC    XL16'0000000000000000000000000000000F'    V1
+         DC    XL16'0000000000009990000000000000000F'    V2
+
+*--------------------------------------------------
+* cc=3 (overflow) tests with rdc=7
+*--------------------------------------------------
+* SC=00 (maintain): nv=1 to avoid data exceptions
+* V1:nonzero V2:positive   PC='0' NZ='–'            V1_sign=C  CC=2
+         VRI_G VPSOP,135,144,1,3         nz=0
+         DC    XL16'0000000000000000000000002000000F'    V1
+         DC    XL16'0000000000000000000000222000000F'    V2
+
+
+
+
+
+
 
          DC    F'0'     END OF TABLE
          DC    F'0'

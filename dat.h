@@ -324,7 +324,7 @@ inline BYTE* ARCH_DEP( maddr_l )
     /* Non-zero AEA Control Register number? */
     if (aea_crn)
     {
-        /* Same Addess Space Designator as before? */
+        /* Same Address Space Designator as before? */
         /* Or if not, is address in a common segment? */
         if (0
             || (regs->CR( aea_crn ) == regs->tlb.TLB_ASD( tlbix ))

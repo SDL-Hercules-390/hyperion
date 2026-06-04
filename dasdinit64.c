@@ -81,7 +81,7 @@ U32     heads = 0;                      /* Number of tracks/cylinder */
 U32     maxdlen = 0;                    /* Maximum R1 data length    */
 U32     sectsize = 0;                   /* Sector size               */
 U16     devtype = 0;                    /* Device type               */
-BYTE    comp = 0xff;                    /* Compression algoritm      */
+BYTE    comp = 0xff;                    /* Compression algorithm     */
 BYTE    type = 0;                       /* C=CKD, F=FBA              */
 char    fname[1024];                    /* File name                 */
 char    volser[6+1];                    /* Volume serial number      */

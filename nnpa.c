@@ -83,6 +83,8 @@ facility  code  test#   Instruction                                             
 #include "opcode.h"
 #include "inline.h"
 
+#include "zvector.h"
+
 #if defined( FEATURE_165_NNET_ASSIST_FACILITY )
 
 /*-------------------------------------------------------------------*/
@@ -183,7 +185,7 @@ static inline void ARCH_DEP( nnpa_qaf ) ( VADR pb_addr, REGS* regs);
 // static inline void ARCH_DEP( nnpa_matmul-opbcast23 ) ( VADR pb_addr, REGS* regs);
 
 /*===================================================================*/
-/* Achitecture Independent Routines                                  */
+/* Architecture Independent Routines                                 */
 /*===================================================================*/
 
 #if !defined(_NNPA_ARCH_INDEPENDENT_)
@@ -205,6 +207,7 @@ typedef U16 N1FLOAT;
 #define N1FLOAT_PACK( sign, exp, frac ) ( ( (N1FLOAT) (sign) << 15 ) | ( (N1FLOAT) ( (exp) & 0x3F ) << 9 ) | (N1FLOAT) ( (frac) & 0x01FF) )
 
 #define N1FLOAT_DEFAULT_NAN             0x7FFF
+#define N1FLOAT_DEFAULT_INFINITY        0x7FFF
 #define N1FLOAT_IS_ZERO(f)              ( ( (f) & 0x7FFF ) == 0x0000 )
 #define N1FLOAT_IS_NAN_INFINITY(f)      ( ( (f) & 0x7FFF ) == 0x7FFF )
 
@@ -218,11 +221,12 @@ typedef U16 TINYB;
 #define TINYB_PACK( sign, exp, frac )   ( ( (TINYB) (sign) << 15 ) | ( (TINYB) ( (exp) &  0x1F ) << 10 ) | (TINYB) ( (frac) & 0x03FF ) )
 
 #define TINYB_DEFAULT_NAN               0x7E00
-#define TINYB_IS_ZERO(f)                ( ( (TINYB) ( (f) & 0x7FFF ) == (TINYB) 0x0000 ) )
-#define TINYB_IS_NAN( f )               ( ( ( (f) & 0x7C00 ) == 0x7C00 ) && ( (f) & 0x03FF) )
-#define TINYB_IS_NAN_INFINITY(f)        ( (   (f) & 0x7C00 ) == 0x7C00 )
-#define TINYB_IS_SUBNORMAL(f)           ( ( ( (f) & 0x7C00 ) == 0x0000 ) && ( (f) & 0x03FF ) != 0x0000 )
-#define TINYB_IS_NORMAL(f)              ( ( ( (f) & 0x7C00 ) != 0x0000 ) && ( (f) & 0x7C00 ) != 0x7C00 )
+#define TINYB_IS_ZERO( f )              ( ( (TINYB) ( (f) & 0x7FFF ) == (TINYB) 0x0000 ) )
+#define TINYB_IS_NAN( f )               ( ( ( (f) & 0x7C00 ) == 0x7C00 ) &&  ( (f) & 0x03FF) )
+#define TINYB_IS_INFINITY( f )          ( ( ( (f) & 0x7C00 ) == 0x7C00 ) && !( (f) & 0x03FF) )
+#define TINYB_IS_NAN_INFINITY( f )      ( (   (f) & 0x7C00 ) == 0x7C00 )
+#define TINYB_IS_SUBNORMAL( f )         ( ( ( (f) & 0x7C00 ) == 0x0000 ) && ( (f) & 0x03FF ) != 0x0000 )
+#define TINYB_IS_NORMAL( f )            ( ( ( (f) & 0x7C00 ) != 0x0000 ) && ( (f) & 0x7C00 ) != 0x7C00 )
 
 /* SHORTB (32 bits): 1 bit sign, 8 bit exponent; 23 bit fraction   */
 typedef U32 SHORTB;
@@ -234,10 +238,16 @@ typedef U32 SHORTB;
 #define SHORTB_PACK( sign, exp, frac )  ( ((SHORTB) (sign) << 31) | ( (SHORTB) ( (exp) & 0xFF ) << 23) | (SHORTB) ( (frac) & 0x007FFFFF ) )
 
 #define SHORTB_DEFAULT_NAN               0x7FC00000
-#define SHORTB_IS_ZERO(f)                ( ( (f) & 0x7FFFFFFF ) == 0x00000000 )
-#define SHORTB_IS_NAN_INFINITY(f)        ( ( (f) & 0x7F800000 ) == 0x7F800000 )
-#define SHORTB_IS_SUBNORMAL(f)           ( ( (f) & 0x7F800000 ) == 0x00000000 && ( (f) & 0x007FFFFF ) != 0x00000000 )
-#define SHORTB_IS_NORMAL(f)              ( ( (f) & 0x7F800000 ) != 0x00000000 && ( (f) & 0x7F800000 ) != 0x7F800000 )
+#define SHORTB_IS_ZERO(f)                ( (   (f) & 0x7FFFFFFF ) == 0x00000000 )
+#define SHORTB_IS_NAN(f)                 ( ( ( (f) & 0x7F800000 ) == 0x7F800000 ) &&  ( (f) & 0x007FFFFF ) )
+#define SHORTB_IS_INFINITY(f)            ( ( ( (f) & 0x7F800000 ) == 0x7F800000 ) && !( (f) & 0x007FFFFF ) )
+#define SHORTB_IS_NAN_INFINITY(f)        ( (   (f) & 0x7F800000 ) == 0x7F800000 )
+#define SHORTB_IS_SUBNORMAL(f)           ( (   (f) & 0x7F800000 ) == 0x00000000 && ( (f) & 0x007FFFFF ) != 0x00000000 )
+#define SHORTB_IS_NORMAL(f)              ( (   (f) & 0x7F800000 ) != 0x00000000 && ( (f) & 0x7F800000 ) != 0x7F800000 )
+
+/* FPC Mask helpers                                                               */
+#define FPC_MASK_IS_ON( x )    (  (regs->fpc & (x) ) != 0 )   /* FPC mask on?     */
+#define FPC_MASK_IS_OFF( x )   (  (regs->fpc & (x) ) == 0 )   /* FPC mask off?    */
 
 /*--------------------------------------------------------------------------------*/
 /* Vector processing with VXC for IEEE exception and element index                */
@@ -255,25 +265,25 @@ static inline void vector_softfloat_conditional( REGS *regs, int vix )
 
     else if ( softfloat_exceptionFlags & softfloat_flag_invalid)
     {
-        vxc =  ( (vix & 0x0F) << 4) | VXC_IEEE_INVALID_OP;
+        vxc =  ( (vix & 0x0F) << VXC_VIX_SHIFT) | VXC_IEEE_INVALID_OP;
         ieee_check_mask = FPC_MASK_IMI;
     }
 
     else if ( softfloat_exceptionFlags & softfloat_flag_overflow)
     {
-        vxc =  ( (vix & 0x0F) << 4) | VXC_IEEE_OVERFLOW;
+        vxc =  ( (vix & 0x0F) << VXC_VIX_SHIFT) | VXC_IEEE_OVERFLOW;
         ieee_check_mask = FPC_MASK_IMO;
     }
 
     else if ( softfloat_exceptionFlags & softfloat_flag_underflow)
     {
-        vxc =  ( (vix & 0x0F) << 4) | VXC_IEEE_UNDERFLOW;
+        vxc =  ( (vix & 0x0F) << VXC_VIX_SHIFT) | VXC_IEEE_UNDERFLOW;
         ieee_check_mask = FPC_MASK_IMU;
     }
 
     else if ( softfloat_exceptionFlags & softfloat_flag_inexact)
     {
-        vxc =  ( (vix & 0x0F) << 4) | VXC_IEEE_INEXACT;
+        vxc =  ( (vix & 0x0F) << VXC_VIX_SHIFT) | VXC_IEEE_INEXACT;
         ieee_check_mask = FPC_MASK_IMX;
     }
 
@@ -289,14 +299,14 @@ static inline void vector_softfloat_conditional( REGS *regs, int vix )
         /* ..and suppress those that could trap */
         ~(regs->fpc >> 8) & FPC_FLAGS;
 
+    if ( FPC_MASK_IS_OFF( ieee_check_mask )  )
+        return;                 /* no trap enabled */
+
+    /* trap enabled */
     regs->dxc = vxc;                   /*  Save VXC in PSA         */
     regs->fpc &= ~FPC_DXC;             /*  Clear previous DXC/VXC  */
     regs->fpc |= ((U32)vxc << FPC_DXC_SHIFT);
 
-    if ( (regs->fpc & ieee_check_mask) == 0 )
-        return;                 /* no trap enabled */
-
-    /* trap enabled */
     regs->program_interrupt( regs, PGM_VECTOR_PROCESSING_EXCEPTION );
 }
 
@@ -366,8 +376,8 @@ static inline float16_t fn1_to_f16( const floatn1_t n1f)
     /* cases: nan or infinity */
     if ( N1FLOAT_IS_NAN_INFINITY( n1f.v ) )
     {
+        t16.v = TINYB_DEFAULT_NAN;                          /* always positive */
         softfloat_exceptionFlags = softfloat_flag_invalid;  /* is this nan or infinity? */
-        t16.v = TINYB_DEFAULT_NAN | (sign << 15);
         return t16;
     }
 
@@ -377,6 +387,15 @@ static inline float16_t fn1_to_f16( const floatn1_t n1f)
     sbf.v = SHORTB_PACK ( sign, exp, frac );
 
     t16 = f32_to_f16 ( sbf );
+
+    /* Note: underflow is recognized when tininess condition exists. */
+    /*       tininess condition is recognized by a subnormal result */
+    if ( TINYB_IS_SUBNORMAL( t16.v ) )
+    {
+        softfloat_exceptionFlags = softfloat_flag_underflow;
+        //logmsg("fn1_to_f16: sign: %d, exp: %d, frac: %x, t16: %04x, tiniess: %d\n", sign, exp, frac, t16.v, softfloat_exceptionFlags & softfloat_flag_tiny);
+    }
+
     return t16;
 }
 
@@ -417,11 +436,19 @@ static inline floatn1_t f16_to_fn1( float16_t tbf)
         return n1f;
     }
 
-    /* cases: nan or infinity -> NaN                              */
-    /* N1FLOAT NAN-INFINITY doesn't care about sign; but maintain */
-    if ( TINYB_IS_NAN_INFINITY( tbf.v ) )
+    /* case: infinity -> overflow                                */
+    if ( TINYB_IS_INFINITY( tbf.v ) )
+    {
+        n1f.v  = N1FLOAT_DEFAULT_INFINITY | (sign << 15);
+        softfloat_exceptionFlags = softfloat_flag_overflow;
+        return n1f;
+    }
+
+    /* cases: nan -> invalid operation                            */
+    if ( TINYB_IS_NAN( tbf.v ) )
     {
         n1f.v  = N1FLOAT_DEFAULT_NAN | (sign << 15);
+        softfloat_exceptionFlags = softfloat_flag_invalid;
         return n1f;
     }
 
@@ -448,7 +475,8 @@ static inline floatn1_t f16_to_fn1( float16_t tbf)
         frac >>= 1;
     }
 
-    /* check for under/over flow */
+    /* check for under/over flow                                   */
+    /* Note: underflow / overflow should never happen for t16->n1f */
     if (exp < 0 )
     {
         n1f.v  = N1FLOAT_PACK( sign, 0, 0 );
@@ -457,7 +485,7 @@ static inline floatn1_t f16_to_fn1( float16_t tbf)
     }
     if (exp > 63 )
     {
-        n1f.v = N1FLOAT_PACK( sign, 0x3f, (0x01FF - 1) );
+        n1f.v = N1FLOAT_DEFAULT_INFINITY | (sign << 15);
         softfloat_exceptionFlags = softfloat_flag_overflow;
         return  n1f;
     }
@@ -504,7 +532,7 @@ static inline float32_t fn1_to_f32( const floatn1_t n1f)
     /* cases: nan or infinity */
     if ( N1FLOAT_IS_NAN_INFINITY( n1f.v ) )
     {
-        sbf.v = SHORTB_DEFAULT_NAN  | (sign << 31);
+        sbf.v = SHORTB_DEFAULT_NAN;                             /* always positive */
         softfloat_exceptionFlags = softfloat_flag_invalid;      /* is this nan or infinity? */
         return sbf;
     }
@@ -528,7 +556,7 @@ static inline float32_t fn1_to_f32( const floatn1_t n1f)
 /*                                                                   */
 /* Softfloat Exceptions                                              */
 /*          0, no error                                              */
-/*             softfloat_flag_invalid   (????)                       */
+/*             softfloat_flag_invalid                                */
 /*             softfloat_flag_underflow                              */
 /*             softfloat_flag_overflow                               */
 /*-------------------------------------------------------------------*/
@@ -553,14 +581,21 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
         return n1f;
     }
 
-    /* cases: nan or infinity -> NaN                              */
-    /* N1FLOAT NAN-INFINITY doesn't care about sign; but maintain */
-    if ( SHORTB_IS_NAN_INFINITY( sbf.v ) )
+    /* cases: infinity -> Overflow                                */
+    if ( SHORTB_IS_INFINITY( sbf.v ) )
     {
-        n1f.v = N1FLOAT_DEFAULT_NAN | (sign << 15);
+        n1f.v = N1FLOAT_DEFAULT_INFINITY | (sign << 15);
+        softfloat_exceptionFlags = softfloat_flag_overflow;
         return n1f;
     }
 
+    /* cases: nan -> invalid operation                            */
+    if ( SHORTB_IS_NAN( sbf.v ) )
+    {
+        n1f.v = N1FLOAT_DEFAULT_NAN | (sign << 15);
+        softfloat_exceptionFlags = softfloat_flag_invalid;
+        return n1f;
+    }
     /* cases: normal */
     if ( SHORTB_IS_NORMAL( sbf.v ) )
     {
@@ -588,7 +623,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
         }
         if (exp > 63 )
         {
-            n1f.v = N1FLOAT_PACK( sign, 0x3f, (0x01FF - 1) );
+            n1f.v = N1FLOAT_DEFAULT_INFINITY | (sign << 15);
             softfloat_exceptionFlags = softfloat_flag_overflow;
             return  n1f;
         }
@@ -608,7 +643,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 
 
 /*===================================================================*/
-/* Achitecture Dependent Routines / Instructions                     */
+/* Architecture Dependent Routines / Instructions                    */
 /*===================================================================*/
 
 /*================================================================================*/
@@ -634,7 +669,7 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 /* Github project: https://github.com/IBM/zDNN                                    */
 /*   IBM Z Deep Neural Network Library (zDNN) provides an interface for           */
 /*   applications making use of Neural Network Processing Assist Facility (NNPA). */
-/*   A function decription for zdnn_is_nnpa_installed indicates DLFOAT16 as an    */
+/*   A function description for zdnn_is_nnpa_installed indicates DLFOAT16 as an   */
 /*   NNP-internal data type.                                                      */
 /*        Description                                                             */
 /*              Interrogates the hardware to determine if the NNPA and            */
@@ -643,9 +678,13 @@ static inline floatn1_t f32_to_fn1( const float32_t sbf)
 /*                                                                                */
 /* Notes:                                                                         */
 /*  1. Softfloat: This implementation uses softfloat and should probably be part  */
-/*          of ieee.c. As these are EXPERIMENTAL zvector instructions, the        */
+/*          of zvector3.c. As these are EXPERIMENTAL zvector instructions, the    */
 /*          implementation remains with Neural-network-processing-assist          */
 /*          instructions.                                                         */
+/*          --------------------------------------------------------------------  */
+/*          NOTE: Original Softfloat tiny (F16) routines are used which have NOT  */
+/*          been modified for IBM-IEEE definition.                                */
+/*          --------------------------------------------------------------------  */
 /*  2. Rounding: N1FLOAT rounding mode is 'Round nearest up'. This rounding mode  */
 /*          is used for conversion to N1FLOAT.                                    */
 /*  3. Normals: N1FLOAT does not have any subnormal numbers. Softfloat short      */
@@ -672,7 +711,7 @@ DEF_INST( vector_fp_convert_to_nnp )
     floatn1_t   n1f;                      /* n1 type float           */
     float16_t   t16;                      /* f16 type float          */
 
-    LOCALS();
+    LOCALS();                             /* local vr save area      */
 
     VRR_A(inst, regs, v1, v2, m3, m4, m5);
 
@@ -684,18 +723,29 @@ DEF_INST( vector_fp_convert_to_nnp )
     /* M3= 1-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m3 > 0  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
     /* M4= 0, 2-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m4 == 0 || m4 >= 2  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
-    /* save v2 */
+    /* save v1, v2 */
+    VR_SAVE_LOCAL( LV1, v1 );
     VR_SAVE_LOCAL( LV2, v2 );
 
     /* the only option is tiny-bfp -> N1FLOAT */
@@ -710,8 +760,11 @@ DEF_INST( vector_fp_convert_to_nnp )
         if (softfloat_exceptionFlags)
             vector_softfloat_conditional( regs, i );
 
-        regs->VR_H( v1, i)  = n1f.v;
+        lregs->VR_H( LV1, i)  = n1f.v;
     }
+
+    /* no trap occurred, copy result */
+    regs->VR_Q( v1) = lregs->VR_Q( LV1 );
 
     ZVECTOR_END( regs );
 }
@@ -728,7 +781,7 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_high )
     float32_t   sbf;                 /* Short (f32) Boolean float     */
     floatn1_t   n1f;                 /* N1 Boolean float              */
 
-    LOCALS();
+    LOCALS();                        /* local vr save area            */
 
     VRR_A(inst, regs, v1, v2, m3, m4, m5);
 
@@ -740,18 +793,29 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_high )
     /* M3= 0-1, 3-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m3 != 2 )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
     /* M4= 1-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m4 >= 1  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
-    /* save v2 */
+    /* save v1, v2 */
+    VR_SAVE_LOCAL( LV1, v1 );
     VR_SAVE_LOCAL( LV2, v2 );
 
     /* the only option is N1FLOAT -> short-bfp */
@@ -766,8 +830,11 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_high )
         if (softfloat_exceptionFlags)
             vector_softfloat_conditional( regs, i );
 
-        regs->VR_F( v1, i)  = sbf.v;
+        lregs->VR_F( LV1, i)  = sbf.v;
     }
+
+    /* no trap occurred, copy result */
+    regs->VR_Q( v1) = lregs->VR_Q( LV1 );
 
     ZVECTOR_END( regs );
 }
@@ -784,7 +851,7 @@ DEF_INST( vector_fp_convert_from_nnp )
     float16_t   t16;                      /* Tiny Boolean float      */
     floatn1_t   n16;                      /* N1 boolean float        */
 
-    LOCALS();
+    LOCALS();                             /* local vr save area      */
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -796,18 +863,29 @@ DEF_INST( vector_fp_convert_from_nnp )
     /* M3= 0, 2-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m3 != 1 )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
     /* M4= 1-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m4 >= 1  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
-    /* save v2 */
+    /* save v1, v2 */
+    VR_SAVE_LOCAL( LV1, v1 );
     VR_SAVE_LOCAL( LV2, v2 );
 
     /* the only option is N1FLOAT -> tiny-bfp */
@@ -822,8 +900,11 @@ DEF_INST( vector_fp_convert_from_nnp )
         if (softfloat_exceptionFlags)
             vector_softfloat_conditional( regs, i );
 
-        regs->VR_H( v1, i)  = t16.v;
+        lregs->VR_H( LV1, i)  = t16.v;
     }
+
+    /* no trap occurred, copy result */
+    regs->VR_Q( v1) = lregs->VR_Q( LV1 );
 
     ZVECTOR_END( regs );
 }
@@ -841,7 +922,7 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_low )
     float32_t   sbf;                  /* Short  (f32) Boolean float  */
     floatn1_t   n1f;                  /* N1 Boolean float            */
 
-    LOCALS();
+    LOCALS();                         /* local vr save area          */
 
     VRR_A( inst, regs, v1, v2, m3, m4, m5 );
 
@@ -853,18 +934,29 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_low )
     /* M3= 0-1, 3-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m3 != 2 )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
     /* M4= 1-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m4 >= 1  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
-    /* save v2 */
+    /* save v1, v2 */
+    VR_SAVE_LOCAL( LV1, v1 );
     VR_SAVE_LOCAL( LV2, v2 );
 
     /* the only option is N1FLOAT -> short-bfp */
@@ -879,8 +971,11 @@ DEF_INST( vector_fp_convert_and_lengthen_from_nnp_low )
         if (softfloat_exceptionFlags)
             vector_softfloat_conditional( regs, i );
 
-        regs->VR_F( v1, k)  = sbf.v;
+        lregs->VR_F( LV1, k)  = sbf.v;
     }
+
+    /* no trap occurred, copy result */
+    regs->VR_Q( v1) = lregs->VR_Q( LV1 );
 
     ZVECTOR_END( regs );
 }
@@ -898,7 +993,7 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
     float32_t   sbf;                  /* Short  (f32) Boolean float  */
     floatn1_t   n1f;                  /* N1 Boolean float            */
 
-    LOCALS();
+    LOCALS();                         /* local vr save area          */
 
     VRR_C(inst, regs, v1, v2, v3, m4, m5, m6);
 
@@ -910,18 +1005,29 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
     /* M4= 1-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m4 > 0  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
     /* M5= 0-1, 3-15 (reserved) => an IEEE-inexact exception is recognized. */
     if ( m5 <= 1 || m5 >= 3  )
     {
-          vector_ieee_inexact( regs, 0 );
-          return;
+        if ( FPC_MASK_IS_OFF (FPC_MASK_IMX) )
+        {
+            regs->VR_D( v1, 0) = 0;
+            regs->VR_D( v1, 1) = 0;
+        }
+        vector_ieee_inexact( regs, 0 );
+        return;
     }
 
-    /* save v2 */
+    /* save v1, v2, v3 */
+    VR_SAVE_LOCAL( LV1, v1 );
     VR_SAVE_LOCAL( LV2, v2 );
     VR_SAVE_LOCAL( LV3, v3 );
 
@@ -938,7 +1044,7 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
         if (softfloat_exceptionFlags)
             vector_softfloat_conditional( regs, k );
 
-        regs->VR_H( v1, k)  = n1f.v;
+        lregs->VR_H( LV1, k)  = n1f.v;
     }
 
     /* vr 3 */
@@ -953,8 +1059,11 @@ DEF_INST( vector_fp_convert_and_round_to_nnp )
         if (softfloat_exceptionFlags)
             vector_softfloat_conditional( regs, k );
 
-        regs->VR_H( v1, k)  = n1f.v;
+        lregs->VR_H( LV1, k)  = n1f.v;
     }
+
+    /* no trap occurred, copy result */
+    regs->VR_Q( v1) = lregs->VR_Q( LV1 );
 
     ZVECTOR_END( regs );
 }

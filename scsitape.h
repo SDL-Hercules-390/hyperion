@@ -69,7 +69,7 @@ extern void  define_BOT_pos( DEVBLK *dev );
 /*                 SCSI drive status query timeout                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*  PROGRAMMING NOTE: I'm not sure of what the the actual/proper     */
+/*  PROGRAMMING NOTE: I'm not sure of what the actual/proper         */
 /*  value should be (or is) for the following value but I've coded   */
 /*  what seems to me to be a reasonable value for it.                */
 /*                                                                   */
@@ -111,7 +111,7 @@ extern void  define_BOT_pos( DEVBLK *dev );
 /*  whenever it eventually noticed a tape was indeed still mounted   */
 /*  on the drive)).                                                  */
 /*                                                                   */
-/*  Thus, even though such unsolicited ATTN interrupts occuring in   */
+/*  Thus, even though such unsolicited ATTN interrupts occurring in  */
 /*  the middle of (i.e. during) an already running tape job should   */
 /*  NOT, under ordinary circumstances, cause any problems (as long   */
 /*  as auto-scsi-mount is enabled of course), in order to reduce     */

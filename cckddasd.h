@@ -136,9 +136,11 @@ int     cckd_sf_init(DEVBLK *dev);
 int     cckd_sf_new(DEVBLK *dev);
 void    cckd_lock_devchain(int flag);
 void    cckd_unlock_devchain();
-void    cckd_dhstart(int by_cmdline);
+void    add_dev_to_cckd_chain_locked( DEVBLK* new_dev );
+void    remove_dev_from_cckd_chain_locked( DEVBLK* old_dev );
+void    cckd_dhstart( bool by_cmdline );
 void*   cckd_dh(void* arg);
-void    cckd_gcstart();
+void    cckd_gcstart( bool by_cmdline );
 void*   cckd_gcol(void* arg);
 void    cckd_gcol_dev( DEVBLK* dev, struct timeval* tv_now );
 int     cckd_gc_state( DEVBLK* dev );
@@ -192,7 +194,6 @@ int     cckd64_sf_init(DEVBLK *dev);
 int     cckd64_sf_new(DEVBLK *dev);
 //id    cckd64_lock_devchain(int flag);
 //id    cckd64_unlock_devchain();
-void    cckd64_gcstart();
 //id*   cckd64_gcol(void* arg);
 void    cckd64_gcol_dev( DEVBLK* dev, struct timeval* tv_now );
 int     cckd64_gc_state( DEVBLK* dev );
@@ -217,9 +218,9 @@ BYTE   *cckd64_uncompress(DEVBLK *dev, BYTE *from, int len, int maxlen, int trk)
 //t     cckd64_compress_zlib(DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm);
 //t     cckd64_compress_bzip2(DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm);
 /*-------------------------------------------------------------------*/
-CCKD_DLL_IMPORT   int     cckd_command(char *op, int cmd);
+CCKD_DLL_IMPORT   int     cckd_command(char *op, bool verbose );
                   void    cckd_command_help();
-                  void    cckd_command_opts();
+                  void    cckd_command_report_opts();
                   void    cckd_command_stats();
                   void    cckd_trace( const char* func, int line,
                                       DEVBLK* dev, char* fmt, ...);

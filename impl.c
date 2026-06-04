@@ -257,7 +257,7 @@ static BOOL WINAPI console_ctrl_handler( DWORD signo )
     //  we only have a maximum of 5 seconds to return TRUE from
     //  the CTRL_CLOSE_EVENT signal. Thus, as normal shutdowns
     //  may likely take longer than 5 seconds and our goal is
-    //  to try hard to shutdown Hercules as gracfully as we can,
+    //  to try hard to shutdown Hercules as gracefully as we can,
     //  we are left with little choice but to always perform
     //  an immediate/emergency shutdown for CTRL_CLOSE_EVENT.
     //
@@ -331,7 +331,7 @@ static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
     //  TRUE from WM_QUERYENDSESSION or return 0 from WM_ENDSESSION,
     //  and since a normal shutdown may likely take longer than 5
     //  seconds and our goal is to try hard to shutdown Hercules as
-    //  gracfully as possible, we are left with little choice but to
+    //  gracefully as possible, we are left with little choice but to
     //  perform an immediate emergency shutdown once we receive the
     //  WM_ENDSESSION message with a WPARAM value of TRUE.
     //
@@ -964,8 +964,12 @@ static void check_host_instruction_availability()
 
     /* Then report all of the ones that aren't available */
     // "WARNING: Host does not support the '%s' instruction"
+
+/* INTEL X64 processor? */
+#if defined( __x86_64__ ) || defined( _M_X64 )
     if (!sysblk.have_PCLMULQDQ) WRMSG( HHC00026, "W", "PCLMULQDQ" );
 //  if (!sysblk.have_XXXXXXXXX) WRMSG( HHC00026, "W", "XXXXXXXXX" );
+#endif
 }
 
 /*-------------------------------------------------------------------*/
@@ -975,7 +979,7 @@ DLL_EXPORT int impl( int argc, char* argv[] )
 {
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
-int     rc, maxprio, minprio;
+int     rc;
 
     SET_THREAD_NAME( IMPL_THREAD_NAME );
 
@@ -985,15 +989,19 @@ int     rc, maxprio, minprio;
     /* Save minprio/maxprio, which were set in bootstrap.c when it
        called SET_THREAD_NAME at or near the beginning of main().
     */
-    minprio = sysblk.minprio;
-    maxprio = sysblk.maxprio;
+    {
+        int minprio, maxprio;
 
-    /* Clear the system configuration block (SYSBLK) to zero */
-    memset( &sysblk, 0, sizeof( SYSBLK ) );
+        minprio = sysblk.minprio;
+        maxprio = sysblk.maxprio;
 
-    /* Restore saved minprio/maxprio into SYSBLK */
-    sysblk.minprio = minprio;
-    sysblk.maxprio = maxprio;
+        /* Clear the system configuration block (SYSBLK) to zero */
+        memset( &sysblk, 0, sizeof( SYSBLK ) );
+
+        /* Restore saved minprio/maxprio into SYSBLK */
+        sysblk.minprio = minprio;
+        sysblk.maxprio = maxprio;
+    }
 
     // Check if, and remember, if debugger is present...
     // (must be done AFTER sysblk has been set to zero)
@@ -1052,6 +1060,9 @@ int     rc, maxprio, minprio;
     if (argc >= 1 && strncmp( argv[argc-1], "EXTERNALGUI", 11 ) == 0)
     {
         extgui = TRUE;
+        sysblk.gui_verstr = "";
+        sysblk.gui_vernum = 0;
+        initialize_lock( &sysblk.gui_msglock );
         argc--;
     }
 
@@ -1109,7 +1120,8 @@ int     rc, maxprio, minprio;
     sysblk.sysgroup = DEFAULT_SYSGROUP;
 
     /* set default console port addresses */
-    sysblk.cnslport = strdup("3270");
+    sysblk.cnslport   = strdup("3270");
+    sysblk.wscnslport = NULL;       /* WebSocket console: opt-in only */
 
     /* Initialize automatic creation of missing tape file to default */
     sysblk.auto_tape_create = DEF_AUTO_TAPE_CREATE;
@@ -1144,7 +1156,7 @@ int     rc, maxprio, minprio;
     sysblk.lparmode = 1;                /* LPARNUM 1    # LPAR ID 01 */
     sysblk.lparnum  = 1;                /* ...                       */
     sysblk.cpuidfmt = 0;                /* CPUIDFMT 0                */
-    sysblk.operation_mode = om_mif;     /* Default to MIF operaitons */
+    sysblk.operation_mode = om_mif;     /* Default to MIF operations */
 
     /* set default CPU identifier */
     sysblk.cpumodel = 0x0586;
@@ -1547,6 +1559,9 @@ int     rc, maxprio, minprio;
     /* Initialize runtime opcode tables */
     init_runtime_opcode_tables();
 
+    /* Initialize command line history */
+    history_init();
+
     /* Initialize the Hercules Dynamic Loader (HDL) */
     rc = hdl_main
     (
@@ -1799,37 +1814,16 @@ int     rc, maxprio, minprio;
 
             process_script_file( "-", true );
 
-            /* We come here only if the user did ctl-d on a tty,
-               or we reached EOF on stdin.  No quit command has
-               been issued (yet) since that (via do_shutdown())
-               would not return.  So we issue the quit command
-               here once all CPUs have quiesced, since with no
-               CPUs doing anything and stdin at EOF, there's no
-               longer any reason for us to stick around!
-
-               UNLESS, of course, there were never at any CPUs
-               defined/configured to begin with! (i.e. "NUMCPU 0"
-               was specified, such as would be the case if Hercules
-               was running solely as a Shared Device Server with
-               no guest operating IPLed or running for example).
-
-               In such a case we must continue running in order
-               to continue serving Shared Dasd I/O requests for
-               our Shared Device clients. So we continue running
-               FOREVER. (Yes, *FOREVER!*) We NEVER exit. We can
-               only go away (disappear) when the user wants us to,
-               by either explicitly KILLING the Hercules process
-               itself, or by issuing the 'quit' command via e.g.
-               our own builtin HTTP Server interface.
+            /* "NOUI" mode means there is essentially no normal way
+                to control Hercules (because there is no stdin), so
+                we essentially continue running "forever"... or until
+                such time as the user either issues the "quit" or "exit"
+                command via some other means (such as via our builtin
+                HTTP Server interface for example) or by them forcibly
+                KILLING the Hercules process itself...
             */
-            while (0
-                || sysblk.started_mask  /* CPU(s) still running?     */
-                || !sysblk.config_mask  /* ZERO CPUs configured?     */
-            )
-                USLEEP( 10 * 1000 );    /* Wait on CPU(s) or forever */
-
-            if (sysblk.config_mask)     /* If NUMCPU > 0, then do    */
-                quit_cmd( 0, 0, 0);     /* normal/clean shutdown     */
+            while (1)                   /* Keep running ... */
+                USLEEP( 10 * 1000 );    /* FOREVER! ...     */
         }
     }
 

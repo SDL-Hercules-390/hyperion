@@ -7,6 +7,10 @@
 *   # -------------------------------------------------------
 *   #  This tests only the basic function of the instruction.
 *   #  Exceptions are NOT tested.
+*   #
+*   # Note: errors may indicate VTPX as the instruction in
+*   #       error. This is the VTPX macro used to generate
+*   #       VTP instructions with a non-zero I3
 *   # -------------------------------------------------------
 *
 mainsize    2

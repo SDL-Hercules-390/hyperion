@@ -1678,7 +1678,7 @@ DLL_EXPORT DEVHND fba_dasd_device_hndinfo = {
         NULL,                          /* Device Attention           */
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
-        NULL,                          /* Signal Adapter Ouput       */
+        NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */

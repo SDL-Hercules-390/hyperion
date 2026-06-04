@@ -1385,7 +1385,7 @@ int     i;
     }
 
     /* If the addressed channel set is currently connected
-       then disconect channel set and return with cc0 */
+       then disconnect channel set and return with cc0 */
     if(regs->chanset == effective_addr2 && regs->chanset != 0xFFFF)
     {
         regs->chanset = 0xFFFF;

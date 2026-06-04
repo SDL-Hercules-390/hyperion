@@ -43,7 +43,7 @@
 /*                                                                   */
 /*                                                                   */
 /* zLinux defines which three devices addresses are used for what    */
-/* purpose depending on on the distribution.                         */
+/* purpose depending on the distribution.                            */
 /* Debian, in a file named, for example, config-ccw-0.0.0800, in the */
 /* /etc/sysconfig/hardware directory, has the CCWGROUP_CHANS         */
 /* statement. An example CCWGROUP_CHANS statement is:-               */
@@ -76,7 +76,7 @@
 /*                                                                   */
 /* z/OS defines which devices addresses are used for what purpose in */
 /* a VTAM 'Transport resource list major node' (a TRLE, see 'z/OS    */
-/* Communication Server: SNA Reource Definition Guide'). One read    */
+/* Communication Server: SNA Resource Definition Guide'). One read   */
 /* device address, one write device address, and up to 238 data      */
 /* device addresses must be specified. The read device address must  */
 /* be an even number, and the write device address must be an odd    */
@@ -174,14 +174,15 @@ static void dbgtrc( const char* file, int line, const char* func,
     OSA_GRP* grp = devgrp->grp_data;
     if (grp && grp->debugmask)
     {
-      char buf[256];
+      char buf[256] = "";
       va_list   vargs;
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
+      va_end( vargs );
+
       // HHC03991D "%1d:%04X %s: %s"
       fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
         "HHC03991D " HHC03991 "\n", LCSS_DEVNUM, dev->typname, buf );
-      va_end( vargs );
     }
   }
 }
@@ -205,14 +206,15 @@ static void dbgupd( const char* file, int line, const char* func,
     OSA_GRP* grp = devgrp->grp_data;
     if (grp && (grp->debugmask & DBGQETHUPDOWN))
     {
-      char buf[256];
+      char buf[256] = "";
       va_list   vargs;
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
+      va_end( vargs );
+
       // HHC03991D "%1d:%04X %s: %s"
       fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
         "HHC03991D " HHC03991 "\n", LCSS_DEVNUM, dev->typname, buf );
-      va_end( vargs );
       if (what == 3) {
         mpc_display_osa_iear( dev, adr, dir, len );
       } else if (what == 2) {
@@ -1132,7 +1134,8 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             | (grp->l3 ? IFF_TUN : IFF_TAP)
         ,
         &grp->ttfd,
-        grp->ttifname
+        grp->ttifname,
+        &grp->internal
 
     )) != 0)
         return QERRMSG( dev, grp, errno,
@@ -1168,7 +1171,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         ASSERT( grp->ttmtu );
         ASSERT( grp->uMTU  );
 
-        /* Decrease their requested MTU if neccessary */
+        /* Decrease their requested MTU if necessary */
         if (ttmtu)
         {
             if (uMTU > grp->uMTU)
@@ -1227,7 +1230,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             MSGBUF( buf, "TUNTAP_SetDestAddr(\"%s\") failed", grp->ttipaddr );
             return QERRMSG( dev, grp, errno, "E", buf );
         }
-#else /* Linux */
+#else /* Linux - and FreeBSD, albeit not very pretty */
         if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
         {
             char buf[64];
@@ -1430,7 +1433,7 @@ U16 offph;
             /* Allocate a buffer to which the request will be copied */
             /* and then modified, to become the response.            */
             FETCH_FW(rqsize,req_th->length);
-            rsp_bhr = alloc_buffer( dev, rqsize+100 );
+            rsp_bhr = alloc_buffer( dev, rqsize + 4095 );
             if (!rsp_bhr)
                 break;
             rsp_bhr->datalen = rqsize;
@@ -1451,7 +1454,10 @@ U16 offph;
             ipa = (MPC_IPA*)((BYTE*)rsp_th + offdata);
 
             /* Modify the response MPC_TH and MPC_RRH. */
-            STORE_FW( rsp_th->seqnum, 0 );
+            /* STORE_FW( rsp_th->seqnum, 0 ); */
+            grp->seqnumth = -2;
+            grp->seqnumcm = 0;
+            STORE_FW( rsp_th->seqnum, ++grp->seqnumth );
             STORE_HW( rsp_th->unknown10, 0x0FFC );        /* !!! */
             rsp_rrh->proto = PROTOCOL_UNKNOWN;
             memcpy( rsp_rrh->token, grp->gtulpconn, MPC_TOKEN_LENGTH );
@@ -1736,7 +1742,7 @@ U16 offph;
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
                       /* Note: whether an address is flagged as default */
                       /* or vipa appear to depend on what the guest is, */
-                      /* and how the inferface is defined in the guest. */
+                      /* and how the interface is defined in the guest. */
                       if (0
                           || flags == IPA_SIP_DEFAULT
                           || flags == IPA_SIP_VIPA
@@ -1799,7 +1805,11 @@ U16 offph;
                     else if (proto == IPA_PROTO_IPV6)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
                         /* Register the IPv6 address */
                         rc = register_ipv6(grp, dev, (BYTE*)ipa_sip->data.ip6.addr);
@@ -2029,7 +2039,11 @@ U16 offph;
                     if (proto == IPA_PROTO_IPV4)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
 
                         /* Unregister the IPv4 address */
@@ -2046,7 +2060,11 @@ U16 offph;
                     else if (proto == IPA_PROTO_IPV6)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
 
                         /* Register the IPv6 address */
@@ -2276,7 +2294,7 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                    /* Return the values that the guest wiil use to create   */
+                    /* Return the values that the guest will use to create   */
                     /* the low-order 64-bits of the IPv6 link local address. */
                     memcpy( ip6+0, grp->iMAC, IFHWADDRLEN );
                     ip6[6] = 0xFF;
@@ -2378,7 +2396,7 @@ U16 reqtype;
 
     /* Allocate a buffer to which the IEA will be copied */
     /* and then modified, to become the IEAR.            */
-    rsp_bhr = alloc_buffer( dev, ieasize+10 );
+    rsp_bhr = alloc_buffer( dev, ieasize );
     if (!rsp_bhr)
         return;
     rsp_bhr->datalen = ieasize;
@@ -3389,7 +3407,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Verify Block is long enough to hold the full OSA header.
            FIXME: there is nothing in the specs that requires the
            header to not span multiple Storage Blocks so we should
-           should probably support it, but at the moment we do not. */
+           probably support it, but at the moment we do not. */
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
             WRMSG( HHC03983, "W", LCSS_DEVNUM,
                 dev->typname, "** FIXME ** OSA_HDR spans multiple storage blocks." );
@@ -3470,7 +3488,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 
         /* I know the following looks pretty weird but it seems to be         */
         /* necessary when using IPv6 over layer 3. IPv6 uses ICMPv6 Neighbor  */
-        /* Solicitation (NS) & Neighbor Advertisment (NA) to determine the    */
+        /* Solicitation (NS) & Neighbor Advertisement (NA) to determine the   */
         /* link layer address (i.e. Ethernet MAC) for an IPv6 address. When   */
         /* the guest sends out a NS, this function sends the packet over the  */
         /* tun to the host, whereupon the host duly ignores the packet. Hence */
@@ -3484,7 +3502,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /*                                                                    */
         /* Originally the whole of this section was surrounded by             */
         /* '#if defined(ENABLE_IPV6)'/'#endif'. However, implementing zLinux  */
-        /* layer 3 support showed that zLinux emmitted IPv4 ARP frames, which */
+        /* layer 3 support showed that zLinux emitted IPv4 ARP frames, which  */
         /* if sent to the tun interface upset the tun. Subsequent exposure to */
         /* layer 3 VSWITCH prompted a revamp to make checks less specific.    */
         /*                                                                    */
@@ -3802,7 +3820,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
                             slsb->slsbe[bn] = SLSBE_OUTPUT_COMPLETED;
                     }
 
-                    /* Packets written or an error has ocurred */
+                    /* Packets written or an error has occurred */
                     ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
 
                     /* Handle errors */
@@ -3867,6 +3885,9 @@ static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
                 */
                 signal_condition( &grp->q_idxrt_cond );
                 wait_condition( &grp->q_hread_cond, &grp->qlock );
+                unregister_all_ipv4( grp );
+                unregister_all_ipv6( grp );
+                unregister_all_mac( grp );
                 PTT_QETH_TRACE( "af halt read", 0,0,0 );
             }
             DBGTRC( dev, "Read device halted" );
@@ -3897,6 +3918,12 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
                 VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
                 wait_condition( &grp->q_hdata_cond, &grp->qlock );
                 dev->scsw.flag2 &= ~SCSW2_Q;
+#if defined( OPTION_W32_CTCI )
+                /* If the interface is still enabled/up we need to */
+                /* bring it down (disable it) to avoid "late" I/O  */
+                if (grp->enabled)
+                    VERIFY( qeth_disable_interface( dev, grp ) == 0);
+#endif
                 PTT_QETH_TRACE( "af halt data", 0,0,0 );
             }
             DBGTRC( dev, "Data device halted" );
@@ -3934,32 +3961,70 @@ static void*  qeth_halt_or_clear_thread( void* arg)
         OBTAIN_DEVLOCK( dev  );
     }
     {
-        if (QTYPE_READ == dev->qtype) // "read" device?
+        switch (dev->qtype)
         {
-            qtype = "read";
-
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+            case 0:     // guest OSA/QETH open/initialization...
             {
-                qeth_halt_read_device( dev, grp );
-            }
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
-        }
-        else if (QTYPE_DATA == dev->qtype) // "data device?
-        {
-            qtype = "data";
+                qtype = "this";
 
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
-            {
-                qeth_halt_data_device( dev, grp );
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    // (qtype not assigned yet; do nothing)
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
             }
-            // "%1d:%04X %s: %s %s for %s device"
-            WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+            break;
+
+            case QTYPE_READ:
+            {
+                qtype = "Read";
+
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    qeth_halt_read_device( dev, grp );
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+                }
+            break;
+
+            case QTYPE_WRITE:
+            {
+                qtype = "Write";
+
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    // (nothing to do!)
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+            }
+            break;
+
+            case QTYPE_DATA:
+            {
+                qtype = "Data";
+
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "recognized", qtype );
+                {
+                    qeth_halt_data_device( dev, grp );
+                }
+                // "%1d:%04X %s: %s %s for %s device"
+                WRMSG( HHC00905, "I", LCSS_DEVNUM, dev->typname, hoc, "completed", qtype );
+            }
+            break;
+
+            default: // (should never occur!)
+            {
+                BREAK_INTO_DEBUGGER();
+            }
+            break;
         }
-        else
-            BREAK_INTO_DEBUGGER(); // (should never occur!)
 
         /* Halt/Clear request completed */
         dev->halting = 0;
@@ -4049,7 +4114,7 @@ static int qeth_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
     NEQ *gen_neq = (NEQ*)tkn_ned+1; /* General NEQ always last   */
     DEVBLK *cua;                    /* Our Control Unit device   */
 
-    /* Copy configuration data from tempate */
+    /* Copy configuration data from template */
     memcpy (work, configuration_data, sizeof( work ));
 
     /* The first device in the group is the control unit */
@@ -4373,78 +4438,105 @@ U32 mask4;
             }
         }
 
-#if defined( OPTION_W32_CTCI )
-        if (!grp->ttnetmask && !grp->ttpfxlen)
-        {
-            grp->ttnetmask = strdup("255.255.255.255");
-            grp->ttpfxlen = strdup("32");
-        }
-#endif
+        // Validate both netmask and prefix-length...
 
-        if (grp->ttnetmask)
+        if (1
+            && !grp->ttnetmask
+            && !grp->ttpfxlen
+        )
         {
-            char *new_ttpfxlen = NULL;
-            /* Build new prefix length based on netmask */
-            if (netmask2prefix( grp->ttnetmask, &new_ttpfxlen ) != 0)
+            // Neither was specified...
+
+            grp->ttnetmask = strdup("255.255.255.255");
+            grp->ttpfxlen  = strdup("32");
+        }
+        else if (1
+            && grp->ttnetmask
+            && grp->ttpfxlen
+        )
+        {
+            // BOTH were specified...
+
+            char *ttpfxlen  = NULL;
+            char *ttnetmask = NULL;
+
+            VERIFY( netmask2prefix( grp->ttnetmask, &ttpfxlen  ) == 0 );
+            VERIFY (prefix2netmask( grp->ttpfxlen,  &ttnetmask ) == 0 );
+
+            if (0
+                || str_caseless_ne( ttnetmask, grp->ttnetmask )
+                || str_caseless_ne( ttpfxlen,  grp->ttpfxlen )
+            )
             {
-                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
-                                     "netmask", grp->ttnetmask );
+                // "%1d:%04X %s: %s \"%s\" inconsistent with %s \"%s\""
+                WRMSG( HHC03998, "E", LCSS_DEVNUM, dev->typname
+                    ,"prefix length", grp->ttpfxlen
+                    ,"netmask",       grp->ttnetmask
+                );
+
                 retcode = -1;
+
                 free( grp->ttnetmask );
                 free( grp->ttipaddr  );
                 free( grp->ttpfxlen  );
+
                 grp->ttnetmask = NULL;
                 grp->ttipaddr  = NULL;
                 grp->ttpfxlen  = NULL;
             }
-            else if (grp->ttpfxlen)
+        }
+        else if (grp->ttnetmask)
+        {
+            /* Build prefix length based on netmask... */
+
+            char *ttpfxlen = NULL;
+
+            if (netmask2prefix( grp->ttnetmask, &ttpfxlen ) == 0)
             {
-                /* Check netmask value (via newly built prefix)
-                   for consistency with existing prefix length */
-                if (grp->ttpfxlen &&
-                    strcmp( new_ttpfxlen, grp->ttpfxlen ) != 0)
-                {
-                    // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
-                    WRMSG(HHC03998, "W", LCSS_DEVNUM, dev->typname,
-                        "prefix length", "netmask" );
-                }
-                /* Use consistent prefix length */
                 free( grp->ttpfxlen );
-                grp->ttpfxlen = new_ttpfxlen;
+                grp->ttpfxlen = ttpfxlen; // (already strdup'ed)
+            }
+            else
+            {
+                // "%1d:%04X %s: option %s value %s invalid"
+                WRMSG( HHC00916, "E", LCSS_DEVNUM, dev->typname,
+                                     "netmask", grp->ttnetmask );
+                retcode = -1;
+
+                free( grp->ttnetmask );
+                free( grp->ttipaddr  );
+                free( grp->ttpfxlen  );
+
+                grp->ttnetmask = NULL;
+                grp->ttipaddr  = NULL;
+                grp->ttpfxlen  = NULL;
             }
         }
-        if (grp->ttpfxlen)
+        else
         {
-            char *new_ttnetmask = NULL;
-            /* Build new netmask based on prefix length */
-            if (prefix2netmask( grp->ttpfxlen, &new_ttnetmask ) != 0)
+            /* Build netmask based on prefix length... */
+
+            char *ttnetmask = NULL;
+
+            if (prefix2netmask( grp->ttpfxlen, &ttnetmask ) == 0)
+            {
+                free( grp->ttnetmask );
+                grp->ttnetmask = ttnetmask; // (already strdup'ed)
+            }
+            else
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 retcode = -1;
+
                 free( grp->ttpfxlen  );
                 free( grp->ttipaddr  );
                 free( grp->ttnetmask );
+
                 grp->ttpfxlen  = NULL;
                 grp->ttipaddr  = NULL;
                 grp->ttnetmask = NULL;
-            }
-            else if (grp->ttnetmask)
-            {
-                /* Check prefix length (via newly built netmask)
-                   for consistency with existing netmask value */
-                if (grp->ttnetmask &&
-                    strcmp( new_ttnetmask, grp->ttnetmask ) != 0)
-                {
-                    // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
-                    WRMSG(HHC03998, "W", LCSS_DEVNUM, dev->typname,
-                        "netmask", "prefix length" );
-                }
-                /* Use consistent netmask */
-                free( grp->ttnetmask );
-                grp->ttnetmask = new_ttnetmask;
             }
         }
 
@@ -4639,7 +4731,7 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         grp->ttfd = -1;
         dev->fd = -1;
         if(ttfd > 0)
-            TUNTAP_Close(ttfd);
+            TUNTAP_Close(ttfd, grp->internal);
         PTT_QETH_TRACE( "af clos ttfd", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos pipe", 0,0,0 );
@@ -5198,7 +5290,7 @@ U32 num;                                /* Number of bytes to move   */
         if ((grp->iir & 0x00030000) != 0)
             len = sizeof(ND);
 
-        /* Copy configuration data from tempate */
+        /* Copy configuration data from template */
         memcpy (iobuf, node_data, len);
 
         /* Insert the CHPID of the node into the Node Descriptor ND */
@@ -5269,7 +5361,7 @@ U32 num;                                /* Number of bytes to move   */
         if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(QDIO_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
         {
         QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
-            qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
+            qib->ac |= QIB_AC_PCI; // Indicate PCI on output is supported
 #if defined( _FEATURE_QEBSM )
             if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
                 qib->rflags |= QIB_RFLAGS_QEBSM;
@@ -5816,8 +5908,8 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    // Allocate a buffer in which the response will be built.
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -5927,8 +6019,8 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    // Allocate a buffer in which the response will be built.
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6135,8 +6227,8 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    // Allocate a buffer in which the response will be built.
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6262,8 +6354,8 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    // Allocate a buffer in which the response will be built.
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6378,8 +6470,8 @@ U16 uLength4;
     uLength2 = SIZE_TH + SIZE_RRH_1 + SIZE_PH;   // the MPC_TH/MPC_RRH/MPC_PH
     uLength1 = uLength2 + uLength3;              // the MPC_TH/MPC_RRH/MPC_PH and data
 
-    // Allocate a buffer in which the response will be build.
-    rsp_bhr = alloc_buffer( dev, uLength1+10 );
+    // Allocate a buffer in which the response will be built.
+    rsp_bhr = alloc_buffer( dev, uLength1 );
     if (!rsp_bhr)
         return NULL;
     rsp_bhr->content = strdup( dev->dev_data );
@@ -6497,7 +6589,7 @@ static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
     if (!bhr)                              // if the allocate was not successful...
     {
         // Report the bad news.
-        MSGBUF( etext, "malloc(%n)", &buflen );
+        MSGBUF( etext, "malloc(%d)", buflen );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
         WRMSG(HHC00900, "E", LCSS_DEVNUM, dev->typname,
                              etext, strerror(errno) );
@@ -6889,7 +6981,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         ip6re_payload_size = 32;
         ip6re_packet_size = ip6re_header_size + ip6re_payload_size;
 
-        // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
+        // Allocate a buffer in which the ICMPv6 Neighbor Advertisement message
         // will be built. Note: the message will be 72 bytes.
         // The source address is the target address, the destination
         // address is the Link-Local Scope All Nodes multicast address,
@@ -6910,7 +7002,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         memcpy( ip6re->bDstAddr, ip6->bSrcAddr, 16 );
 
         // Prepare response ICMPv6 data
-        icmpre[0] = 0x88;                    /* Neighbor Advertisment  0x88 = 136 */
+        icmpre[0] = 0x88;                    /* Neighbor Advertisement  0x88 = 136 */
         icmpre[4] = 0x60;                    /* Solicited & Override flags */
         memcpy( &icmpre[8], &icmp[8], 16 );  /* Target IP address */
         icmpre[24] = 0x02;                   /* Target link local option */
@@ -6979,7 +7071,7 @@ void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
     // Clear the checksum in the ICMP header before calculating the checksum.
     STORE_HW( pIcmpHdr+2, 0x0000 );
 
-    // Construct the Psuedo-Header for the checksum calcuation.
+    // Construct the Psuedo-Header for the checksum calculation.
     memcpy( bPseudoHeader+0, pIP6FRM->bSrcAddr, 16 );
     memcpy( bPseudoHeader+16, pIP6FRM->bDstAddr, 16 );
     STORE_FW( bPseudoHeader+32, iIcmpLen );
@@ -7063,7 +7155,7 @@ static DEVHND qeth_device_hndinfo =
         NULL                           /* Hercules resume            */
 };
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtqeth_LTX_hdl_ddev

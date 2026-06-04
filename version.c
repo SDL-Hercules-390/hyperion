@@ -707,7 +707,12 @@ static const char *build_info[] = {
 
 
 //---------------------------------------------------------------------
-// Fishtest:  log 'featall.h' Research/Workaround build options
+//       Log 'featall.h' Research/Workaround build options...
+//---------------------------------------------------------------------
+//  FIXME: These are/were supposed to only be temporary, and then
+//  eventually removed and made permanent once we verified they
+//  were correct.
+//---------------------------------------------------------------------
 
 #if defined( OPTION_USE_SKAIP_AS_LOCK )         // Use SKAIP as lock, not RCP
     "With    OPTION_USE_SKAIP_AS_LOCK",

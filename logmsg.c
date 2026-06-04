@@ -14,74 +14,6 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/*                Helper macro "BFR_VSNPRINTF"                       */
-/*-------------------------------------------------------------------*/
-/* Original design by Fish                                           */
-/* Modified by Jay Maynard                                           */
-/* Further modification by Ivan Warren                               */
-/*                                                                   */
-/* Purpose:                                                          */
-/*                                                                   */
-/*  set 'bfr' to contain a C string based on a message format        */
-/*  and va_list of args. NOTE: 'bfr' must be free()d when done.      */
-/*                                                                   */
-/* Local variables referenced:                                       */
-/*                                                                   */
-/*  char*    bfr;     must be originally defined                     */
-/*  int      siz;     must be defined and contain a start size       */
-/*  va_list  vl;      must be defined and initialised with va_start  */
-/*  char*    fmt;     is the message format                          */
-/*  int       rc;     will contain final size                        */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-#define  BFR_CHUNKSIZE    (256)
-
-#define  BFR_VSNPRINTF()                                            \
-                                                                    \
-    do                                                              \
-    {                                                               \
-        va_list  original_vl;                                       \
-        va_copy( original_vl, vl );                                 \
-                                                                    \
-        bfr = (char*) calloc( 1, siz );                             \
-        rc = -1;                                                    \
-                                                                    \
-        while (bfr && rc < 0)                                       \
-        {                                                           \
-            rc = vsnprintf( bfr, siz, fmt, vl );                    \
-                                                                    \
-            if (rc >= 0 && rc < siz)                                \
-                break;                                              \
-                                                                    \
-            rc = -1;                                                \
-            siz += BFR_CHUNKSIZE;                                   \
-                                                                    \
-            if (siz > 65536)                                        \
-                break;                                              \
-                                                                    \
-            bfr = realloc( bfr, siz );                              \
-            va_copy( vl, original_vl );                             \
-        }                                                           \
-                                                                    \
-        if (bfr && strlen( bfr ) == 0 && strlen( fmt) != 0)         \
-        {                                                           \
-            free( bfr );                                            \
-            bfr = strdup( fmt );                                    \
-        }                                                           \
-        else                                                        \
-        {                                                           \
-            if (bfr)                                                \
-            {                                                       \
-                char* p = strdup( bfr );                            \
-                free( bfr );                                        \
-                bfr = p;                                            \
-            }                                                       \
-        }                                                           \
-    }                                                               \
-    while (0)
-
-/*-------------------------------------------------------------------*/
 /*       panel_command message capturing structs and vars            */
 /*-------------------------------------------------------------------*/
 
@@ -292,7 +224,7 @@ static void _flog_write_pipe( FILE* f, const char* msg )
         // logfile write in order to prevent duplicate messages.
         //
         // If no external GUI exists however, then we need to
-        // write the message to the logfile WITH a timstamp.
+        // write the message to the logfile WITH a timestamp.
 
         if (1
             && sysblk.shutdown      // (shutting down?)
@@ -313,7 +245,7 @@ static void _flog_write_pipe( FILE* f, const char* msg )
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* The "flog_write" function is the function responsible for either  */
-/* sending a formatted message through the Hercules logger facilty   */
+/* sending a formatted message through the Hercules logger facility  */
 /* pipe to panel.c for display to the user (handled by logger.c),    */
 /* for optionally capturing messages issued by the DIAG8 interface,  */
 /* or for printing the message directly to the terminal in the case  */
@@ -382,7 +314,6 @@ static void vfwritemsg( BYTE panel, FILE* f,
     char     prefix[ 32 ]  =  {0};
     char*    bfr           =  NULL;
     int      rc            =  1;
-    int      siz           =  1024;
     char*    msgbuf;
     size_t   msglen, bufsiz;
 
@@ -391,12 +322,11 @@ static void vfwritemsg( BYTE panel, FILE* f,
   #endif
 
     // Format just the message part, without the filename and line number
-
-    BFR_VSNPRINTF();  // Note: uses 'vl', 'bfr', 'siz', 'fmt' and 'rc'.
-    if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
+    rc = vasprintf( &bfr, fmt, vl );
+    if (rc < 0)       // If vasprintf runs out of memory,
         return;       // then there's nothing more we can do.
 
-    bufsiz = msglen = strlen( bfr ) + 2;
+    bufsiz = msglen = ((size_t)rc) + 2;
 
     // Prefix message with filename and line number, if requested
 
@@ -413,7 +343,7 @@ static void vfwritemsg( BYTE panel, FILE* f,
 
         // Special handling for multi-line messages: insert the
         // debug prefix (prefix) before each line except the first
-        // (which is is handled automatically further below)
+        // (which is handled automatically further below)
 
         for (nl = strchr( bfr, '\n' ); nl && nl[1]; nl = strchr( nl, '\n' ))
         {
@@ -482,14 +412,13 @@ static void vflogmsg( BYTE panel, FILE* f, const char* fmt, va_list vl )
 {
     char    *bfr =   NULL;
     int      rc;
-    int      siz =   1024;
 
 #ifdef NEED_LOGMSG_FFLUSH
     fflush(f);
 #endif
 
-    BFR_VSNPRINTF();  // Note: uses 'vl', 'bfr', 'siz', 'fmt' and 'rc'.
-    if (!bfr)         // If BFR_VSNPRINTF runs out of memory,
+    rc = vasprintf( &bfr, fmt, vl );
+    if (rc < 0)       // If vasprintf runs out of memory,
         return;       // then there's nothing more we can do.
 
     flog_write( panel, f, bfr );
@@ -517,6 +446,7 @@ DLL_EXPORT void fwritemsg( const char* filename, int line, const char* func,
     va_list   vl;
     va_start( vl, fmt );
     vfwritemsg( panel, f, filename, line, func, fmt, vl );
+    va_end( vl );
 }
 
 DLL_EXPORT void logmsg( const char* fmt, ... )
@@ -524,4 +454,5 @@ DLL_EXPORT void logmsg( const char* fmt, ... )
     va_list   vl;
     va_start( vl, fmt );
     vflogmsg( WRMSG_NORMAL, stdout, fmt, vl );
+    va_end( vl );
 }

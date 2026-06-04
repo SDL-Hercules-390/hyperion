@@ -516,7 +516,7 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
             _T("is missing or is not installed or was otherwise not located.")
             ,_T("OOPS!  Hercules has crashed!"),
             uiMBFlags
-                | MB_ICONERROR
+                | (sysblk.no_oops_icon ? 0 : MB_ICONERROR)
                 | MB_OK
             ,0                  // (default/neutral language)
             ,(15 * 1000)        // (timeout == 15 seconds)
@@ -534,7 +534,7 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
         _T("the Hercules development team to analyze?")
         ,_T("OOPS!  Hercules has crashed!"),
         uiMBFlags
-            | MB_ICONERROR
+            | (sysblk.no_oops_icon ? 0 : MB_ICONERROR)
             | MB_YESNO
         ,0                      // (default/neutral language)
         ,(10 * 1000)            // (timeout == 10 seconds)
@@ -636,11 +636,11 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
             );
         }
         else
-            _tprintf( _T("\nMiniDumpWriteDump failed! Error: %u\n\n"), GetLastError() );
+            _tprintf( _T("\nMiniDumpWriteDump failed! Error: %lu\n\n"), GetLastError() );
     }
     else
     {
-        _tprintf( _T("\nCreateFile failed! Error: %u\n\n"), GetLastError() );
+        _tprintf( _T("\nCreateFile failed! Error: %lu\n\n"), GetLastError() );
     }
 
     return bSuccess;

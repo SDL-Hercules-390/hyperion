@@ -1,0 +1,1454 @@
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *
+                                                     5 *   Miscellaneous-instruction-extensions facility 4 instruction tests
+                                                     6 *   for RRE encoded:
+                                                     7 *
+                                                     8 *   B968  CLZG  - COUNT LEADING ZEROS
+                                                     9 *   B969  CTZG  - COUNT TRAILING ZEROS
+                                                    10 *
+                                                    11 *        James Wekel March 2026
+                                                    12 ***********************************************************************
+
+
+                                                    14 ***********************************************************************
+                                                    15 *
+                                                    16 *        basic instruction tests
+                                                    17 *
+                                                    18 ***********************************************************************
+                                                    19 *  This program tests proper functioning of the Miscellaneous
+                                                    20 *  Instruction Extensions facility 4 RRE Count Leading Zeros and
+                                                    21 *  Count Trailing Zeros instructions.
+                                                    22 *  Exceptions are not tested.
+                                                    23 *
+                                                    24 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    25 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    26 *  NOT designed to test all aspects of any of the instructions.
+                                                    27 *
+                                                    28 ***********************************************************************
+                                                    29 *
+                                                    30 *    *Testcase mie4-CLZG-CTZG
+                                                    31 *    *
+                                                    32 *    *   Miscellaneous-instruction-extensions facility 4 instruction
+                                                    33 *    *   tests for RRE encoded:
+                                                    34 *    *
+                                                    35 *    *   B968  CLZG  - COUNT LEADING ZEROS
+                                                    36 *    *   B969  CTZG  - COUNT TRAILING ZEROS
+                                                    37 *    *
+                                                    38 *    *   # ------------------------------------------------------------
+                                                    39 *    *   #  This tests only the basic function of the instruction.
+                                                    40 *    *   #  Exceptions are NOT tested.
+                                                    41 *    *   # ------------------------------------------------------------
+                                                    42 *    *
+                                                    43 *    mainsize    2
+                                                    44 *    numcpu      1
+                                                    45 *    sysclear
+                                                    46 *    archlvl     z/Arch
+                                                    47 *
+                                                    48 *    loadcore    "$(testpath)/mie4-CLZG-CTZG.core" 0x0
+                                                    49 *
+                                                    50 *    diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    51 *    runtest     5         #
+                                                    52 *    diag8cmd    disable   # (reset back to default)
+                                                    53 *
+                                                    54 *    *Done
+                                                    55 *
+                                                    56 ***********************************************************************
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    58 ***********************************************************************
+                                                    59 *        FCHECK Macro - Is a Facility Bit set?
+                                                    60 *
+                                                    61 *        If the facility bit is NOT set, an message is issued and
+                                                    62 *        the test is skipped.
+                                                    63 *
+                                                    64 *        Fcheck uses R0, R1 and R2
+                                                    65 *
+                                                    66 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    67 ***********************************************************************
+                                                    68          MACRO
+                                                    69          FCHECK &BITNO,&NOTSETMSG
+                                                    70 .*                        &BITNO : facility bit number to check
+                                                    71 .*                        &NOTSETMSG : 'facility name'
+                                                    72          LCLA  &FBBYTE           Facility bit in Byte
+                                                    73          LCLA  &FBBIT            Facility bit within Byte
+                                                    74
+                                                    75          LCLA  &L(8)
+                                                    76 &L(1)    SetA  128,64,32,16,8,4,2,1  bit positions within byte
+                                                    77
+                                                    78 &FBBYTE  SETA  &BITNO/8
+                                                    79 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    80 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    81
+                                                    82          B     X&SYSNDX
+                                                    83 *                                      Fcheck data area
+                                                    84 *                                      skip messgae
+                                                    85 SKT&SYSNDX DC  C'    Skipping tests: '
+                                                    86          DC    C&NOTSETMSG
+                                                    87          DC    C' (bit &BITNO) is not installed.'
+                                                    88 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    89 *                                      facility bits
+                                                    90          DS    FD                      gap
+                                                    91 FB&SYSNDX DS   4FD
+                                                    92          DS    FD                      gap
+                                                    93 *
+                                                    94 X&SYSNDX EQU *
+                                                    95          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    96          STFLE FB&SYSNDX               get facility bits
+                                                    97
+                                                    98          XGR   R0,R0
+                                                    99          IC    R0,FB&SYSNDX+&FBBYTE    get fbit byte
+                                                   100          N     R0,=F'&FBBIT'           is bit set?
+                                                   101          BNZ   XC&SYSNDX
+                                                   102 *
+                                                   103 * facility bit not set, issue message and exit
+                                                   104 *
+                                                   105          LA    R0,SKL&SYSNDX           message length
+                                                   106          LA    R1,SKT&SYSNDX           message address
+                                                   107          BAL   R2,MSG
+                                                   108
+                                                   109          B     EOJ
+                                                   110 XC&SYSNDX EQU *
+                                                   111          MEND
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   113 ***********************************************************************
+                                                   114 * (pending     B968  CLZG  - COUNT LEADING ZEROS
+                                                   115 *  inclusion in SATK ASAM)
+                                                   116 *
+                                                   117 *     CLZG Macro to help build CLZG instruction
+                                                   118 *        CLZG
+                                                   119 *
+                                                   120 *        Note: R1, R2 are fixed registers:
+                                                   121 *                         r1 = 1; r2 = 2
+                                                   122 ***********************************************************************
+                                                   123          MACRO
+                                                   124          CLZG
+                                                   125                                                                SPACE 1
+                                                   126          DS    0H
+                                                   127          DC    XL4'B9680012'           CLZQ r1,r2
+                                                   128                                                                SPACE 1
+                                                   129          MEND
+                                                   130
+                                                   131 ***********************************************************************
+                                                   132 * (pending     B969  CTZG  - COUNT TRAILING ZEROS
+                                                   133 *  inclusion in SATK ASAM)
+                                                   134 *
+                                                   135 *     CTZG Macro to help build CTZG instruction
+                                                   136 *        CLZG
+                                                   137 *
+                                                   138 *        Note: R1, R2 are fixed registers:
+                                                   139 *                         r1 = 1; r2 = 2
+                                                   140 ***********************************************************************
+                                                   141          MACRO
+                                                   142          CTZG
+                                                   143                                                                SPACE 1
+                                                   144          DS    0H
+                                                   145          DC    XL4'B9690012'           CTZQ r1,r2
+                                                   146                                                                SPACE 1
+                                                   147          MEND
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   149 ***********************************************************************
+                                                   150 *        Low core PSWs
+                                                   151 ***********************************************************************
+                              00000000  000016AF   152 MIE4TST  START 0
+00000000                      00000000             153          USING MIE4TST,R0            Low core addressability
+                                                   154
+                              00000140  00000000   155 SVOLDPSW EQU   MIE4TST+X'140'        z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   157          ORG   MIE4TST+X'1A0'        z/Architecure RESTART PSW
+000001A0  00000001 80000000                        158          DC    X'0000000180000000'
+000001A8  00000000 00000200                        159          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   161          ORG   MIE4TST+X'1D0'        z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        162          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        163          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   165          ORG   MIE4TST+X'200'        Start of actual test program...
+
+
+                                                   167 ***********************************************************************
+                                                   168 *               The actual "MIE4TST" program itself...
+                                                   169 ***********************************************************************
+                                                   170 *
+                                                   171 *  Architecture Mode: z/Arch
+                                                   172 *  Register Usage:
+                                                   173 *
+                                                   174 *   R0       (work)
+                                                   175 *   R1-4     (work)
+                                                   176 *   R5       Testing control table - current test base
+                                                   177 *   R6-R7    (work)
+                                                   178 *   R8       First base register
+                                                   179 *   R9       Second base register
+                                                   180 *   R10      Third base register
+                                                   181 *   R11      M4TEST call return
+                                                   182 *   R12      M4TESTS register
+                                                   183 *   R13      (work)
+                                                   184 *   R14      Subroutine call
+                                                   185 *   R15      Secondary Subroutine call or work
+                                                   186 *
+                                                   187 ***********************************************************************
+
+00000200                      00000200             189          USING  BEGIN,R8        FIRST Base Register
+00000200                      00001200             190          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00002200             191          USING  BEGIN+8192,R10  THIRD Base Register
+
+00000200  0580                                     193 BEGIN    BALR  R8,0             Initalize FIRST base register
+00000202  0680                                     194          BCTR  R8,0             Initalize FIRST base register
+00000204  0680                                     195          BCTR  R8,0             Initalize FIRST base register
+
+00000206  4190 8800                     00000800   197          LA    R9,2048(,R8)     Initalize SECOND base register
+0000020A  4190 9800                     00000800   198          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                   199
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000020E  41A0 9800                     00000800   200          LA    R10,2048(,R9)    Initalize THIRD base register
+00000212  41A0 A800                     00000800   201          LA    R10,2048(,R10)   Initalize THIRD base register
+                                                   202
+00000216  B600 8284                     00000484   203          STCTL R0,R0,CTLR0      Store CR0 to enable AFP
+0000021A  9604 8285                     00000485   204          OI    CTLR0+1,X'04'    Turn on AFP bit
+0000021E  9602 8285                     00000485   205          OI    CTLR0+1,X'02'    Turn on Vector bit
+00000222  B700 8284                     00000484   206          LCTL  R0,R0,CTLR0      Reload updated CR0
+                                                   207
+                                                   208 ***********************************************************************
+                                                   209 * Is Miscellaneous-instruction-extensions facility 4  (bit 84)
+                                                   210 ***********************************************************************
+                                                   211
+                                                   212          FCHECK 84,'Miscellaneous-instruction-extensions facility 4'
+00000226  47F0 80B8                     000002B8   213+         B     X0001
+                                                   214+*                                      Fcheck data area
+                                                   215+*                                      skip messgae
+0000022A  40404040 E2928997                        216+SKT0001  DC    C'    Skipping tests: '
+0000023E  D489A283 85939381                        217+         DC    C'Miscellaneous-instruction-extensions facility 4'
+0000026D  404D8289 A340F8F4                        218+         DC    C' (bit 84) is not installed.'
+                              0000005E  00000001   219+SKL0001  EQU   *-SKT0001
+                                                   220+*                                      facility bits
+00000288  00000000 00000000                        221+         DS    FD                      gap
+00000290  00000000 00000000                        222+FB0001   DS    4FD
+000002B0  00000000 00000000                        223+         DS    FD                      gap
+                                                   224+*
+                              000002B8  00000001   225+X0001    EQU   *
+000002B8  4100 0004                     00000004   226+         LA    R0,((X0001-FB0001)/8)-1
+000002BC  B2B0 8090                     00000290   227+         STFLE FB0001                  get facility bits
+000002C0  B982 0000                                228+         XGR   R0,R0
+000002C4  4300 809A                     0000029A   229+         IC    R0,FB0001+10            get fbit byte
+000002C8  5400 828C                     0000048C   230+         N     R0,=F'8'                is bit set?
+000002CC  4770 80E0                     000002E0   231+         BNZ   XC0001
+                                                   232+*
+                                                   233+* facility bit not set, issue message and exit
+                                                   234+*
+000002D0  4100 005E                     0000005E   235+         LA    R0,SKL0001              message length
+000002D4  4110 802A                     0000022A   236+         LA    R1,SKT0001              message address
+000002D8  4520 81A0                     000003A0   237+         BAL   R2,MSG
+000002DC  47F0 8268                     00000468   238+         B     EOJ
+                              000002E0  00000001   239+XC0001   EQU   *
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   241 ***********************************************************************
+                                                   242 *              Do tests in the M4TESTS table
+                                                   243 ***********************************************************************
+                                                   244
+000002E0  58C0 8290                     00000490   245          L     R12,=A(M4TESTS)       get table of test addresses
+                                                   246
+                              000002E4  00000001   247 NEXTM4   EQU   *
+000002E4  5850 C000                     00000000   248          L     R5,0(0,R12)       get test address
+000002E8  1255                                     249          LTR   R5,R5                have a test?
+000002EA  4780 812E                     0000032E   250          BZ    ENDTEST                 done?
+                                                   251
+000002EE                      00000000             252          USING M4TEST,R5
+                                                   253
+000002EE  4800 5004                     00000004   254          LH    R0,TNUM           save current test number
+000002F2  5000 8E04                     00001004   255          ST    R0,TESTING        for easy reference
+                                                   256
+000002F6  E310 8E88 0004                00001088   257          LG    R1,R1FUDGE
+000002FC  58B0 5000                     00000000   258          L     R11,TSUB          get address of test routine
+00000300  05BB                                     259          BALR  R11,R11           do test
+                                                   260
+00000302  E310 501C 0014                0000001C   261          LGF   R1,READDR         get address of expected result
+00000308  D507 5028 1000      00000028  00000000   262          CLC   R1OUTPUT,0(R1)    valid?
+0000030E  4770 811A                     0000031A   263          BNE   FAILMSG              no, issue failed message
+                                                   264
+00000312  41C0 C004                     00000004   265          LA    R12,4(0,R12)      next test address
+00000316  47F0 80E4                     000002E4   266          B     NEXTM4
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   268 ***********************************************************************
+                                                   269 * result not as expected:
+                                                   270 *        issue message with test number, instruction under test
+                                                   271 *              and instruction m4
+                                                   272 ***********************************************************************
+                              0000031A  00000001   273 FAILMSG  EQU   *
+0000031A  45F0 813C                     0000033C   274          BAL   R15,RPTERROR
+
+
+                                                   276 ***********************************************************************
+                                                   277 * continue after a failed test
+                                                   278 ***********************************************************************
+                              0000031E  00000001   279 FAILCONT EQU   *
+0000031E  5800 8294                     00000494   280          L     R0,=F'1'          set failed test indicator
+00000322  5000 8E00                     00001000   281          ST    R0,FAILED
+                                                   282
+00000326  41C0 C004                     00000004   283          LA    R12,4(0,R12)      next test address
+0000032A  47F0 80E4                     000002E4   284          B     NEXTM4
+
+
+                                                   286 ***********************************************************************
+                                                   287 * end of testing; set ending psw
+                                                   288 ***********************************************************************
+                              0000032E  00000001   289 ENDTEST  EQU   *
+0000032E  5810 8E00                     00001000   290          L     R1,FAILED         did a test fail?
+00000332  1211                                     291          LTR   R1,R1
+00000334  4780 8268                     00000468   292          BZ    EOJ                  No, exit
+00000338  47F0 8280                     00000480   293          B     FAILTEST             Yes, exit with BAD PSW
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   295 ***********************************************************************
+                                                   296 *        RPTERROR                 Report instruction test in error
+                                                   297 ***********************************************************************
+
+0000033C  50F0 8184                     00000384   299 RPTERROR ST    R15,RPTSAVE          Save return address
+00000340  5050 8188                     00000388   300          ST    R5,RPTSVR5           Save R5
+                                                   301 *
+00000344  4820 5004                     00000004   302          LH    R2,TNUM              get test number and convert
+00000348  4E20 8E67                     00001067   303          CVD   R2,DECNUM
+0000034C  D211 8E51 8E3B      00001051  0000103B   304          MVC   PRT3,EDIT
+00000352  DE11 8E51 8E67      00001051  00001067   305          ED    PRT3,DECNUM
+00000358  D202 8E18 8E5E      00001018  0000105E   306          MVC   PRTNUM(3),PRT3+13    fill in message with test #
+                                                   307
+0000035E  D207 8E33 5007      00001033  00000007   308          MVC   PRTNAME,OPNAME       fill in message with instruction
+
+                                                   310 *
+                                                   311 *        Use Hercules Diagnose for Message to console
+                                                   312 *
+00000364  9002 8190                     00000390   313          STM   R0,R2,RPTDWSAV       save regs used by MSG
+00000368  4100 0033                     00000033   314          LA    R0,PRTLNG            message length
+0000036C  4110 8E08                     00001008   315          LA    R1,PRTLINE           messagfe address
+00000370  4520 81A0                     000003A0   316          BAL   R2,MSG               call Hercules console MSG display
+00000374  9802 8190                     00000390   317          LM    R0,R2,RPTDWSAV       restore regs
+
+
+00000378  5850 8188                     00000388   319          L     R5,RPTSVR5         Restore R5
+0000037C  58F0 8184                     00000384   320          L     R15,RPTSAVE        Restore return address
+00000380  07FF                                     321          BR    R15                Return to caller
+
+00000384  00000000                                 323 RPTSAVE  DC    F'0'               R15 save area
+00000388  00000000                                 324 RPTSVR5  DC    F'0'               R5 save area
+
+00000390  00000000 00000000                        326 RPTDWSAV DC    2D'0'              R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   328 ***********************************************************************
+                                                   329 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   330 *              R2 = return address
+                                                   331 ***********************************************************************
+
+000003A0  4900 8298                     00000498   333 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+000003A4  07D2                                     334          BNHR  R2                     No, ignore
+
+000003A6  9002 81DC                     000003DC   336          STM   R0,R2,MSGSAVE          Save registers
+
+000003AA  4900 829A                     0000049A   338          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+000003AE  47D0 81B6                     000003B6   339          BNH   MSGOK                  Yes, continue
+000003B2  4100 005F                     0000005F   340          LA    R0,L'MSGMSG            No, set to maximum
+
+000003B6  1820                                     342 MSGOK    LR    R2,R0                  Copy length to work register
+000003B8  0620                                     343          BCTR  R2,0                   Minus-1 for execute
+000003BA  4420 81E8                     000003E8   344          EX    R2,MSGMVC              Copy message to O/P buffer
+
+000003BE  4120 200A                     0000000A   346          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+000003C2  4110 81EE                     000003EE   347          LA    R1,MSGCMD              Point to true command
+
+000003C6  83120008                                 349          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+000003CA  4780 81D6                     000003D6   350          BZ    MSGRET                 Return if successful
+                                                   351
+000003CE  1222                                     352          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+000003D0  4780 81D6                     000003D6   353          BZ    MSGRET                   an error occurred but coninue
+                                                   354
+000003D4  0000                                     355          DC    H'0'                   CRASH for debugging purposes
+
+000003D6  9802 81DC                     000003DC   357 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+000003DA  07F2                                     358          BR    R2                     Return to caller
+
+
+
+
+
+
+000003DC  00000000 00000000                        360 MSGSAVE  DC    3F'0'                  Registers save area
+000003E8  D200 81F7 1000      000003F7  00000000   361 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+000003EE  D4E2C7D5 D6C8405C                        363 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+000003F7  40404040 40404040                        364 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   365
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   367 ***********************************************************************
+                                                   368 *        Normal completion or Abnormal termination PSWs
+                                                   369 ***********************************************************************
+
+
+
+
+
+00000458  00020001 80000000                        371 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+00000468  B2B2 8258                     00000458   373 EOJ      LPSWE EOJPSW               Normal completion
+
+
+
+
+
+00000470  00020001 80000000                        375 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+00000480  B2B2 8270                     00000470   377 FAILTEST LPSWE FAILPSW              Abnormal termination
+
+
+
+
+
+
+
+                                                   379 ***********************************************************************
+                                                   380 *        Working Storage
+                                                   381 ***********************************************************************
+
+
+00000484  00000000                                 383 CTLR0    DS    F                CR0
+00000488  00000000                                 384          DS    F
+
+0000048C                                           386          LTORG ,                Literals pool
+0000048C  00000008                                 387                =F'8'
+00000490  00001668                                 388                =A(M4TESTS)
+00000494  00000001                                 389                =F'1'
+00000498  0000                                     390                =H'0'
+0000049A  005F                                     391                =AL2(L'MSGMSG)
+                                                   392
+                                                   393 *        some constants
+                                                   394
+                              00000400  00000001   395 K        EQU   1024             One KB
+                              00001000  00000001   396 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001   397 K64      EQU   (64*K)           64 KB
+                              00100000  00000001   398 MB       EQU   (K*K)             1 MB
+                                                   399
+                              AABBCCDD  00000001   400 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
+                              000000DD  00000001   401 REG2LOW  EQU         X'DD'    (last byte above)
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   403 *======================================================================
+                                                   404 *
+                                                   405 *  NOTE: start data on an address that is easy to display
+                                                   406 *        within Hercules
+                                                   407 *
+                                                   408 *======================================================================
+                                                   409
+0000049C                      0000049C  00001000   410          ORG   MIE4TST+X'1000'
+00001000  00000000                                 411 FAILED   DC    F'0'                     some test failed?
+00001004  00000000                                 412 TESTING  DC    F'0'                     current test number
+
+
+                                                   414 *
+                                                   415 *        failed message and associated editting
+                                                   416 *
+00001008  40404040 40404040                        417 PRTLINE  DC    C'         Test # '
+00001018  A7A7A7                                   418 PRTNUM   DC    C'xxx'
+0000101B  40868189 93858440                        419          DC    c' failed for instruction '
+00001033  A7A7A7A7 A7A7A7A7                        420 PRTNAME  DC    CL8'xxxxxxxx'
+                              00000033  00000001   421 PRTLNG   EQU   *-PRTLINE
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   423 ***********************************************************************
+                                                   424 *        TEST failed : message working storge
+                                                   425 ***********************************************************************
+0000103B  40212020 20202020                        426 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   427
+0000104D  7E7E7E6E                                 428          DC    C'===>'
+00001051  40404040 40404040                        429 PRT3     DC    CL18' '
+00001063  4C7E7E7E                                 430          DC    C'<==='
+00001067  00000000 00000000                        431 DECNUM   DS    CL16
+
+
+                                                   433 ***********************************************************************
+                                                   434 *        pollution
+                                                   435 ***********************************************************************
+00001078                                           436          DS    0F
+00001078  00000000 00000000                        437          DS    XL16                        gap
+00001088  C6A48487 85C6A484                        438 R1FUDGE  DC    CL16'FudgeFudgeFudge-'
+00001098  00000000 00000000                        439          DS    XL16                        gap
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   441 ***********************************************************************
+                                                   442 *        M4TEST DSECT
+                                                   443 ***********************************************************************
+
+
+                                                   445 M4TEST   DSECT ,
+00000000  00000000                                 446 TSUB     DC    A(0)           pointer  to test
+00000004  0000                                     447 TNUM     DC    H'00'          Test Number
+00000006  00                                       448          DC    X'00'
+                                                   449
+00000007  40404040 40404040                        450 OPNAME   DC    CL8' '         E7 name
+00000010  00000000                                 451 R2ADDR   DC    A(0)           address of R2 source
+00000014  00000000                                 452 R3ADDR   DC    A(0)           address of R3 source
+00000018  00000000                                 453 RELEN    DC    A(0)           RESULT LENGTH
+0000001C  00000000                                 454 READDR   DC    A(0)           result (expected) address
+00000020  00000000 00000000                        455          DS    FD                gap
+00000028  00000000 00000000                        456 R1OUTPUT DS    D              r1 Output
+00000030  00000000 00000000                        457          DS    FD                gap
+                                                   458
+                                                   459 *        test routine will be here (from RRE macro)
+                                                   460 *
+                                                   461 *        followed by
+                                                   462 *              EXPECTED RESULT
+
+
+                              00000000  000016AF   464 MIE4TST  CSECT ,
+000010A8                                           465          DS    0F
+
+
+                                                   467 ***********************************************************************
+                                                   468 *     Macros to help build test tables
+                                                   469 ***********************************************************************
+
+
+
+                                                   471 *
+                                                   472 * macro to generate individual test
+                                                   473 *
+                                                   474          MACRO
+                                                   475          RRE   &INST
+                                                   476 .*                               &INST   - RRE instruction under test
+                                                   477
+                                                   478
+                                                   479          GBLA  &TNUM
+                                                   480 &TNUM    SETA  &TNUM+1
+                                                   481
+                                                   482          DS    0FD
+                                                   483          USING *,R5              base for test data and test routine
+                                                   484
+                                                   485 T&TNUM   DC    A(X&TNUM)         address of test routine
+                                                   486          DC    H'&TNUM'          test number
+                                                   487          DC    X'00'
+                                                   488          DC    CL8'&INST'        instruction name
+                                                   489          DC    A(RE&TNUM+8)      address of R2 source
+                                                   490          DC    A(RE&TNUM+16)     address of R3 source
+                                                   491          DC    A(8)              result length
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   492 REA&TNUM DC    A(RE&TNUM)        result address
+                                                   493          DS    FD                gap
+                                                   494 R1O&TNUM DS    D                 R1 output
+                                                   495          DS    FD                gap
+                                                   496 .*
+                                                   497 *
+                                                   498 X&TNUM   DS    0F
+                                                   499          LG    R1,R1FUDGE
+                                                   500
+                                                   501          XGR   R2,R2
+                                                   502          L     R2,R2ADDR         load r2 source address
+                                                   503          LG    R2,0(R2)          load source
+                                                   504
+                                                   505          &INST                test instruction
+                                                   506          STG   R1,R1O&TNUM       save R1 output
+                                                   507
+                                                   508          BR    R11               return
+                                                   509
+                                                   510 RE&TNUM  DC    0F                xl16 expected result
+                                                   511
+                                                   512          DROP  R5
+                                                   513          MEND
+
+
+
+                                                   515 *
+                                                   516 * macro to generate table of pointers to individual tests
+                                                   517 *
+                                                   518          MACRO
+                                                   519          PTTABLE
+                                                   520          GBLA  &TNUM
+                                                   521          LCLA  &CUR
+                                                   522 &CUR     SETA  1
+                                                   523 .*
+                                                   524 TTABLE   DS    0F
+                                                   525 .LOOP    ANOP
+                                                   526 .*
+                                                   527          DC    A(T&CUR)
+                                                   528 .*
+                                                   529 &CUR     SETA  &CUR+1
+                                                   530          AIF   (&CUR LE &TNUM).LOOP
+                                                   531 *
+                                                   532          DC    A(0)              END OF TABLE
+                                                   533          DC    A(0)
+                                                   534 .*
+                                                   535          MEND
+                                                   536
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   538 ***********************************************************************
+                                                   539 *        MIE4  RRE tests
+                                                   540 ***********************************************************************
+                                                   541          PRINT DATA
+000010A8  00000000 00000000                        542          DS    FD
+                                                   543 *
+                                                   544 *   B968  CLZG  - COUNT LEADING ZEROS
+                                                   545 *   B969  CTZG  - COUNT TRAILING ZEROS
+                                                   546 *
+                                                   547 *        RRE instruction
+                                                   548 *              followed by
+                                                   549 *                 8 byte expected result (R1)
+                                                   550 *                 8 byte R2 source
+                                                   551 *---------------------------------------------------------------------
+                                                   552 *  CLZG  - COUNT LEADING ZEROS
+                                                   553 *---------------------------------------------------------------------
+                                                   554 *
+                                                   555          RRE   CLZG
+000010B0                                           556+         DS    0FD
+000010B0                      000010B0             557+         USING *,R5              base for test data and test routine
+000010B0  000010E8                                 558+T1       DC    A(X1)             address of test routine
+000010B4  0001                                     559+         DC    H'1'              test number
+000010B6  00                                       560+         DC    X'00'
+000010B7  C3D3E9C7 40404040                        561+         DC    CL8'CLZG'         instruction name
+000010C0  00001110                                 562+         DC    A(RE1+8)          address of R2 source
+000010C4  00001118                                 563+         DC    A(RE1+16)         address of R3 source
+000010C8  00000008                                 564+         DC    A(8)              result length
+000010CC  00001108                                 565+REA1     DC    A(RE1)            result address
+000010D0  00000000 00000000                        566+         DS    FD                gap
+000010D8  00000000 00000000                        567+R1O1     DS    D                 R1 output
+000010E0  00000000 00000000                        568+         DS    FD                gap
+                                                   569+*
+000010E8                                           570+X1       DS    0F
+000010E8  E310 8E88 0004                00001088   571+         LG    R1,R1FUDGE
+000010EE  B982 0022                                572+         XGR   R2,R2
+000010F2  5820 5010                     00000010   573+         L     R2,R2ADDR         load r2 source address
+000010F6  E322 0000 0004                00000000   574+         LG    R2,0(R2)          load source
+
+000010FC                                           577+         DS    0H
+000010FC  B9680012                                 578+         DC    XL4'B9680012'           CLZQ r1,r2
+
+00001100  E310 5028 0024                000010D8   580+         STG   R1,R1O1           save R1 output
+00001106  07FB                                     581+         BR    R11               return
+00001108                                           582+RE1      DC    0F                xl16 expected result
+00001108                                           583+         DROP  R5
+00001108  00000000 00000000                        584          DC    XL8'0000 0000 0000 0000'   result
+00001110  AAAAAAAA AAAAAAAA                        585          DC    XL8'AAAA AAAA AAAA AAAA'   R2
+                                                   586
+                                                   587          RRE   CLZG
+00001118                                           588+         DS    0FD
+00001118                      00001118             589+         USING *,R5              base for test data and test routine
+00001118  00001150                                 590+T2       DC    A(X2)             address of test routine
+0000111C  0002                                     591+         DC    H'2'              test number
+0000111E  00                                       592+         DC    X'00'
+0000111F  C3D3E9C7 40404040                        593+         DC    CL8'CLZG'         instruction name
+00001128  00001178                                 594+         DC    A(RE2+8)          address of R2 source
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000112C  00001180                                 595+         DC    A(RE2+16)         address of R3 source
+00001130  00000008                                 596+         DC    A(8)              result length
+00001134  00001170                                 597+REA2     DC    A(RE2)            result address
+00001138  00000000 00000000                        598+         DS    FD                gap
+00001140  00000000 00000000                        599+R1O2     DS    D                 R1 output
+00001148  00000000 00000000                        600+         DS    FD                gap
+                                                   601+*
+00001150                                           602+X2       DS    0F
+00001150  E310 8E88 0004                00001088   603+         LG    R1,R1FUDGE
+00001156  B982 0022                                604+         XGR   R2,R2
+0000115A  5820 5010                     00000010   605+         L     R2,R2ADDR         load r2 source address
+0000115E  E322 0000 0004                00000000   606+         LG    R2,0(R2)          load source
+
+00001164                                           609+         DS    0H
+00001164  B9680012                                 610+         DC    XL4'B9680012'           CLZQ r1,r2
+
+00001168  E310 5028 0024                00001140   612+         STG   R1,R1O2           save R1 output
+0000116E  07FB                                     613+         BR    R11               return
+00001170                                           614+RE2      DC    0F                xl16 expected result
+00001170                                           615+         DROP  R5
+00001170  00000000 00000004                        616          DC    XL8'0000 0000 0000 0004'   result
+00001178  0AAAAAAA AAAAAAAA                        617          DC    XL8'0AAA AAAA AAAA AAAA'   R2
+                                                   618
+                                                   619          RRE   CLZG
+00001180                                           620+         DS    0FD
+00001180                      00001180             621+         USING *,R5              base for test data and test routine
+00001180  000011B8                                 622+T3       DC    A(X3)             address of test routine
+00001184  0003                                     623+         DC    H'3'              test number
+00001186  00                                       624+         DC    X'00'
+00001187  C3D3E9C7 40404040                        625+         DC    CL8'CLZG'         instruction name
+00001190  000011E0                                 626+         DC    A(RE3+8)          address of R2 source
+00001194  000011E8                                 627+         DC    A(RE3+16)         address of R3 source
+00001198  00000008                                 628+         DC    A(8)              result length
+0000119C  000011D8                                 629+REA3     DC    A(RE3)            result address
+000011A0  00000000 00000000                        630+         DS    FD                gap
+000011A8  00000000 00000000                        631+R1O3     DS    D                 R1 output
+000011B0  00000000 00000000                        632+         DS    FD                gap
+                                                   633+*
+000011B8                                           634+X3       DS    0F
+000011B8  E310 8E88 0004                00001088   635+         LG    R1,R1FUDGE
+000011BE  B982 0022                                636+         XGR   R2,R2
+000011C2  5820 5010                     00000010   637+         L     R2,R2ADDR         load r2 source address
+000011C6  E322 0000 0004                00000000   638+         LG    R2,0(R2)          load source
+
+000011CC                                           641+         DS    0H
+000011CC  B9680012                                 642+         DC    XL4'B9680012'           CLZQ r1,r2
+
+000011D0  E310 5028 0024                000011A8   644+         STG   R1,R1O3           save R1 output
+000011D6  07FB                                     645+         BR    R11               return
+000011D8                                           646+RE3      DC    0F                xl16 expected result
+000011D8                                           647+         DROP  R5
+000011D8  00000000 00000006                        648          DC    XL8'0000 0000 0000 0006'   result
+000011E0  03AAAAAA AAAAAAAA                        649          DC    XL8'03AA AAAA AAAA AAAA'   R2
+                                                   650
+                                                   651          RRE   CLZG
+000011E8                                           652+         DS    0FD
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000011E8                      000011E8             653+         USING *,R5              base for test data and test routine
+000011E8  00001220                                 654+T4       DC    A(X4)             address of test routine
+000011EC  0004                                     655+         DC    H'4'              test number
+000011EE  00                                       656+         DC    X'00'
+000011EF  C3D3E9C7 40404040                        657+         DC    CL8'CLZG'         instruction name
+000011F8  00001248                                 658+         DC    A(RE4+8)          address of R2 source
+000011FC  00001250                                 659+         DC    A(RE4+16)         address of R3 source
+00001200  00000008                                 660+         DC    A(8)              result length
+00001204  00001240                                 661+REA4     DC    A(RE4)            result address
+00001208  00000000 00000000                        662+         DS    FD                gap
+00001210  00000000 00000000                        663+R1O4     DS    D                 R1 output
+00001218  00000000 00000000                        664+         DS    FD                gap
+                                                   665+*
+00001220                                           666+X4       DS    0F
+00001220  E310 8E88 0004                00001088   667+         LG    R1,R1FUDGE
+00001226  B982 0022                                668+         XGR   R2,R2
+0000122A  5820 5010                     00000010   669+         L     R2,R2ADDR         load r2 source address
+0000122E  E322 0000 0004                00000000   670+         LG    R2,0(R2)          load source
+
+00001234                                           673+         DS    0H
+00001234  B9680012                                 674+         DC    XL4'B9680012'           CLZQ r1,r2
+
+00001238  E310 9010 0024                00001210   676+         STG   R1,R1O4           save R1 output
+0000123E  07FB                                     677+         BR    R11               return
+00001240                                           678+RE4      DC    0F                xl16 expected result
+00001240                                           679+         DROP  R5
+00001240  00000000 00000010                        680          DC    XL8'0000 0000 0000 0010'   result
+00001248  0000AAAA AAAAAAAA                        681          DC    XL8'0000 AAAA AAAA AAAA'   R2
+                                                   682
+                                                   683          RRE   CLZG
+00001250                                           684+         DS    0FD
+00001250                      00001250             685+         USING *,R5              base for test data and test routine
+00001250  00001288                                 686+T5       DC    A(X5)             address of test routine
+00001254  0005                                     687+         DC    H'5'              test number
+00001256  00                                       688+         DC    X'00'
+00001257  C3D3E9C7 40404040                        689+         DC    CL8'CLZG'         instruction name
+00001260  000012B0                                 690+         DC    A(RE5+8)          address of R2 source
+00001264  000012B8                                 691+         DC    A(RE5+16)         address of R3 source
+00001268  00000008                                 692+         DC    A(8)              result length
+0000126C  000012A8                                 693+REA5     DC    A(RE5)            result address
+00001270  00000000 00000000                        694+         DS    FD                gap
+00001278  00000000 00000000                        695+R1O5     DS    D                 R1 output
+00001280  00000000 00000000                        696+         DS    FD                gap
+                                                   697+*
+00001288                                           698+X5       DS    0F
+00001288  E310 8E88 0004                00001088   699+         LG    R1,R1FUDGE
+0000128E  B982 0022                                700+         XGR   R2,R2
+00001292  5820 5010                     00000010   701+         L     R2,R2ADDR         load r2 source address
+00001296  E322 0000 0004                00000000   702+         LG    R2,0(R2)          load source
+
+0000129C                                           705+         DS    0H
+0000129C  B9680012                                 706+         DC    XL4'B9680012'           CLZQ r1,r2
+
+000012A0  E310 5028 0024                00001278   708+         STG   R1,R1O5           save R1 output
+000012A6  07FB                                     709+         BR    R11               return
+000012A8                                           710+RE5      DC    0F                xl16 expected result
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000012A8                                           711+         DROP  R5
+000012A8  00000000 00000018                        712          DC    XL8'0000 0000 0000 0018'   result
+000012B0  000000AA AAAAAAAA                        713          DC    XL8'0000 00AA AAAA AAAA'   R2
+                                                   714
+                                                   715          RRE   CLZG
+000012B8                                           716+         DS    0FD
+000012B8                      000012B8             717+         USING *,R5              base for test data and test routine
+000012B8  000012F0                                 718+T6       DC    A(X6)             address of test routine
+000012BC  0006                                     719+         DC    H'6'              test number
+000012BE  00                                       720+         DC    X'00'
+000012BF  C3D3E9C7 40404040                        721+         DC    CL8'CLZG'         instruction name
+000012C8  00001318                                 722+         DC    A(RE6+8)          address of R2 source
+000012CC  00001320                                 723+         DC    A(RE6+16)         address of R3 source
+000012D0  00000008                                 724+         DC    A(8)              result length
+000012D4  00001310                                 725+REA6     DC    A(RE6)            result address
+000012D8  00000000 00000000                        726+         DS    FD                gap
+000012E0  00000000 00000000                        727+R1O6     DS    D                 R1 output
+000012E8  00000000 00000000                        728+         DS    FD                gap
+                                                   729+*
+000012F0                                           730+X6       DS    0F
+000012F0  E310 8E88 0004                00001088   731+         LG    R1,R1FUDGE
+000012F6  B982 0022                                732+         XGR   R2,R2
+000012FA  5820 5010                     00000010   733+         L     R2,R2ADDR         load r2 source address
+000012FE  E322 0000 0004                00000000   734+         LG    R2,0(R2)          load source
+
+00001304                                           737+         DS    0H
+00001304  B9680012                                 738+         DC    XL4'B9680012'           CLZQ r1,r2
+
+00001308  E310 5028 0024                000012E0   740+         STG   R1,R1O6           save R1 output
+0000130E  07FB                                     741+         BR    R11               return
+00001310                                           742+RE6      DC    0F                xl16 expected result
+00001310                                           743+         DROP  R5
+00001310  00000000 00000030                        744          DC    XL8'0000 0000 0000 0030'   result
+00001318  00000000 0000AAAA                        745          DC    XL8'0000 0000 0000 AAAA'   R2
+                                                   746
+                                                   747          RRE   CLZG
+00001320                                           748+         DS    0FD
+00001320                      00001320             749+         USING *,R5              base for test data and test routine
+00001320  00001358                                 750+T7       DC    A(X7)             address of test routine
+00001324  0007                                     751+         DC    H'7'              test number
+00001326  00                                       752+         DC    X'00'
+00001327  C3D3E9C7 40404040                        753+         DC    CL8'CLZG'         instruction name
+00001330  00001380                                 754+         DC    A(RE7+8)          address of R2 source
+00001334  00001388                                 755+         DC    A(RE7+16)         address of R3 source
+00001338  00000008                                 756+         DC    A(8)              result length
+0000133C  00001378                                 757+REA7     DC    A(RE7)            result address
+00001340  00000000 00000000                        758+         DS    FD                gap
+00001348  00000000 00000000                        759+R1O7     DS    D                 R1 output
+00001350  00000000 00000000                        760+         DS    FD                gap
+                                                   761+*
+00001358                                           762+X7       DS    0F
+00001358  E310 8E88 0004                00001088   763+         LG    R1,R1FUDGE
+0000135E  B982 0022                                764+         XGR   R2,R2
+00001362  5820 5010                     00000010   765+         L     R2,R2ADDR         load r2 source address
+00001366  E322 0000 0004                00000000   766+         LG    R2,0(R2)          load source
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000136C                                           769+         DS    0H
+0000136C  B9680012                                 770+         DC    XL4'B9680012'           CLZQ r1,r2
+
+00001370  E310 5028 0024                00001348   772+         STG   R1,R1O7           save R1 output
+00001376  07FB                                     773+         BR    R11               return
+00001378                                           774+RE7      DC    0F                xl16 expected result
+00001378                                           775+         DROP  R5
+00001378  00000000 00000040                        776          DC    XL8'0000 0000 0000 0040'   result
+00001380  00000000 00000000                        777          DC    XL8'0000 0000 0000 0000'   R2
+                                                   778
+                                                   779 *---------------------------------------------------------------------
+                                                   780 *  CTZG  - COUNT TRAILING ZEROS
+                                                   781 *---------------------------------------------------------------------
+                                                   782 *
+                                                   783          RRE   CTZG
+00001388                                           784+         DS    0FD
+00001388                      00001388             785+         USING *,R5              base for test data and test routine
+00001388  000013C0                                 786+T8       DC    A(X8)             address of test routine
+0000138C  0008                                     787+         DC    H'8'              test number
+0000138E  00                                       788+         DC    X'00'
+0000138F  C3E3E9C7 40404040                        789+         DC    CL8'CTZG'         instruction name
+00001398  000013E8                                 790+         DC    A(RE8+8)          address of R2 source
+0000139C  000013F0                                 791+         DC    A(RE8+16)         address of R3 source
+000013A0  00000008                                 792+         DC    A(8)              result length
+000013A4  000013E0                                 793+REA8     DC    A(RE8)            result address
+000013A8  00000000 00000000                        794+         DS    FD                gap
+000013B0  00000000 00000000                        795+R1O8     DS    D                 R1 output
+000013B8  00000000 00000000                        796+         DS    FD                gap
+                                                   797+*
+000013C0                                           798+X8       DS    0F
+000013C0  E310 8E88 0004                00001088   799+         LG    R1,R1FUDGE
+000013C6  B982 0022                                800+         XGR   R2,R2
+000013CA  5820 5010                     00000010   801+         L     R2,R2ADDR         load r2 source address
+000013CE  E322 0000 0004                00000000   802+         LG    R2,0(R2)          load source
+
+000013D4                                           805+         DS    0H
+000013D4  B9690012                                 806+         DC    XL4'B9690012'           CTZQ r1,r2
+
+000013D8  E310 5028 0024                000013B0   808+         STG   R1,R1O8           save R1 output
+000013DE  07FB                                     809+         BR    R11               return
+000013E0                                           810+RE8      DC    0F                xl16 expected result
+000013E0                                           811+         DROP  R5
+000013E0  00000000 00000000                        812          DC    XL8'0000 0000 0000 0000'   result
+000013E8  55555555 55555555                        813          DC    XL8'5555 5555 5555 5555'   R2
+                                                   814
+                                                   815          RRE   CTZG
+000013F0                                           816+         DS    0FD
+000013F0                      000013F0             817+         USING *,R5              base for test data and test routine
+000013F0  00001428                                 818+T9       DC    A(X9)             address of test routine
+000013F4  0009                                     819+         DC    H'9'              test number
+000013F6  00                                       820+         DC    X'00'
+000013F7  C3E3E9C7 40404040                        821+         DC    CL8'CTZG'         instruction name
+00001400  00001450                                 822+         DC    A(RE9+8)          address of R2 source
+00001404  00001458                                 823+         DC    A(RE9+16)         address of R3 source
+00001408  00000008                                 824+         DC    A(8)              result length
+0000140C  00001448                                 825+REA9     DC    A(RE9)            result address
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001410  00000000 00000000                        826+         DS    FD                gap
+00001418  00000000 00000000                        827+R1O9     DS    D                 R1 output
+00001420  00000000 00000000                        828+         DS    FD                gap
+                                                   829+*
+00001428                                           830+X9       DS    0F
+00001428  E310 8E88 0004                00001088   831+         LG    R1,R1FUDGE
+0000142E  B982 0022                                832+         XGR   R2,R2
+00001432  5820 5010                     00000010   833+         L     R2,R2ADDR         load r2 source address
+00001436  E322 0000 0004                00000000   834+         LG    R2,0(R2)          load source
+
+0000143C                                           837+         DS    0H
+0000143C  B9690012                                 838+         DC    XL4'B9690012'           CTZQ r1,r2
+
+00001440  E310 5028 0024                00001418   840+         STG   R1,R1O9           save R1 output
+00001446  07FB                                     841+         BR    R11               return
+00001448                                           842+RE9      DC    0F                xl16 expected result
+00001448                                           843+         DROP  R5
+00001448  00000000 00000004                        844          DC    XL8'0000 0000 0000 0004'   result
+00001450  0A555555 55555550                        845          DC    XL8'0A55 5555 5555 5550'   R2
+                                                   846
+                                                   847          RRE   CTZG
+00001458                                           848+         DS    0FD
+00001458                      00001458             849+         USING *,R5              base for test data and test routine
+00001458  00001490                                 850+T10      DC    A(X10)            address of test routine
+0000145C  000A                                     851+         DC    H'10'             test number
+0000145E  00                                       852+         DC    X'00'
+0000145F  C3E3E9C7 40404040                        853+         DC    CL8'CTZG'         instruction name
+00001468  000014B8                                 854+         DC    A(RE10+8)         address of R2 source
+0000146C  000014C0                                 855+         DC    A(RE10+16)        address of R3 source
+00001470  00000008                                 856+         DC    A(8)              result length
+00001474  000014B0                                 857+REA10    DC    A(RE10)           result address
+00001478  00000000 00000000                        858+         DS    FD                gap
+00001480  00000000 00000000                        859+R1O10    DS    D                 R1 output
+00001488  00000000 00000000                        860+         DS    FD                gap
+                                                   861+*
+00001490                                           862+X10      DS    0F
+00001490  E310 8E88 0004                00001088   863+         LG    R1,R1FUDGE
+00001496  B982 0022                                864+         XGR   R2,R2
+0000149A  5820 5010                     00000010   865+         L     R2,R2ADDR         load r2 source address
+0000149E  E322 0000 0004                00000000   866+         LG    R2,0(R2)          load source
+
+000014A4                                           869+         DS    0H
+000014A4  B9690012                                 870+         DC    XL4'B9690012'           CTZQ r1,r2
+
+000014A8  E310 5028 0024                00001480   872+         STG   R1,R1O10          save R1 output
+000014AE  07FB                                     873+         BR    R11               return
+000014B0                                           874+RE10     DC    0F                xl16 expected result
+000014B0                                           875+         DROP  R5
+000014B0  00000000 00000006                        876          DC    XL8'0000 0000 0000 0006'   result
+000014B8  03555555 555555C0                        877          DC    XL8'0355 5555 5555 55C0'   R2
+                                                   878
+                                                   879          RRE   CTZG
+000014C0                                           880+         DS    0FD
+000014C0                      000014C0             881+         USING *,R5              base for test data and test routine
+000014C0  000014F8                                 882+T11      DC    A(X11)            address of test routine
+000014C4  000B                                     883+         DC    H'11'             test number
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000014C6  00                                       884+         DC    X'00'
+000014C7  C3E3E9C7 40404040                        885+         DC    CL8'CTZG'         instruction name
+000014D0  00001520                                 886+         DC    A(RE11+8)         address of R2 source
+000014D4  00001528                                 887+         DC    A(RE11+16)        address of R3 source
+000014D8  00000008                                 888+         DC    A(8)              result length
+000014DC  00001518                                 889+REA11    DC    A(RE11)           result address
+000014E0  00000000 00000000                        890+         DS    FD                gap
+000014E8  00000000 00000000                        891+R1O11    DS    D                 R1 output
+000014F0  00000000 00000000                        892+         DS    FD                gap
+                                                   893+*
+000014F8                                           894+X11      DS    0F
+000014F8  E310 8E88 0004                00001088   895+         LG    R1,R1FUDGE
+000014FE  B982 0022                                896+         XGR   R2,R2
+00001502  5820 5010                     00000010   897+         L     R2,R2ADDR         load r2 source address
+00001506  E322 0000 0004                00000000   898+         LG    R2,0(R2)          load source
+
+0000150C                                           901+         DS    0H
+0000150C  B9690012                                 902+         DC    XL4'B9690012'           CTZQ r1,r2
+
+00001510  E310 5028 0024                000014E8   904+         STG   R1,R1O11          save R1 output
+00001516  07FB                                     905+         BR    R11               return
+00001518                                           906+RE11     DC    0F                xl16 expected result
+00001518                                           907+         DROP  R5
+00001518  00000000 00000010                        908          DC    XL8'0000 0000 0000 0010'   result
+00001520  00005555 55550000                        909          DC    XL8'0000 5555 5555 0000'   R2
+                                                   910
+                                                   911          RRE   CTZG
+00001528                                           912+         DS    0FD
+00001528                      00001528             913+         USING *,R5              base for test data and test routine
+00001528  00001560                                 914+T12      DC    A(X12)            address of test routine
+0000152C  000C                                     915+         DC    H'12'             test number
+0000152E  00                                       916+         DC    X'00'
+0000152F  C3E3E9C7 40404040                        917+         DC    CL8'CTZG'         instruction name
+00001538  00001588                                 918+         DC    A(RE12+8)         address of R2 source
+0000153C  00001590                                 919+         DC    A(RE12+16)        address of R3 source
+00001540  00000008                                 920+         DC    A(8)              result length
+00001544  00001580                                 921+REA12    DC    A(RE12)           result address
+00001548  00000000 00000000                        922+         DS    FD                gap
+00001550  00000000 00000000                        923+R1O12    DS    D                 R1 output
+00001558  00000000 00000000                        924+         DS    FD                gap
+                                                   925+*
+00001560                                           926+X12      DS    0F
+00001560  E310 8E88 0004                00001088   927+         LG    R1,R1FUDGE
+00001566  B982 0022                                928+         XGR   R2,R2
+0000156A  5820 5010                     00000010   929+         L     R2,R2ADDR         load r2 source address
+0000156E  E322 0000 0004                00000000   930+         LG    R2,0(R2)          load source
+
+00001574                                           933+         DS    0H
+00001574  B9690012                                 934+         DC    XL4'B9690012'           CTZQ r1,r2
+
+00001578  E310 5028 0024                00001550   936+         STG   R1,R1O12          save R1 output
+0000157E  07FB                                     937+         BR    R11               return
+00001580                                           938+RE12     DC    0F                xl16 expected result
+00001580                                           939+         DROP  R5
+00001580  00000000 00000018                        940          DC    XL8'0000 0000 0000 0018'   result
+00001588  000000AA 55000000                        941          DC    XL8'0000 00AA 5500 0000'   R2
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   942
+                                                   943          RRE   CTZG
+00001590                                           944+         DS    0FD
+00001590                      00001590             945+         USING *,R5              base for test data and test routine
+00001590  000015C8                                 946+T13      DC    A(X13)            address of test routine
+00001594  000D                                     947+         DC    H'13'             test number
+00001596  00                                       948+         DC    X'00'
+00001597  C3E3E9C7 40404040                        949+         DC    CL8'CTZG'         instruction name
+000015A0  000015F0                                 950+         DC    A(RE13+8)         address of R2 source
+000015A4  000015F8                                 951+         DC    A(RE13+16)        address of R3 source
+000015A8  00000008                                 952+         DC    A(8)              result length
+000015AC  000015E8                                 953+REA13    DC    A(RE13)           result address
+000015B0  00000000 00000000                        954+         DS    FD                gap
+000015B8  00000000 00000000                        955+R1O13    DS    D                 R1 output
+000015C0  00000000 00000000                        956+         DS    FD                gap
+                                                   957+*
+000015C8                                           958+X13      DS    0F
+000015C8  E310 8E88 0004                00001088   959+         LG    R1,R1FUDGE
+000015CE  B982 0022                                960+         XGR   R2,R2
+000015D2  5820 5010                     00000010   961+         L     R2,R2ADDR         load r2 source address
+000015D6  E322 0000 0004                00000000   962+         LG    R2,0(R2)          load source
+
+000015DC                                           965+         DS    0H
+000015DC  B9690012                                 966+         DC    XL4'B9690012'           CTZQ r1,r2
+
+000015E0  E310 5028 0024                000015B8   968+         STG   R1,R1O13          save R1 output
+000015E6  07FB                                     969+         BR    R11               return
+000015E8                                           970+RE13     DC    0F                xl16 expected result
+000015E8                                           971+         DROP  R5
+000015E8  00000000 00000030                        972          DC    XL8'0000 0000 0000 0030'   result
+000015F0  05550000 00000000                        973          DC    XL8'0555 0000 0000 0000'   R2
+                                                   974
+                                                   975          RRE   CTZG
+000015F8                                           976+         DS    0FD
+000015F8                      000015F8             977+         USING *,R5              base for test data and test routine
+000015F8  00001630                                 978+T14      DC    A(X14)            address of test routine
+000015FC  000E                                     979+         DC    H'14'             test number
+000015FE  00                                       980+         DC    X'00'
+000015FF  C3E3E9C7 40404040                        981+         DC    CL8'CTZG'         instruction name
+00001608  00001658                                 982+         DC    A(RE14+8)         address of R2 source
+0000160C  00001660                                 983+         DC    A(RE14+16)        address of R3 source
+00001610  00000008                                 984+         DC    A(8)              result length
+00001614  00001650                                 985+REA14    DC    A(RE14)           result address
+00001618  00000000 00000000                        986+         DS    FD                gap
+00001620  00000000 00000000                        987+R1O14    DS    D                 R1 output
+00001628  00000000 00000000                        988+         DS    FD                gap
+                                                   989+*
+00001630                                           990+X14      DS    0F
+00001630  E310 8E88 0004                00001088   991+         LG    R1,R1FUDGE
+00001636  B982 0022                                992+         XGR   R2,R2
+0000163A  5820 5010                     00000010   993+         L     R2,R2ADDR         load r2 source address
+0000163E  E322 0000 0004                00000000   994+         LG    R2,0(R2)          load source
+
+00001644                                           997+         DS    0H
+00001644  B9690012                                 998+         DC    XL4'B9690012'           CTZQ r1,r2
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001648  E310 5028 0024                00001620  1000+         STG   R1,R1O14          save R1 output
+0000164E  07FB                                    1001+         BR    R11               return
+00001650                                          1002+RE14     DC    0F                xl16 expected result
+00001650                                          1003+         DROP  R5
+00001650  00000000 00000040                       1004          DC    XL8'0000 0000 0000 0040'   result
+00001658  00000000 00000000                       1005          DC    XL8'0000 0000 0000 0000'   R2
+                                                  1006
+                                                  1007
+                                                  1008
+                                                  1009
+00001660  00000000                                1010          DC    F'0'     END OF TABLE
+00001664  00000000                                1011          DC    F'0'
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1013 *
+                                                  1014 * table of pointers to individual load test
+                                                  1015 *
+00001668                                          1016 M4TESTS  DS    0F
+                                                  1017          PTTABLE
+00001668                                          1018+TTABLE   DS    0F
+00001668  000010B0                                1019+         DC    A(T1)
+0000166C  00001118                                1020+         DC    A(T2)
+00001670  00001180                                1021+         DC    A(T3)
+00001674  000011E8                                1022+         DC    A(T4)
+00001678  00001250                                1023+         DC    A(T5)
+0000167C  000012B8                                1024+         DC    A(T6)
+00001680  00001320                                1025+         DC    A(T7)
+00001684  00001388                                1026+         DC    A(T8)
+00001688  000013F0                                1027+         DC    A(T9)
+0000168C  00001458                                1028+         DC    A(T10)
+00001690  000014C0                                1029+         DC    A(T11)
+00001694  00001528                                1030+         DC    A(T12)
+00001698  00001590                                1031+         DC    A(T13)
+0000169C  000015F8                                1032+         DC    A(T14)
+                                                  1033+*
+000016A0  00000000                                1034+         DC    A(0)              END OF TABLE
+000016A4  00000000                                1035+         DC    A(0)
+                                                  1036
+000016A8  00000000                                1037          DC    F'0'     END OF TABLE
+000016AC  00000000                                1038          DC    F'0'
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1040 ***********************************************************************
+                                                  1041 *        Register equates
+                                                  1042 ***********************************************************************
+
+
+                              00000000  00000001  1044 R0       EQU   0
+                              00000001  00000001  1045 R1       EQU   1
+                              00000002  00000001  1046 R2       EQU   2
+                              00000003  00000001  1047 R3       EQU   3
+                              00000004  00000001  1048 R4       EQU   4
+                              00000005  00000001  1049 R5       EQU   5
+                              00000006  00000001  1050 R6       EQU   6
+                              00000007  00000001  1051 R7       EQU   7
+                              00000008  00000001  1052 R8       EQU   8
+                              00000009  00000001  1053 R9       EQU   9
+                              0000000A  00000001  1054 R10      EQU   10
+                              0000000B  00000001  1055 R11      EQU   11
+                              0000000C  00000001  1056 R12      EQU   12
+                              0000000D  00000001  1057 R13      EQU   13
+                              0000000E  00000001  1058 R14      EQU   14
+                              0000000F  00000001  1059 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  1061 ***********************************************************************
+                                                  1062 *        Register equates
+                                                  1063 ***********************************************************************
+
+
+                              00000000  00000001  1065 V0       EQU   0
+                              00000001  00000001  1066 V1       EQU   1
+                              00000002  00000001  1067 V2       EQU   2
+                              00000003  00000001  1068 V3       EQU   3
+                              00000004  00000001  1069 V4       EQU   4
+                              00000005  00000001  1070 V5       EQU   5
+                              00000006  00000001  1071 V6       EQU   6
+                              00000007  00000001  1072 V7       EQU   7
+                              00000008  00000001  1073 V8       EQU   8
+                              00000009  00000001  1074 V9       EQU   9
+                              0000000A  00000001  1075 V10      EQU   10
+                              0000000B  00000001  1076 V11      EQU   11
+                              0000000C  00000001  1077 V12      EQU   12
+                              0000000D  00000001  1078 V13      EQU   13
+                              0000000E  00000001  1079 V14      EQU   14
+                              0000000F  00000001  1080 V15      EQU   15
+                              00000010  00000001  1081 V16      EQU   16
+                              00000011  00000001  1082 V17      EQU   17
+                              00000012  00000001  1083 V18      EQU   18
+                              00000013  00000001  1084 V19      EQU   19
+                              00000014  00000001  1085 V20      EQU   20
+                              00000015  00000001  1086 V21      EQU   21
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001  1087 V22      EQU   22
+                              00000017  00000001  1088 V23      EQU   23
+                              00000018  00000001  1089 V24      EQU   24
+                              00000019  00000001  1090 V25      EQU   25
+                              0000001A  00000001  1091 V26      EQU   26
+                              0000001B  00000001  1092 V27      EQU   27
+                              0000001C  00000001  1093 V28      EQU   28
+                              0000001D  00000001  1094 V29      EQU   29
+                              0000001E  00000001  1095 V30      EQU   30
+                              0000001F  00000001  1096 V31      EQU   31
+                                                  1097
+                                                  1098          END
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    27
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   193   159   189   190   191
+CTLR0               F    00000484           4   383   203   204   205   206
+DECNUM              C    00001067          16   431   303   305
+EDIT                X    0000103B          18   426   304
+ENDTEST             U    0000032E           1   289   250
+EOJ                 I    00000468           4   373   238   292
+EOJPSW              D    00000458           8   371   373
+FAILCONT            U    0000031E           1   279
+FAILED              F    00001000           4   411   281   290
+FAILMSG             U    0000031A           1   273   263
+FAILPSW             D    00000470           8   375   377
+FAILTEST            I    00000480           4   377   293
+FB0001              F    00000290           8   222   226   227   229
+IMAGE               1    00000000        5808     0
+K                   U    00000400           1   395   396   397   398
+K64                 U    00010000           1   397
+M4TEST              4    00000000          56   445   252
+M4TESTS             F    00001668           4  1016   245
+MB                  U    00100000           1   398
+MIE4TST             J    00000000        5808   152   155   157   161   165   410   153
+MSG                 I    000003A0           4   333   237   316
+MSGCMD              C    000003EE           9   363   346   347
+MSGMSG              C    000003F7          95   364   340   361   338
+MSGMVC              I    000003E8           6   361   344
+MSGOK               I    000003B6           2   342   339
+MSGRET              I    000003D6           4   357   350   353
+MSGSAVE             F    000003DC           4   360   336   357
+NEXTM4              U    000002E4           1   247   266   284
+OPNAME              C    00000007           8   450   308
+PAGE                U    00001000           1   396
+PRT3                C    00001051          18   429   304   305   306
+PRTLINE             C    00001008          16   417   421   315
+PRTLNG              U    00000033           1   421   314
+PRTNAME             C    00001033           8   420   308
+PRTNUM              C    00001018           3   418   306
+R0                  U    00000000           1  1044   153   203   206   226   228   229   230   235   254   255   280   281   313
+                                                      314   317   333   336   338   340   342   357
+R1                  U    00000001           1  1045   236   257   261   262   290   291   315   347   361   571   580   603   612
+                                                      635   644   667   676   699   708   731   740   763   772   799   808   831
+                                                      840   863   872   895   904   927   936   959   968   991  1000
+R10                 U    0000000A           1  1054   191   200   201
+R11                 U    0000000B           1  1055   258   259   581   613   645   677   709   741   773   809   841   873   905
+                                                      937   969  1001
+R12                 U    0000000C           1  1056   245   248   265   283
+R13                 U    0000000D           1  1057
+R14                 U    0000000E           1  1058
+R15                 U    0000000F           1  1059   274   299   320   321
+R1FUDGE             C    00001088          16   438   257   571   603   635   667   699   731   763   799   831   863   895   927
+                                                      959   991
+R1O1                D    000010D8           8   567   580
+R1O10               D    00001480           8   859   872
+R1O11               D    000014E8           8   891   904
+R1O12               D    00001550           8   923   936
+R1O13               D    000015B8           8   955   968
+R1O14               D    00001620           8   987  1000
+R1O2                D    00001140           8   599   612
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    28
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R1O3                D    000011A8           8   631   644
+R1O4                D    00001210           8   663   676
+R1O5                D    00001278           8   695   708
+R1O6                D    000012E0           8   727   740
+R1O7                D    00001348           8   759   772
+R1O8                D    000013B0           8   795   808
+R1O9                D    00001418           8   827   840
+R1OUTPUT            D    00000028           8   456   262
+R2                  U    00000002           1  1046   237   302   303   313   316   317   334   336   342   343   344   346   352
+                                                      357   358   572   573   574   604   605   606   636   637   638   668   669
+                                                      670   700   701   702   732   733   734   764   765   766   800   801   802
+                                                      832   833   834   864   865   866   896   897   898   928   929   930   960
+                                                      961   962   992   993   994
+R2ADDR              A    00000010           4   451   573   605   637   669   701   733   765   801   833   865   897   929   961
+                                                      993
+R3                  U    00000003           1  1047
+R3ADDR              A    00000014           4   452
+R4                  U    00000004           1  1048
+R5                  U    00000005           1  1049   248   249   252   300   319   557   583   589   615   621   647   653   679
+                                                      685   711   717   743   749   775   785   811   817   843   849   875   881
+                                                      907   913   939   945   971   977  1003
+R6                  U    00000006           1  1050
+R7                  U    00000007           1  1051
+R8                  U    00000008           1  1052   189   193   194   195   197
+R9                  U    00000009           1  1053   190   197   198   200
+RE1                 F    00001108           4   582   562   563   565
+RE10                F    000014B0           4   874   854   855   857
+RE11                F    00001518           4   906   886   887   889
+RE12                F    00001580           4   938   918   919   921
+RE13                F    000015E8           4   970   950   951   953
+RE14                F    00001650           4  1002   982   983   985
+RE2                 F    00001170           4   614   594   595   597
+RE3                 F    000011D8           4   646   626   627   629
+RE4                 F    00001240           4   678   658   659   661
+RE5                 F    000012A8           4   710   690   691   693
+RE6                 F    00001310           4   742   722   723   725
+RE7                 F    00001378           4   774   754   755   757
+RE8                 F    000013E0           4   810   790   791   793
+RE9                 F    00001448           4   842   822   823   825
+REA1                A    000010CC           4   565
+REA10               A    00001474           4   857
+REA11               A    000014DC           4   889
+REA12               A    00001544           4   921
+REA13               A    000015AC           4   953
+REA14               A    00001614           4   985
+REA2                A    00001134           4   597
+REA3                A    0000119C           4   629
+REA4                A    00001204           4   661
+REA5                A    0000126C           4   693
+REA6                A    000012D4           4   725
+REA7                A    0000133C           4   757
+REA8                A    000013A4           4   793
+REA9                A    0000140C           4   825
+READDR              A    0000001C           4   454   261
+REG2LOW             U    000000DD           1   401
+REG2PATT            U    AABBCCDD           1   400
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    29
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+RELEN               A    00000018           4   453
+RPTDWSAV            D    00000390           8   326   313   317
+RPTERROR            I    0000033C           4   299   274
+RPTSAVE             F    00000384           4   323   299   320
+RPTSVR5             F    00000388           4   324   300   319
+SKL0001             U    0000005E           1   219   235
+SKT0001             C    0000022A          20   216   219   236
+SVOLDPSW            U    00000140           0   155
+T1                  A    000010B0           4   558  1019
+T10                 A    00001458           4   850  1028
+T11                 A    000014C0           4   882  1029
+T12                 A    00001528           4   914  1030
+T13                 A    00001590           4   946  1031
+T14                 A    000015F8           4   978  1032
+T2                  A    00001118           4   590  1020
+T3                  A    00001180           4   622  1021
+T4                  A    000011E8           4   654  1022
+T5                  A    00001250           4   686  1023
+T6                  A    000012B8           4   718  1024
+T7                  A    00001320           4   750  1025
+T8                  A    00001388           4   786  1026
+T9                  A    000013F0           4   818  1027
+TESTING             F    00001004           4   412   255
+TNUM                H    00000004           2   447   254   302
+TSUB                A    00000000           4   446   258
+TTABLE              F    00001668           4  1018
+V0                  U    00000000           1  1065
+V1                  U    00000001           1  1066
+V10                 U    0000000A           1  1075
+V11                 U    0000000B           1  1076
+V12                 U    0000000C           1  1077
+V13                 U    0000000D           1  1078
+V14                 U    0000000E           1  1079
+V15                 U    0000000F           1  1080
+V16                 U    00000010           1  1081
+V17                 U    00000011           1  1082
+V18                 U    00000012           1  1083
+V19                 U    00000013           1  1084
+V2                  U    00000002           1  1067
+V20                 U    00000014           1  1085
+V21                 U    00000015           1  1086
+V22                 U    00000016           1  1087
+V23                 U    00000017           1  1088
+V24                 U    00000018           1  1089
+V25                 U    00000019           1  1090
+V26                 U    0000001A           1  1091
+V27                 U    0000001B           1  1092
+V28                 U    0000001C           1  1093
+V29                 U    0000001D           1  1094
+V3                  U    00000003           1  1068
+V30                 U    0000001E           1  1095
+V31                 U    0000001F           1  1096
+V4                  U    00000004           1  1069
+V5                  U    00000005           1  1070
+V6                  U    00000006           1  1071
+V7                  U    00000007           1  1072
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    30
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V8                  U    00000008           1  1073
+V9                  U    00000009           1  1074
+X0001               U    000002B8           1   225   213   226
+X1                  F    000010E8           4   570   558
+X10                 F    00001490           4   862   850
+X11                 F    000014F8           4   894   882
+X12                 F    00001560           4   926   914
+X13                 F    000015C8           4   958   946
+X14                 F    00001630           4   990   978
+X2                  F    00001150           4   602   590
+X3                  F    000011B8           4   634   622
+X4                  F    00001220           4   666   654
+X5                  F    00001288           4   698   686
+X6                  F    000012F0           4   730   718
+X7                  F    00001358           4   762   750
+X8                  F    000013C0           4   798   786
+X9                  F    00001428           4   830   818
+XC0001              U    000002E0           1   239   231
+=A(M4TESTS)         A    00000490           4   388   245
+=AL2(L'MSGMSG)      R    0000049A           2   391   338
+=F'1'               F    00000494           4   389   280
+=F'8'               F    0000048C           4   387   230
+=H'0'               H    00000498           2   390   333
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    31
+
+ MACRO   DEFN  REFERENCES
+
+CLZG      124    575    607    639    671    703    735    767
+CTZG      142    803    835    867    899    931    963    995
+FCHECK     69    212
+PTTABLE   519   1017
+RRE       475    555    587    619    651    683    715    747    783    815    847    879    911    943    975
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    32
+
+   DESC     SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE    5808  0000-16AF  0000-16AF
+  Region            5808  0000-16AF  0000-16AF
+    CSECT  MIE4TST  5808  0000-16AF  0000-16AF
+ASMA Ver. 0.7.0  mie4-02-CLZG-CTZG                                                                  09 Mar 2026 12:33:07  Page    33
+
+   STMT                    FILE NAME
+
+1     /devstor/sharedvfp/tests/mie4-02-CLZG-CTZG.asm
+
+
+** NO ERRORS FOUND **
+
+

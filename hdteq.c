@@ -151,7 +151,7 @@ static const char* devequ_func( const char* typname )
 }
 
 /*-------------------------------------------------------------------*/
-/*             Libtool static name colision resolution               */
+/*             Libtool static name collision resolution              */
 /*-------------------------------------------------------------------*/
 /* NOTE: lt_dlopen will look for symbol & modulename_LTX_symbol for  */
 /*       use in DLREOPEN case only.                                  */

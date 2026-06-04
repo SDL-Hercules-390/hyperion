@@ -611,7 +611,7 @@ where:
         <dt><code><em>--NoUI</em></code><p><dd>
 
             specifies that Hercules is to be run invisibly in "No User Interface" mode, wherein it
-            runs in the backgroud without any attached console or keyboard.
+            runs in the background without any attached console or keyboard.
         <p>
             <b>Please Note</b> that Hercules's "No User Interface mode" is <i>not</i> the same
             as e.g. Linux's daemon mode. It is quite different. Refer to our
@@ -663,7 +663,7 @@ where:
             accepted as aliases for <code>long</code>.
             <p>
             The <code>short</code> help option displays just the syntax of the
-            the command line arguments. The <code>version</code> help option
+            command line arguments. The <code>version</code> help option
             displays version information. The <code>build</code> option displays
             some of the more important optional features that Hercules was
             either built with or without. The <code>long</code>, <code>all</code>
@@ -1320,14 +1320,16 @@ this additional help information. (Note: not every command supports additional h
 </a>
 <p>
 Hercules also supports the ability to automatically execute panel commands
-upon startup via the 'run-commands' file. If the run-commands file
-is found to exist when Hercules starts, each line contained within it is
-read and interpreted as a panel command exactly as if the command were
-entered from the HMC system console.
+upon startup via the 'run-commands' file. If the "hercules.rc" run-commands file
+is found to exist in the current directory when Hercules starts, each line
+contained within it is read and interpreted as a panel command exactly as if
+the command were entered from the HMC system console.
 <p>
-The default filename for the run-commands file is "hercules.rc", but may be
-overridden by setting the "<code><b>HERCULES_RC</b></code>" environment variable to the
-desired filename.
+The default filename for the run-commands file is "hercules.rc" and is presumed
+to exist in the current directory, but may be
+overridden by setting the "<code><b>HERCULES_RC</b></code>" environment variable
+to the desired filename. (Note that the overriding filename may be either just a name
+or a full-path or relative-path filename.)
 <p>
 Except for the 'pause' command (see paragraph further below), each command
 read from the run-commands file is logged to the console preceded by a '> '

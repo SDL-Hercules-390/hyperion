@@ -32,12 +32,53 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
+#undef ISSUE_UNEXPECTED_MSG
+
+#define ISSUE_UNEXPECTED_MSG()                                      \
+    do                                                              \
+    {                                                               \
+        const char*  file  = __FILE__;                              \
+        const char*  func  = __FUNCTION__;                          \
+        int          line  = __LINE__;                              \
+                                                                    \
+        const char* p = strrchr( file, '\\' ); /* Windows */        \
+        if (!p) p = strrchr( file, '/' );      /* non-Windows */    \
+        if (p) ++p;                                                 \
+        if (p) file = p;                                            \
+                                                                    \
+        /* HHC02218 "** UNEXPECTED! ** file \"%s\", line %d, function \"%s\"" */ \
+                                                                    \
+        fprintf( stdout, "HHC02218E ** UNEXPECTED! ** file \"%s\", line %d, function \"%s\"\n", \
+            file, line, func );                                     \
+    }                                                               \
+    while(0)
+
 #undef BREAK_INTO_DEBUGGER
 
 #if defined( _MSVC_ )
-  #define BREAK_INTO_DEBUGGER()     do { if (IsDebuggerPresent())         __debugbreak();  } while(0)
+
+  #define BREAK_INTO_DEBUGGER()                                     \
+                                                                    \
+    do                                                              \
+    {                                                               \
+      ISSUE_UNEXPECTED_MSG();                                       \
+      if (IsDebuggerPresent())                                      \
+        __debugbreak();                                             \
+    }                                                               \
+    while(0)
+
 #else
-  #define BREAK_INTO_DEBUGGER()     do { if (sysblk.is_debugger_present) raise( SIGTRAP ); } while(0)
+
+  #define BREAK_INTO_DEBUGGER()                                     \
+                                                                    \
+    do                                                              \
+    {                                                               \
+      ISSUE_UNEXPECTED_MSG();                                       \
+      if (sysblk.is_debugger_present)                               \
+        raise( SIGTRAP );                                           \
+    }                                                               \
+    while(0)
+
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -148,38 +189,38 @@
   #ifndef _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED
   #define _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED
 
-    static inline void DebuggerTrace( char* fmt, ...) 
+    static inline void DebuggerTrace( char* fmt, ...)
     {
-        const int       chunksize  = 512;
-              int       buffsize   = 0;
-              char*     buffer     = NULL;
-              int       rc         = -1;
-              va_list   args;
+        va_list vl;
+        int expectedLen, actualLen;
+        size_t bufCount;
+        char *buf = NULL;
 
-        va_start( args, fmt );
-
-        do
+        va_start( vl, fmt );
+        expectedLen = _vscprintf( fmt , vl );
+        va_end( vl );
+        if (expectedLen < 0)
         {
-            if (buffer)
-                free( buffer );
-
-            buffsize += chunksize;
-            buffer = malloc( buffsize + 1 );
-
-            if (!buffer)
-                BREAK_INTO_DEBUGGER();
-
-            rc = _vsnprintf_s( buffer, buffsize+1, buffsize, fmt, args);
+DebuggerTrace_Fail:
+            BREAK_INTO_DEBUGGER();
+            if (buf != NULL)
+                free(buf);
+            return;
         }
-        while (rc < 0 || rc >= buffsize);
+
+        bufCount = ((size_t)expectedLen) + 1;
+        if ((buf = (char *)malloc( bufCount )) == NULL)
+            goto DebuggerTrace_Fail;
+
+        va_start( vl, fmt );
+        actualLen = _vsnprintf_s( buf, bufCount, _TRUNCATE, fmt, vl );
+        va_end( vl );
+        if (actualLen < 0)
+            goto DebuggerTrace_Fail;
 
         /* Write to debugger pane */
-        OutputDebugStringA( buffer );
-
-        if (buffer)
-            free( buffer );
-
-        va_end( args );
+        OutputDebugStringA( buf );
+        free( buf );
     }
 
   #endif // _ENABLE_TRACING_STMTS_DEBUGGERTRACE_DEFINED

@@ -707,7 +707,7 @@ VADR op4addr;
     }
     else
     {
-        /* Store 2nd op at 1st op comare value */
+        /* Store 2nd op at 1st op compare value */
         ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
@@ -804,7 +804,7 @@ VADR op4addr;
     }
     else
     {
-        /* Store 2nd op at 1st op comare value */
+        /* Store 2nd op at 1st op compare value */
         ARCH_DEP(vstorec)(op2, 16-1, effective_addr4 + 0, b4, regs);
 
         return 1;

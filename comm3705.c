@@ -1474,7 +1474,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     dev->fd = 3705;     // too high an FD to be normally used
     /* Release the CA lock */
     release_lock(&dev->commadpt->lock);
-    /* Indicate succesfull completion */
+    /* Indicate successful completion */
     return 0;
 }
 
@@ -2259,7 +2259,7 @@ static DEVHND com3705_device_hndinfo =
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

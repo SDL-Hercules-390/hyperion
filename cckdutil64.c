@@ -29,11 +29,6 @@ static int  cdsk_spctab64_sort(const void *a, const void *b);
 static int  cdsk_build_free_space64(SPCTAB64 *spctab, int s);
 
 /*-------------------------------------------------------------------*/
-/* Helper macro                                                      */
-/*-------------------------------------------------------------------*/
-#define  gui_fprintf        if (extgui) fprintf
-
-/*-------------------------------------------------------------------*/
 /* Toggle the endianness of a compressed file                        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd64_swapend (DEVBLK *dev)
@@ -64,14 +59,14 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
     /* Get file size */
     if (fstat (fd, &fst) < 0)
         goto cswp_fstat_error;
-    gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
+    EXTGUIMSG( "SIZE=%"PRIu64"\n", (U64) fst.st_size);
     hipos = fst.st_size;
 
     /* Device header */
     off = CCKD64_DEVHDR_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD64_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto cswp_read_error;
@@ -83,7 +78,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
     cdevhdr.cdh_opts |= CCKD_OPT_OPENRW;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, &cdevhdr, len)) != len)
         goto cswp_write_error;
 
@@ -97,7 +92,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
     off = CCKD64_L1TAB_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto cswp_read_error;
 
@@ -105,7 +100,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
 
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, l1, len)) != len)
         goto cswp_write_error;
 
@@ -128,7 +123,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
         off = l1[i];
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD64_L2TAB_SIZE;
         if ((rc = read (fd, l2, len)) != len)
             goto cswp_read_error;
@@ -137,7 +132,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
 
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((rc = write (fd, l2, len)) != len)
             goto cswp_write_error;
     }
@@ -152,7 +147,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
         off = cdevhdr.free_off;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD64_FREEBLK_SIZE;
         if ((rc = read (fd, &freeblk, len)) != len)
             goto cswp_read_error;
@@ -166,7 +161,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
                     break;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
 
@@ -174,7 +169,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
 
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
             } /* for each free space */
@@ -188,7 +183,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
                     break;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
 
@@ -196,7 +191,7 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
 
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
 
@@ -363,7 +358,7 @@ BYTE            buf[256*1024];          /* 256K Buffer               */
      *---------------------------------------------------------------*/
     if (fstat (fd, &fst) < 0)
         goto comp_fstat_error;
-    gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
+    EXTGUIMSG( "SIZE=%"PRIu64"\n", (U64) fst.st_size);
 
     /*---------------------------------------------------------------
      * Read device header
@@ -371,7 +366,7 @@ BYTE            buf[256*1024];          /* 256K Buffer               */
     off = 0;
     if (lseek( fd, off, SEEK_SET ) < 0)
         goto comp_lseek_error;
-    gui_fprintf( stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CKD_DEVHDR_SIZE;
     if ((U64)(rc = read( fd, &devhdr, (unsigned int) len )) != len)
         goto comp_read_error;
@@ -402,7 +397,7 @@ comp_restart:
     off = CCKD64_DEVHDR_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD64_DEVHDR_SIZE;
     if ((U64)(rc = read (fd, &cdevhdr, (unsigned int) len)) != len)
         goto comp_read_error;
@@ -456,7 +451,7 @@ comp_restart:
     off = CCKD64_L1TAB_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((U64)(rc = read (fd, l1, (unsigned int) len)) != len)
         goto comp_read_error;
 
@@ -525,7 +520,7 @@ comp_restart:
         off = spctab[i].spc_off;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((U64)(rc = read (fd, l2[l], (unsigned int) len)) != len)
             goto comp_read_error;
         for (j = 0; j < 256; j++)
@@ -571,7 +566,7 @@ comp_restart:
         l2area += CCKD64_L2TAB_SIZE;
     }
 
-    /* quick return if all l2 tables are orderered and no free space */
+    /* quick return if all l2 tables are ordered and no free space */
     if (!relocate)
     {
         for (i = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)
@@ -611,7 +606,7 @@ comp_restart:
             off = spctab[i].spc_off;
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
-            gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+            EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = spctab[i].spc_len;
             if ((U64)(rc = read (fd, p, (unsigned int) len)) != len)
                 goto comp_read_error;
@@ -681,7 +676,7 @@ comp_restart:
         /* read the image(s) to be relocated */
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((U64)(rc = read (fd, buf, (unsigned int) len)) != len)
             goto comp_write_error;
 
@@ -689,7 +684,7 @@ comp_restart:
         off = spctab[i].spc_off + spctab[i].spc_len;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         if ((U64)(rc = write (fd, buf, (unsigned int) len)) != len)
             goto comp_write_error;
     }
@@ -714,7 +709,7 @@ comp_restart:
 
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = spctab[s].spc_len;
         if ((U64)(rc = write (fd, p, (unsigned int) len)) != len)
             goto comp_write_error;
@@ -772,7 +767,7 @@ comp_restart:
     off = CCKD64_DEVHDR_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD64_DEVHDR_SIZE;
     if ((U64)(rc = write (fd, &cdevhdr, (unsigned int) len)) != len)
         goto comp_write_error;
@@ -781,7 +776,7 @@ comp_restart:
     off = CCKD64_L1TAB_POS;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = l1size;
     if ((U64)(rc = write (fd, l1, (unsigned int) len)) != len)
         goto comp_write_error;
@@ -793,7 +788,7 @@ comp_restart:
             off = l1[i];
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
-            gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+            EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = CCKD64_L2TAB_SIZE;
             if ((U64)(rc = write (fd, l2[i], (unsigned int) len)) != len)
                 goto comp_lseek_error;
@@ -828,7 +823,7 @@ comp_return_ok:
 
 comp_return:
 
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
 
     if (rbuf) free(rbuf);
     if (l2)
@@ -1009,7 +1004,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Get some file information */
     if ( fstat (fd, &fst) < 0 )
         goto cdsk_fstat_error;
-    gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
+    EXTGUIMSG( "SIZE=%"PRIu64"\n", (U64) fst.st_size);
     hipos = fst.st_size;
     cckd_maxsize = CCKD64_MAXSIZE;
     fdflags = get_file_accmode_flags(fd);
@@ -1037,7 +1032,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     off = 0;
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CKD_DEVHDR_SIZE;
     if ((U64)(rc = read (fd, &devhdr, (unsigned int) len)) != len)
         goto cdsk_read_error;
@@ -1074,7 +1069,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     off = CCKD64_DEVHDR_POS;
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CCKD64_DEVHDR_SIZE;
     if ((U64)(rc = read (fd, &cdevhdr, (unsigned int) len)) != len)
         goto cdsk_read_error;
@@ -1298,7 +1293,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     off = CCKD64_L1TAB_POS;
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((U64)(rc = read (fd, l1, (unsigned int) len)) != len)
         goto cdsk_read_error;
     if (swapend) cckd64_swapend_l1 (l1, cdevhdr.num_L1tab);
@@ -1426,7 +1421,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         off = spctab[i].spc_off;
         if ( lseek (fd, off, SEEK_SET) < 0 )
             goto cdsk_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD64_L2TAB_SIZE;
         if ((U64)(rc = read (fd, l2tab, (unsigned int) len)) != len)
             goto cdsk_read_error;
@@ -1632,7 +1627,7 @@ BYTE            buf[4*65536];           /* buffer                    */
              || (U64)(rc = read (fd, &freeblk, (unsigned int) len)) != len)
                 break;
 
-            gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+            EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
 
             if (memcmp (&freeblk, "FREE_BLK", 8) == 0)
             {
@@ -1670,7 +1665,7 @@ BYTE            buf[4*65536];           /* buffer                    */
                     if (off < lopos || off > hipos) break;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
-                    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     if ((U64)(rc = read (fd, &freeblk, (unsigned int) len)) != len)
                         goto cdsk_read_error;
                     if (swapend) cckd64_swapend_free (&freeblk);
@@ -1724,7 +1719,7 @@ cdsk_space_check:
             off = spctab[i].spc_off;
             if ( lseek (fd, off, SEEK_SET) < 0 )
                 goto cdsk_lseek_error;
-            gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+            EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = level < 3 ? CKD_TRKHDR_SIZE : spctab[i].spc_len;
             if ((U64)(rc = read (fd, buf, (unsigned int) len)) != len)
                 goto cdsk_read_error;
@@ -1861,7 +1856,7 @@ cdsk_recovery:
                 off = fpos;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((U64)(rc = read (fd, buf, (unsigned int) len)) != len)
                     goto cdsk_read_error;
 
@@ -2113,7 +2108,7 @@ cdsk_ckd_recover:
                 off = fpos;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((U64)(rc = read (fd, buf, (unsigned int) len)) != len)
                     goto cdsk_read_error;
 
@@ -2437,7 +2432,7 @@ cdsk_fba_recover:
         off = CCKD64_L1TAB_POS;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = l1size;
         if ((U64)(rc = write (fd, l1, (unsigned int) len)) != len)
             goto cdsk_write_error;
@@ -2452,7 +2447,7 @@ cdsk_fba_recover:
             off = l1[L1idx];
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto cdsk_lseek_error;
-            gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+            EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = CCKD64_L2TAB_SIZE;
             if ((U64)(rc = write (fd, l2[L1idx], (unsigned int) len)) != len)
                 goto cdsk_write_error;
@@ -2530,14 +2525,14 @@ cdsk_fsperr_retry:
                 off = spctab[i].spc_off;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 len = spctab[i].spc_siz;
                 if ((U64)(rc = read (fd, buf, (unsigned int) len)) != len)
                     goto cdsk_read_error;
                 off -= l;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((U64)(rc = write (fd, buf, (unsigned int) len)) != len)
                     goto cdsk_write_error;
                 spctab[i].spc_off -= l;
@@ -2550,14 +2545,14 @@ cdsk_fsperr_retry:
                     off = l1[L1idx] + l2x * CCKD64_L2ENT_SIZE;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
-                    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     len = CCKD64_L2ENT_SIZE;
                     if ((U64)(rc = read (fd, &l2ent, (unsigned int) len)) != len)
                         goto cdsk_read_error;
                     l2ent.L2_trkoff -= l;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
-                    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     if ((U64)(rc = write (fd, &l2ent, (unsigned int) len)) != len)
                         goto cdsk_write_error;
                 } /* trk/blkgrp relocated */
@@ -2627,6 +2622,9 @@ cdsk_fsperr_retry:
 
             if (off)
             {
+                /* Zero entire block to avoid writing garbage to underlying file */
+                memset (fsp, 0, CCKD64_FREEBLK_SIZE);
+
                 /* new format free space */
                 memcpy (fsp, "FREE_BLK", 8);
                 for (i = 0, j = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)
@@ -2639,7 +2637,7 @@ cdsk_fsperr_retry:
                 /* Write the free space */
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((U64)(rc = write (fd, fsp, (unsigned int) len)) != len)
                     goto cdsk_write_error;
                 cdevhdr.free_off = off;
@@ -2662,7 +2660,7 @@ cdsk_fsperr_retry:
                         freeblk.fb_offnxt = spctab[i].spc_off;
                         if (lseek (fd, off, SEEK_SET) < 0)
                             goto cdsk_lseek_error;
-                        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                         if ((U64)write (fd, &freeblk, (unsigned int) len) != len)
                             goto cdsk_write_error;
                         off = spctab[i].spc_off;
@@ -2671,7 +2669,7 @@ cdsk_fsperr_retry:
                     }
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
-                gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+                EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((U64)write (fd, &freeblk, (unsigned int) len) != len)
                     goto cdsk_write_error;
             } /* old format free space */
@@ -2681,7 +2679,7 @@ cdsk_fsperr_retry:
         off = CCKD64_DEVHDR_POS;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = CCKD64_DEVHDR_SIZE;
         if ((U64)write (fd, &cdevhdr, (unsigned int) len) != len)
             goto cdsk_write_error;
@@ -2689,7 +2687,7 @@ cdsk_fsperr_retry:
         off = CCKD64_L1TAB_POS;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
         len = l1size;
         if ((U64)write (fd, l1, (unsigned int) len) != len)
             goto cdsk_write_error;
@@ -2727,12 +2725,12 @@ cdsk_return_ok:
         off = CCKD64_DEVHDR_POS;
         if (lseek (fd, CCKD64_DEVHDR_POS, SEEK_SET) >= 0)
             VERIFY(CCKD64_DEVHDR_SIZE == write (fd, &cdevhdr, CCKD64_DEVHDR_SIZE));
-        gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+        EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     }
 
 cdsk_return:
 
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    EXTGUIMSG( "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
 
     /* free all space */
     if (l1)     free (l1);

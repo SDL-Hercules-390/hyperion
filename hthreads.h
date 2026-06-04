@@ -298,7 +298,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define SCSIMOUNT_THREAD_NAME   "scsi_mount"
 #define CCKD_RA_THREAD_NAME     "cckd_ra"
 #define CCKD_WR_THREAD_NAME     "cckd_writer"
-#define CCKD_GC_THREAD_NAME     "cckd_gcol"
+#define CCKD_GC_THREAD_NAME     "cckd_gc"
 #define CON_CONN_THREAD_NAME    "console_connect"
 #define CONN_CLI_THREAD_NAME    "connect_client"
 #define HAO_THREAD_NAME         "hao_thread"
@@ -306,7 +306,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define HTTP_REQ_THREAD_NAME    "http_request"
 #define WATCHDOG_THREAD_NAME    "watchdog_thread"
 #define HERCLIN_KB_THREAD       "keyboard thread"
-#define CCKD_DH_THREAD_NAME     "Dasd Hardener"
+#define CCKD_DH_THREAD_NAME     "cckd_dh"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

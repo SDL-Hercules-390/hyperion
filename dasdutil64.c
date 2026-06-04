@@ -533,7 +533,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Create the secondary lookup table */
         memset (&l2, 0, CCKD64_L2TAB_SIZE);
 
-        /* Write the seondary lookup table */
+        /* Write the secondary lookup table */
         rc = write (fd, &l2, CCKD64_L2TAB_SIZE);
         if (rc < (int)       CCKD64_L2TAB_SIZE)
         {

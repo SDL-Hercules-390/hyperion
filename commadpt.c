@@ -151,7 +151,7 @@
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -575,7 +575,7 @@ static inline BYTE commadpt_ring_pop(COMMADPT_RING *ring)
 }
 
 /*-------------------------------------------------------------------*/
-/* Buffer ring management : Retrive a byte array from the ring       */
+/* Buffer ring management : Retrieve a byte array from the ring      */
 /*-------------------------------------------------------------------*/
 static inline size_t commadpt_ring_popbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
 {
@@ -1648,7 +1648,7 @@ static void *commadpt_thread(void *vca)
                                 /* Call initiated - FD will be ready */
                                 /* for writing when the connect ends */
                                 /* getsockopt/SOERROR will tell if   */
-                                /* the call was sucessfull or not    */
+                                /* the call was successful or not    */
                                 FD_SET(ca->sfd,&wfd);
 #if defined(_MSVC_)
                                 FD_SET(ca->sfd,&xfd);
@@ -1726,7 +1726,7 @@ static void *commadpt_thread(void *vca)
         /* Set the IPC pipe in the select */
         FD_SET(ca->pipe[0],&rfd);
 
-        /* The the MAX File Desc for Arg 1 of SELECT */
+        /* The MAX File Desc for Arg 1 of SELECT */
         maxfd=maxfd<ca->pipe[0]?ca->pipe[0]:maxfd;
         maxfd++;
 
@@ -2014,7 +2014,7 @@ static void commadpt_wakeup(COMMADPT *ca,BYTE code)
 }
 
 /*-------------------------------------------------------------------*/
-/* Wait for a copndition from the thread                             */
+/* Wait for a condition from the thread                              */
 /* MUST HOLD the CA lock                                             */
 /*-------------------------------------------------------------------*/
 static void commadpt_wait(DEVBLK *dev)
@@ -2673,7 +2673,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 
     /* Release the CA lock */
     release_lock(&dev->commadpt->lock);
-    /* Indicate succesfull completion */
+    /* Indicate successful completion */
     return 0;
 }
 
@@ -2957,7 +2957,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
             }
             /* Determine remaining length */
             *residual=count-dev->commadpt->pollused;
-            /* Determine if SM should be set (succesfull or unsucessfull POLLs) */
+            /* Determine if SM should be set (successful or unsuccessful POLLs) */
             /* exhausting poll data when all stations reported NO data          */
             /* does not set Status Modifier                                     */
             *unitstat=CSW_CE|CSW_DE|(dev->commadpt->pollsm?CSW_SM:0);
@@ -2976,7 +2976,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
         /* EON is ignored                                                */
         /* format is : AAA/SEP/BBB/SEP/CCC/SEP/DDD/SEP/PPPP              */
         /*          where A,B,C,D,P are numbers from 0 to 9              */
-        /* This perfoms an outgoing call to AAA.BBB.CCC.DDD port PPPP    */
+        /* This performs an outgoing call to AAA.BBB.CCC.DDD port PPPP   */
         /*---------------------------------------------------------------*/
         case 0x29:
             /* The line must have dial-out capability */
@@ -3610,7 +3610,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
         /* PREPARE                                                       */
         /* NOTE : DO NOT SET RESIDUAL to 0 : Otherwise, channel.c        */
         /*        will reflect a channel prot check - residual           */
-        /*        should indicate NO data was transfered for this        */
+        /*        should indicate NO data was transferred for this       */
         /*        pseudo-read operation                                  */
         /*---------------------------------------------------------------*/
         case 0x06:
@@ -3650,7 +3650,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
                 return;
             }
 
-            /* If data is present, prepare ends immediatly */
+            /* If data is present, prepare ends immediately */
             if(dev->commadpt->inbfr.havedata)
             {
                 *unitstat=CSW_CE|CSW_DE;
@@ -3739,7 +3739,7 @@ static DEVHND comadpt_device_hndinfo =
 };
 
 
-/* Libtool static name colision resolution */
+/* Libtool static name collision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
 
 #if defined( HDL_USE_LIBTOOL )

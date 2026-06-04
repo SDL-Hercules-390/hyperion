@@ -44,16 +44,16 @@ rport: the remote port number or service name
         This parameter is irrelevant and is ignored for DIAL=IN
         for DIAL=OUT|INOUT|NO, this parameter is mandatory
 
-rto, pto, eto: Read, Poll and Enable Timeout values in miliseconds.
+rto, pto, eto: Read, Poll and Enable Timeout values in milliseconds.
         specifying 0 means No Timeout (infinite wait). -1 Means immediate
         timeout.
 ```
 
-The read timeout is how long the handler will wait for an ending character after the last character was received or the I/O initiated. The read timeout default is 3000 Miliseconds (3 Seconds)
+The read timeout is how long the handler will wait for an ending character after the last character was received or the I/O initiated. The read timeout default is 3000 Milliseconds (3 Seconds)
 
-The poll timeout is how long the handler will wait for a polled station to respond to a poll request. The poll timeout default is 3000 Miliseconds (3 Seconds)
+The poll timeout is how long the handler will wait for a polled station to respond to a poll request. The poll timeout default is 3000 Milliseconds (3 Seconds)
 
-The enable timeout is how long the handler will wait for the TCP connection to be established. the enable timeout default is 10000 Miliseconds (10 Seconds), except if DIAL=NO is also specified, in which case the enable timeout defaults to 0.
+The enable timeout is how long the handler will wait for the TCP connection to be established. the enable timeout default is 10000 Milliseconds (10 Seconds), except if DIAL=NO is also specified, in which case the enable timeout defaults to 0.
 
 Note: the ETO parameter is ignored if DIAL=NO is not specified. For a dialed line, there is no enable timeout. If the eto parameter is specified and DIAL is not "NO", then a warning message is issued and the parameter is ignored.
 
@@ -66,7 +66,7 @@ Note: the ETO parameter is ignored if DIAL=NO is not specified. For a dialed lin
                         Wait forever for an incoming call
 
                 DIAL=NO
-                        Completes immediatelly if a call
+                        Completes immediately if a call
                         is already present
                         Otherwise, attemps connecting to the
                         remote end
@@ -82,7 +82,7 @@ Note: the ETO parameter is ignored if DIAL=NO is not specified. For a dialed lin
                 DIAL=OUT|DIAL=INOUT
                         The outgoing call is attempted
 
-        Incomming TCP call :
+        Incoming TCP call :
                 In any case, if a call is already present, the
                 call is rejected.
 
@@ -99,7 +99,7 @@ Note: the ETO parameter is ignored if DIAL=NO is not specified. For a dialed lin
 
 
 ## The communication protocol
-The communication protocol is basic. Every character written by the guest program with a WRITE CCW is transfered to the remote end, untranslated and untouched (except for Transparent BSC rules which deem that DLE characters are doubled when the program has previously written a DLE/STX sequence).
+The communication protocol is basic. Every character written by the guest program with a WRITE CCW is transferred to the remote end, untranslated and untouched (except for Transparent BSC rules which deem that DLE characters are doubled when the program has previously written a DLE/STX sequence).
 
 ## Dial data format
 Dial data is originally as follows :
@@ -131,5 +131,5 @@ The EON is optional. If it is present, it must be the last character of the dial
 - Group DIAL IN is not implemented
 - DIAL CCW Not tested
 - There is 1 thread per line, when there should be 1 thread for ALL lines.
-- MAXDEVT may have to be adjusted under Windows to accomodate for a large number of lines (because some I/O may take an indefinite amount of time).
+- MAXDEVT may have to be adjusted under Windows to accommodate for a large number of lines (because some I/O may take an indefinite amount of time).
 - There is no 'REAL' BSC line support yet.

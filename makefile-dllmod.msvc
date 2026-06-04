@@ -36,7 +36,7 @@ cvarsdll    =  -D_MT -D_DLL
 dlllflags   =  /INCREMENTAL:NO /NOLOGO -dll
 rcvars      =  -DWIN32 -D_WIN32 -DWINVER=$(NMAKE_WINVER)
 
-# We use CLANG if the CL envrionment variable is set, e.g. with a  SET "CL=-mcx16 /w"
+# We use CLANG if the CL environment variable is set, e.g. with a  SET "CL=-mcx16 /w"
 # The -DHAVE_SOCKLEN_T avoids a type redefinition from "ws2tcpip.h"
 
 !IFDEF CL

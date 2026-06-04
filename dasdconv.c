@@ -755,7 +755,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display completion message */
-    // "%u cylinders succesfully written to file %s"
+    // "%u cylinders successfully written to file %s"
     WRMSG( HHC02420, "I", cyl - start, ofname );
 
 } /* end function convert_ckd_file */

@@ -72,7 +72,7 @@ struct TPAGEMAP
 {
     U64     virtpageaddr;       /* virtual address of mapped page    */
     BYTE*   mainpageaddr;       /* address of main page being mapped */
-    BYTE*   altpageaddr;        /* addesss of alternate & save pages */
+    BYTE*   altpageaddr;        /* address of alternate & save pages */
     BYTE    cachemap[ ZCACHE_LINE_PAGE ];  /* cache line indicators  */
 
 #define CM_CLEAN    0           /* clean cache line (init default)   */
@@ -139,7 +139,7 @@ struct TDB
 #define TAC_MISC         255    /* Miscellaneous condition           */
 #define TAC_TABORT       256    /* TABORT instruction                */
 };
-typedef struct TDB  TDB;             // Transaction Dianostic Block
+typedef struct TDB  TDB;             // Transaction Diagnostic Block
 
 CASSERT( sizeof( TDB ) == 256, transact_h );
 
@@ -160,7 +160,7 @@ struct TXFSTATS
              [ TXF_STATS_RETRY_SLOTS ]; /* (Slot 0 = no retry)       */
         U64  txf_retries_hwm;           /* Retries high watermark    */
 };
-typedef struct TXFSTATS  TXFSTATS;  // TXF Statisics
+typedef struct TXFSTATS  TXFSTATS;  // TXF Statistics
 
 /*-------------------------------------------------------------------*/
 /*                   TXF debug tracing                               */

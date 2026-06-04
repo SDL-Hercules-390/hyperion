@@ -237,28 +237,33 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-    /* Nothing for us to do unless the architecture changed */
-    if (new_arch_mode != old_arch_mode )
+    obtain_lock( &sysblk.sigplock );
     {
-        /* Re-configure storage if MAINSIZE needs to be adjusted */
-        if ((new_mainsize = adjust_mainsize( new_arch_mode, sysblk.mainsize )) != old_mainsize)
-            configure_storage( new_mainsize >> SHIFT_4K );
-
-        /* Switch to the new architecture mode as requested */
         OBTAIN_INTLOCK( NULL );
+
+        /* Nothing for us to do unless the architecture changed */
+        if (new_arch_mode != old_arch_mode )
         {
+            /* Re-configure storage if MAINSIZE needs to be adjusted */
+            if ((new_mainsize = adjust_mainsize( new_arch_mode, sysblk.mainsize )) != old_mainsize)
+                configure_storage( new_mainsize >> SHIFT_4K );
+
             /* Perform system reset to switch architecture mode */
-            static const bool clear = false, ipl = false;
-            system_reset( new_arch_mode, clear, ipl, sysblk.pcpu );
+            {
+                static const bool clear = false, ipl = false;
+                system_reset( new_arch_mode, clear, ipl, sysblk.pcpu );
+            }
 
             /* (ensure dummyregs matches new architecture) */
             sysblk.dummyregs.arch_mode = sysblk.arch_mode;
         }
+
+        /* ALWAYS do an "initial_cpu_reset()" for all processors */
+        initial_cpu_reset_all();
+
         RELEASE_INTLOCK( NULL );
     }
-
-    /* ALWAYS do an "initial_cpu_reset()" for all processors */
-    initial_cpu_reset_all();
+    release_lock( &sysblk.sigplock );
 
     /* Display results */
     if (argc > 1 && MLVL( VERBOSE ))

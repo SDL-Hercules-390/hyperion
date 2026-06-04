@@ -146,6 +146,24 @@ HUT_DLL_IMPORT size_t
 strlcat(char *dst, const char *src, size_t siz);
 #endif
 
+#if !defined( HAVE_VASPRINTF )
+
+/*
+ * The functions asprintf() and vasprintf() are analogs of sprintf(3) and
+ * vsprintf(3), except that they allocate a string large enough to hold the
+ * output including the terminating null byte, and return a pointer to it via
+ * the first argument. This pointer should be passed to free(3) to release the
+ * allocated storage when it is no longer needed.
+ *
+ * When successful, these functions return the number of bytes printed, just
+ * like sprintf(3).  On error, -1 is returned, errno is set to indicate the
+ * error, and the contents of strp are undefined.
+ */
+HUT_DLL_IMPORT int
+vasprintf(char **strp, const char *fmt, va_list ap) ATTR_PRINTF(2,0);
+
+#endif // !defined(HAVE_VASPRINTF)
+
 /* The following helper macros can be used in place of direct calls
  * to either the strlcpy or strlcat functions ONLY when the destination
  * buffer is an array. They must NEVER be used whenever the destination
@@ -209,7 +227,7 @@ HUT_DLL_IMPORT const char* trimloc( const char* loc );
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
 /* being exactly 26 characters long (27 bytes with null terminator). */
 /* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
-/* the curent time of day as returned by a call to 'gettimeofday' is */
+/* the current time of day returned by a call to 'gettimeofday' is   */
 /* used instead. buf must point to a char work buffer where the time */
 /* is formatted into and must not be NULL. bufsz is the size of buf  */
 /* and must be >= 2. If successful then the value of buf is returned */
@@ -279,7 +297,7 @@ HUT_DLL_IMPORT char*   trim ( char* str, const char* dlm ); // (trim both)
 
 #if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
 /*-------------------------------------------------------------------*/
-/* Set thead name           (nonstandard GNU extension)              */
+/* Set thread name          (nonstandard GNU extension)              */
 /*                          (note: retcode is error code, NOT errno) */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int nix_set_thread_name( pthread_t tid, const char* name );
@@ -447,6 +465,24 @@ HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev );
 
 HUT_DLL_IMPORT bool check_if_debugger_is_present();
 
+/*-------------------------------------------------------------------*/
+/*        Format and send a status message to HercGUI                */
+/*-------------------------------------------------------------------*/
+
+HUT_DLL_IMPORT void  send2gui( const char* pszFormat, ... );
+
+/*-------------------------------------------------------------------*/
+/*      convert a version string to a number or vice-versa           */
+/*-------------------------------------------------------------------*/
+
+HUT_DLL_IMPORT U32   verstr2num ( const char* verstr );
+HUT_DLL_IMPORT char* vernum2str ( U32 vernum, char* verstr );
+
+#define              VERNUM2STR_BUFFSIZE          16
+#define _VNUM( s )   verstr2num( s )
+#define  VNUM( s )  _VNUM( #s )
+#define  GNUM()      sysblk.gui_vernum
+
 /*********************************************************************/
 /*********************************************************************/
 /**                                                                 **/
@@ -458,8 +494,9 @@ HUT_DLL_IMPORT bool check_if_debugger_is_present();
 #define TF_FMT0   '0'       // Format 0 = original release
 #define TF_FMT1   '1'       // Format 1 = 64 bytes of E7 CCW data
 #define TF_FMT2   '2'       // Format 2 = TFHDR thread id/name
+#define TF_FMT3   '3'       // Format 3 = 80 bytes of CCW data
 
-#define TF_FMT  TF_FMT2     // Current TraceFile file-format
+#define TF_FMT  TF_FMT3     // Current TraceFile file-format
 
 #undef ATTRIBUTE_PACKED
 #if defined(_MSVC_)
@@ -1230,7 +1267,7 @@ struct TF01315
     U32     addr;           // CCW data address
     U16     count;          // CCW byte count
     BYTE    amt;            // Data amount
-    BYTE    pad [ 1 ];      // (padding/alignment/unused)
+    BYTE    sysg;           // SYSG I/O via
     BYTE    ccw[8];         // CCW
 
     // Format-0...
@@ -1239,7 +1276,11 @@ struct TF01315
 
     // Format-1...
 
-    BYTE    data[64];       // CCW data (amt <= 64)
+//  BYTE    data[64];       // CCW data (amt <= 64)
+
+    // Format-3...
+
+    BYTE    data[80];       // CCW data (amt <= 80)
 }
 ATTRIBUTE_PACKED; typedef struct TF01315 TF01315;
 CASSERT( sizeof( TF01315 ) % 8 == 0, hscutl_h );

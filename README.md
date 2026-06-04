@@ -6,8 +6,9 @@
 ## Contents
 
 1. [About](#About)
-2. [Find out more](#Find-out-more)
-3. [Additional README files](#Additional-README-files)
+2. [The name 'SDL Hercules 4.x Hyperion'](#The-name-'SDL-Hercules-4.x-Hyperion')
+3. [Find out more](#Find-out-more)
+4. [Additional README files](#Additional-README-files)
 
 ## About
 
@@ -22,6 +23,20 @@ Hercules was created by Roger Bowler.
 Jay Maynard "the Tron Guy" was the maintainer from 2000 to 2012.
 
 Jan Jaeger designed and implemented many of the advanced features of Hercules, including dynamic reconfiguration, integrated console, interpretive execution and z/Architecture support.
+
+### The name 'SDL Hercules 4.x Hyperion'
+
+_**<big><big>Please Note**</big></big>_ &nbsp;that this version of Hercules is only called
+the "SDL" version in order to distinguish it from other versions of Hercules
+that may be out there, and _**not**_ for any other reason. 
+
+This version of Hercules was neither created by, nor is owned by, nor is maintained by,
+nor is supported by, nor is Copyrighted by, [Software Development Laboratories](http://www.softdevlabs.com). 
+
+Hercules is _not_ the work of any one person or company or organization. It was created by
+_many_ very smart and talented individuals over the course of many years.
+For a list of just _some_ of these very talented people, please refer to
+[question 6.01 of our FAQ](https://sdl-hercules-390.github.io/html/hercfaq.html#6.01). 
 
 ## Find out more
 
@@ -43,7 +58,7 @@ to our **bug report tracking system** by adding/creating a new
 [**Building "External Packages"**](readme/README.EXTPKG.md) &nbsp; _(Important!)_  
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
-[Budiling Hercules for OSX](readme/README.OSX.md)  
+[Building Hercules for OSX](readme/README.OSX.md)  
 [Building Hercules under 64-bit Windows](readme/README.WIN64.md) &nbsp; _(obsolete)_  
 [Building Hercules with MinGW](readme/README.MINGW.md) &nbsp; _(obsolete)_  
 [Building Hercules for Windows with Visual C](readme/README.MSVC.md) &nbsp; _(obsolete)_  
@@ -60,9 +75,9 @@ to our **bug report tracking system** by adding/creating a new
 ### Features and Operation
 
 [Customizable Hercules 3270 Logo](readme/README.HERCLOGO.md)  
-[Running Hercules in "No UI" mode](readme/README.DAEMON.md)  
 [Guest Access To Host IP Stack - The TCPIP (X'75') Instruction](readme/README.TCPIP.md)  
 [HAO (Hercules Automatic Operator)](readme/README.HAO.md)  
+[`HERCULES_370_EXTENSION` Facility: S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules Networking](readme/README.NETWORKING.md)  
 [Hercules SNA Support](readme/README.SNA.md)  
@@ -70,10 +85,10 @@ to our **bug report tracking system** by adding/creating a new
 [Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
 [MAKETAPE Create .AWS Tape File from Data Utility](readme/README.MAKETAPE.md)  
-[Runtest Low-level Test Cases](tests/README.md)  
-[S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
+[Running Hercules in "No UI" mode](readme/README.DAEMON.md)  
 [TCPNJE Support](readme/README.TCPNJE.md)  
 [VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
+[WebSocket Console Transport (WSCNSLPORT)](readme/README.WebSocket.md)  
 
 ### HERCULES INTERNAL READMEs
 
@@ -83,6 +98,6 @@ to our **bug report tracking system** by adding/creating a new
 [Hercules Dynamic Loader](readme/README.HDL.md)  
 [Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
 [HQA Build Scenarios](readme/README.HQA.md)  
-[Low-level Test Cases](tests/README.md)  
 [PTT Tracing](readme/README.PTT.md)  
+[Runtest Low-level Test Cases](tests/README.md)  
 [Trace-to-File Support](readme/README.TRACEFILE.md)  

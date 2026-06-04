@@ -24,7 +24,7 @@
 #ifndef _TT32API_H_
 #define _TT32API_H_
 
-#include "TT32if.h"
+#include "tt32if.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                            TunTap32.dll name

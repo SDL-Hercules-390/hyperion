@@ -257,22 +257,25 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_DEF_FREEPEND     -1        /* Def free pending cycles   */
 #define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
-#define CCKD_MIN_DHMAX         0        /* Min DASD hardeners allowed  */
-#define CCKD_DEF_DHMAX         1        /* Def DASD hardeners allowed  */
-#define CCKD_MAX_DHMAX         1        /* Max DASD hardeners allowed  */
-                                        /* *** ONLY ONE ALLOWED! ***   */
+#define CCKD_DEF_DHSTART       1        /* Def DASD hardener start   */
 
-#define CCKD_MIN_DHINT         0        /* Min DASD hardening interval */
-#define CCKD_DEF_DHINT         0        /* Def DASD hardening interval */
-#define CCKD_MAX_DHINT         999      /* Max DASD hardening interval */
+#define CCKD_MIN_DHINT         0        /* Min DASD hardener interval*/
+#define CCKD_DEF_DHINT         10       /* Def DASD hardener interval*/
+#define CCKD_MAX_DHINT         999      /* Max DASD hardener interval*/
 
+#define CCKD_MIN_DHMAX         0        /* Min DASD hardeners allowed*/
+#define CCKD_DEF_DHMAX         1        /* Def DASD hardeners allowed*/
+#define CCKD_MAX_DHMAX         1        /* Max DASD hardeners allowed*/
+                                        /* *** ONLY ONE ALLOWED ***  */
 
 /*-------------------------------------------------------------------*/
 /*                   Global CCKD dasd block                          */
 /*-------------------------------------------------------------------*/
-struct CCKDBLK {                        /* Global cckd dasd block    */
-        BYTE             id[8];         /* "CCKDBLK "                */
-#define CCKDBLK_ID      "CCKDBLK "      /* "CCKDBLK "                */
+struct CCKDBLK                          /* Global cckd dasd block    */
+{
+        BYTE             id[8];         /* Eye-catcher               */
+#define CCKDBLK_ID      "CCKDBLK "      /* Eye-catcher               */
+
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         unsigned int     batch:1,       /* 1=called in batch mode    */
                          debug:1,       /* 1=CCW trace debug msgs    */
@@ -294,6 +297,17 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              dhmax;         /* Max Dasd Hardeners        */
         int              dhint;         /* Wait time in seconds      */
         bool             dhstart;       /* 1=start Dasd Hardener     */
+
+        LOCK             dh_gc_lock;    /* Combined Garbage Collector
+                                           and Dasd Hardener lock, to
+                                           prevent them from running
+                                           at the same time          */
+
+#define DH_GC_LOCK      cckdblk.dh_gc_lock
+#define LOCK_DH_GC()    obtain_lock(  &DH_GC_LOCK )
+#define UNLOCK_DH_GC()  release_lock( &DH_GC_LOCK )
+
+
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
         int              gcs;           /* Number garbage collector threads started */
@@ -302,6 +316,8 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              gcint;         /* Wait time in seconds      */
         int              gcparm;        /* Adjustment parm           */
         bool             gcstart;       /* 1=start Garbage Collector */
+        bool             gcmsgs;        /* Garbage collector msgs    */
+
         LOCK             wrlock;        /* I/O lock                  */
         COND             wrcond;        /* I/O condition             */
         int              wrpending;     /* Number writes pending     */
@@ -330,7 +346,6 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              devwaiters;    /* Number of waiters         */
 
         int              freepend;      /* Number freepend cycles    */
-        int              gcmsgs;        /* Garbage collector msgs    */
         int              nosfd;         /* 1=No stats rpt at close   */
         int              nostress;      /* 1=No stress writes        */
         int              linuxnull;     /* 1=Always check nulltrk    */

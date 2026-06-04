@@ -1,4 +1,4 @@
- TITLE 'zvector-e6-11-convertbinary (Zvector E6 VRR-i)'
+ TITLE 'zvector-e6-11-convertbinary'
 ***********************************************************************
 *
 *        Zvector E6 instruction tests for VRR-i encoded:
@@ -7,6 +7,7 @@
 *        E652 VCVBG   - VECTOR CONVERT TO BINARY  (64)
 *
 *        James Wekel June 2024
+*                   March 2025 - packed-decimal-enhancements facility 3
 ***********************************************************************
 
 ***********************************************************************
@@ -170,6 +171,12 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
          FCHECK 134,'vector-packed-decimal'
                                                                 EJECT
 ***********************************************************************
+* Is Vector packed-decimal enhancement 3 facility installed  (bit 199)
+***********************************************************************
+
+         FCHECK 199,'vector packed-decimal-enhancement 3'
+                                                                EJECT
+***********************************************************************
 *              Do tests in the E6TESTS table
 ***********************************************************************
 
@@ -271,6 +278,13 @@ FAILMSG  EQU   *
          MVC   PRT3,EDIT
          ED    PRT3,DECNUM
          MVC   PRTM3(2),PRT3+14     fill in message with m3 field
+
+         XGR   R2,R2                get M4 as U8
+         IC    R2,M4                and convert
+         CVD   R2,DECNUM
+         MVC   PRT3,EDIT
+         ED    PRT3,DECNUM
+         MVC   PRTM4(2),PRT3+14     fill in message with m4 field
 
          LA    R0,PRTLNG            message length
          LA    R1,PRTLINE           messagfe address
@@ -414,6 +428,8 @@ PRTNUM   DC    C'xxx'
 PRTNAME  DC    CL8'xxxxxxxx'
          DC    C' with m3='
 PRTM3    DC    C'xx'
+         DC    C', with m4='
+PRTM4    DC    C'xx'
          DC    C'.'
 PRTLNG   EQU   *-PRTLINE
                                                                SPACE 2
@@ -458,8 +474,6 @@ R1FUDGE  DC    XL8'AABBCCDDEEFFAABB'                     R1 FUDGE
          DS    XL16                                          gap
 V1OUTPUT DS    XL16                                      V1 OUTPUT
          DS    XL16                                          gap
-R1OUTPUT DS    FD                                        R1 OUTPUT
-         DS    XL16                                          gap
 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
 V1FUDGEB DC    XL16'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'    V1 FUDGE b
 V1INPUT  DC    CL16'1234567890123456'                    V1 input
@@ -476,6 +490,7 @@ TSUB     DC    A(0)           pointer  to test
 TNUM     DC    H'00'          Test Number
          DC    XL1'00'
 M3       DC    HL1'00'        M3
+M4       DC    HL1'00'        M4
 CC       DC    HL1'00'        cc
 CCMASK   DC    HL1'00'        not expected CC mask
 
@@ -483,6 +498,9 @@ OPNAME   DC    CL8' '         E6 name
 
 RELEN    DC    A(0)           RESULT LENGTH
 READDR   DC    A(0)           expected result address
+         DS    FD                      gap
+R1OUTPUT DS    FD             R1 OUTPUT
+         DS    FD                      gap
 
 **
 *        test routine will be here (from VRR_I macro)
@@ -496,7 +514,7 @@ READDR   DC    A(0)           expected result address
 *     VRR_I Macro to help build test tables
 ***********************************************************************
          MACRO
-         VRR_I &INST,&M3,&CC
+         VRR_I &INST,&M3,&M4,&CC
 .*                               &INST  - VRS-d instruction under test
 .*                               &M3    - P2 (bit 0), P1 (bit 2) and
 .*                                        CS (bit 3)
@@ -521,21 +539,25 @@ T&TNUM   DC    A(X&TNUM)         address of test routine
          DC    H'&TNUM'          test number
          DC    XL1'00'
          DC    HL1'&M3'          &M3
+         DC    HL1'&M4'          &M4
          DC    HL1'&CC'          cc
          DC    HL1'&XCC(&CC+1)'  cc failed mask
 
          DC    CL8'&INST'        instruction name
          DC    A(16)             result length
 REA&TNUM DC    A(RE&TNUM)        result address
+         DS    FD                      gap
+R1O&TNUM DS    FD                R1 OUTPUT
+         DS    FD                      gap
 .*
 *                                INSTRUCTION UNDER TEST ROUTINE
 X&TNUM   DS    0F
          LG    R1,R1FUDGE        pollute R1
          VL    V1,RE&TNUM+8      get V1 source
 
-         &INST R1,V1,&M3         test instruction
+         &INST R1,V1,&M3,&M4     test instruction
 
-         STG   R1,R1OUTPUT       save
+         STG   R1,R1O&TNUM       save
          EPSW  R2,R0             exptract psw
          ST    R2,CCPSW              to save CC
 
@@ -580,7 +602,7 @@ ZVE6TST  CSECT ,
 *        E650 VCVB    - VECTOR CONVERT TO BINARY  (32)
 *        E652 VCVBG   - VECTOR CONVERT TO BINARY  (64)
 *
-*        VRR_I instr, m3, m4
+*        VRR_I instr, m3, m4, cc
 *              followed by
 *              r1     - expected result (64 bits) (even for VCVB)
 *              v1     - 16 byte packed decimal source
@@ -588,196 +610,721 @@ ZVE6TST  CSECT ,
 *---------------------------------------------------------------------
 * VCVB    - VECTOR CONVERT TO BINARY  (32)
 *---------------------------------------------------------------------
-* VCVB simple
-         VRR_I VCVB,1,0
+* VCVB   m3=1 (p2=0, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVB,1,0,0
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'0000000000000000000000000000000C'   V1 source
+
+         VRR_I VCVB,1,0,0                               Neg Zero
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'0000000000000000000000000000000D'   V1 source
+
+         VRR_I VCVB,1,0,0
          DC    XL08'AABBCCDD0000000A'                   R1 result
          DC    XL16'0000000000000000000000000000010C'   V1 source
 
-         VRR_I VCVB,1,0
+         VRR_I VCVB,1,0,0
          DC    XL08'AABBCCDDFFFFFFF6'                   R1 result
          DC    XL16'0000000000000000000000000000010D'   V1 source
 
-         VRR_I VCVB,1,0
+         VRR_I VCVB,1,0,0                               + SIGN - A
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255A'   V1 source
+
+         VRR_I VCVB,1,0,0                               - SIGN - B
+         DC    XL08'AABBCCDDFFFFFF01'                   R1 result
+         DC    XL16'0000000000000000000000000000255B'   V1 source
+
+         VRR_I VCVB,1,0,0                               + SIGN - E
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255E'   V1 source
+
+         VRR_I VCVB,1,0,0                               + SIGN - F
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255F'   V1 source
+
+         VRR_I VCVB,1,0,0
          DC    XL08'AABBCCDD0008A160'                   R1 result
          DC    XL16'0000000000000000000000000565600C'   V1 source
 
-         VRR_I VCVB,1,0
+         VRR_I VCVB,1,0,0
          DC    XL08'AABBCCDDFFF75EA0'                   R1 result
          DC    XL16'0000000000000000000000000565600D'   V1 source
 
-         VRR_I VCVB,1,0                                 INT_MAX
+         VRR_I VCVB,1,0,0                               INT_MAX
          DC    XL08'AABBCCDD7FFFFFFF'                   R1 result
          DC    XL16'0000000000000000000002147483647C'   V1 source
 
-         VRR_I VCVB,1,0                                 INT_MIN
+         VRR_I VCVB,1,0,0                               INT_MIN
          DC    XL08'AABBCCDD80000000'                   R1 result
          DC    XL16'0000000000000000000002147483648D'   V1 source
 
-         VRR_I VCVB,3,0                                 UINT_MAX
+* VCVB   m3=1 (p2=0, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVB,1,0,3                               UINT_MAX
          DC    XL08'AABBCCDDFFFFFFFF'                   R1 result
          DC    XL16'000000000000000000004294967295C'    V1 source
 
-         VRR_I VCVB,3,3                                 UINT_MAX +1
+         VRR_I VCVB,1,0,3                               UINT_MAX +1
          DC    XL08'AABBCCDD00000000'                   R1 result
          DC    XL16'000000000000000000004294967296C'    V1 source
 
-         VRR_I VCVB,1,3
+         VRR_I VCVB,1,0,3
          DC    XL08'AABBCCDDDF8E1660'                   R1 result
          DC    XL16'00000000000000000000012340565600C'  V1 source
 
-* VCVB simple: p2=1
-         VRR_I VCVB,9,0
-         DC    XL08'AABBCCDD0000000A'                   R1 result
-         DC    XL16'0000000000000000000000000000010C'   V1 source
-
-         VRR_I VCVB,9,0
-         DC    XL08'AABBCCDD0000000A'                   R1 result
-         DC    XL16'0000000000000000000000000000010D'   V1 source
-
-         VRR_I VCVB,9,0
-         DC    XL08'AABBCCDD0008A160'                   R1 result
-         DC    XL16'0000000000000000000000000565600C'   V1 source
-
-         VRR_I VCVB,9,0
-         DC    XL08'AABBCCDD0008A160'                   R1 result
-         DC    XL16'0000000000000000000000000565600D'   V1 source
-
-         VRR_I VCVB,9,0                                 INT_MAX
-         DC    XL08'AABBCCDD7FFFFFFF'                   R1 result
-         DC    XL16'0000000000000000000002147483647C'   V1 source
-
-         VRR_I VCVB,9,3                                 INT_MIN
-         DC    XL08'AABBCCDD80000000'                   R1 result
-         DC    XL16'0000000000000000000002147483648D'   V1 source
-
-         VRR_I VCVB,11,0                                 UINT_MAX
-         DC    XL08'AABBCCDDFFFFFFFF'                   R1 result
+* VCVB   m3=1 (p2=0, lb=0, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVB,1,4,3                               UINT_MAX
+         DC    XL08'AABBCCDD00000000'                   R1 result
          DC    XL16'000000000000000000004294967295C'    V1 source
 
-         VRR_I VCVB,11,3                                 UINT_MAX +1
+         VRR_I VCVB,1,4,3                               UINT_MAX +1
          DC    XL08'AABBCCDD00000000'                   R1 result
          DC    XL16'000000000000000000004294967296C'    V1 source
 
-         VRR_I VCVB,9,3
+         VRR_I VCVB,1,4,3
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'00000000000000000000012340565600C'  V1 source
+
+* VCVB   m3=3 (p2=0, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'0000000000000000000000000000000C'   V1 source
+
+         VRR_I VCVB,3,0,0                               Neg Zero
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'0000000000000000000000000000000D'   V1 source
+
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010C'   V1 source
+
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010C'   V1 source
+
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVB,3,0,0                               + SIGN - A
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255A'   V1 source
+
+         VRR_I VCVB,3,0,0                               - SIGN - B
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255B'   V1 source
+
+         VRR_I VCVB,3,0,0                               + SIGN - E
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255E'   V1 source
+
+         VRR_I VCVB,3,0,0                               + SIGN - F
+         DC    XL08'AABBCCDD000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255F'   V1 source
+
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD0008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600C'   V1 source
+
+         VRR_I VCVB,3,0,0
+         DC    XL08'AABBCCDD0008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600D'   V1 source
+
+         VRR_I VCVB,3,0,0                               INT_MAX
+         DC    XL08'AABBCCDD7FFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000002147483647C'   V1 source
+
+         VRR_I VCVB,3,0,0                               INT_MIN
+         DC    XL08'AABBCCDD80000000'                   R1 result
+         DC    XL16'0000000000000000000002147483648D'   V1 source
+
+         VRR_I VCVB,3,0,0                               UINT_MAX
+         DC    XL08'AABBCCDDFFFFFFFF'                   R1 result
+         DC    XL16'000000000000000000004294967295C'    V1 source
+
+* VCVB   m3=3 (p2=0, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVB,3,0,3                               UINT_MAX +1
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'000000000000000000004294967296C'    V1 source
+
+         VRR_I VCVB,3,0,3
          DC    XL08'AABBCCDDDF8E1660'                   R1 result
-         DC    XL16'000000000000000000012340565600C'  V1 source
+         DC    XL16'00000000000000000000012340565600C'  V1 source
+
+* VCVB   m3=3 (p2=0, lb=1, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVB,3,4,3                               UINT_MAX +1
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'000000000000000000004294967296C'    V1 source
+
+         VRR_I VCVB,3,4,3
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'00000000000000000000012340565600C'  V1 source
+
+* VCVB   m3=9 (p2=1, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVB,9,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010C'   V1 source
+
+         VRR_I VCVB,9,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVB,9,0,0
+         DC    XL08'AABBCCDD0008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600C'   V1 source
+
+         VRR_I VCVB,9,0,0
+         DC    XL08'AABBCCDD0008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600D'   V1 source
+
+         VRR_I VCVB,9,0,0                               INT_MAX
+         DC    XL08'AABBCCDD7FFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000002147483647C'   V1 source
+
+         VRR_I VCVB,9,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVB,9,0,0                               BAD SIGN - 0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'00000000000000000000000000000100'   V1 source
+
+* VCVB   m3=9 (p2=1, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVB,9,0,3                               INT_MIN
+         DC    XL08'AABBCCDD80000000'                   R1 result
+         DC    XL16'0000000000000000000002147483648D'   V1 source
+
+         VRR_I VCVB,9,0,3
+         DC    XL08'AABBCCDDDF8E1660'                   R1 result
+         DC    XL16'000000000000000000012340565600C'    V1 source
+
+* VCVB   m3=9 (p2=1, lb=0, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVB,9,4,3                               INT_MIN
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'0000000000000000000002147483648D'   V1 source
+
+         VRR_I VCVB,9,4,3
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'000000000000000000012340565600C'    V1 source
+
+* VCVB   m3=11 (p2=1, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVB,11,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010C'   V1 source
+
+         VRR_I VCVB,11,0,0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVB,11,0,0
+         DC    XL08'AABBCCDD0008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600C'   V1 source
+
+         VRR_I VCVB,11,0,0
+         DC    XL08'AABBCCDD0008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600D'   V1 source
+
+         VRR_I VCVB,11,0,0                               INT_MAX
+         DC    XL08'AABBCCDD7FFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000002147483647C'   V1 source
+
+         VRR_I VCVB,11,0,0                              UINT_MAX
+         DC    XL08'AABBCCDDFFFFFFFF'                   R1 result
+         DC    XL16'000000000000000000004294967295C'    V1 source
+
+         VRR_I VCVB,11,0,0                               INT_MIN
+         DC    XL08'AABBCCDD80000000'                   R1 result
+         DC    XL16'0000000000000000000002147483648D'   V1 source
+
+         VRR_I VCVB,11,0,0                              BAD SIGN - 0
+         DC    XL08'AABBCCDD0000000A'                   R1 result
+         DC    XL16'00000000000000000000000000000100'   V1 source
+
+* VCVB   m3=11 (p2=1, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVB,11,0,3                              UINT_MAX+5
+         DC    XL08'AABBCCDD00000004'                   R1 result
+         DC    XL16'000000000000000000004294967300C'    V1 source
+
+         VRR_I VCVB,11,0,3                              -(UINT_MAX+5)
+         DC    XL08'AABBCCDD00000004'                   R1 result
+         DC    XL16'000000000000000000004294967300D'     V1 source
+
+         VRR_I VCVB,11,0,3
+         DC    XL08'AABBCCDDDF8E1660'                   R1 result
+         DC    XL16'000000000000000000012340565600C'    V1 source
+
+* VCVB   m3=11 (p2=1, lb=1, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVB,11,4,3                              UINT_MAX+5
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'000000000000000000004294967300C'    V1 source
+
+         VRR_I VCVB,11,4,3                              -(UINT_MAX+5)
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'000000000000000000004294967300D'     V1 source
+
+         VRR_I VCVB,11,4,3
+         DC    XL08'AABBCCDD00000000'                   R1 result
+         DC    XL16'000000000000000000012340565600C'    V1 sourc
+
 
 *---------------------------------------------------------------------
 * VCVBG   - VECTOR CONVERT TO BINARY  (64)
 *---------------------------------------------------------------------
-* VCVBG simple
-         VRR_I VCVBG,1,0
+* VCVBG  m3=1 (p2=0, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVBG,1,0,0
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000000000000000000000000C'   V1 source
+
+         VRR_I VCVBG,1,0,0                              Neg Zero
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000000000000000000000000D'   V1 source
+
+         VRR_I VCVBG,1,0,0
          DC    XL08'000000000000000A'                   R1 result
          DC    XL16'0000000000000000000000000000010C'   V1 source
 
-         VRR_I VCVBG,1,0
+         VRR_I VCVBG,1,0,0
          DC    XL08'FFFFFFFFFFFFFFF6'                   R1 result
          DC    XL16'0000000000000000000000000000010D'   V1 source
 
-         VRR_I VCVBG,1,0
+         VRR_I VCVBG,1,0,0                              + SIGN - A
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255A'   V1 source
+
+         VRR_I VCVBG,1,0,0                              - SIGN - B
+         DC    XL08'FFFFFFFFFFFFFF01'                   R1 result
+         DC    XL16'0000000000000000000000000000255B'   V1 source
+
+         VRR_I VCVBG,1,0,0                              + SIGN - E
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255E'   V1 source
+
+         VRR_I VCVBG,1,0,0                              + SIGN - F
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255F'   V1 source
+
+         VRR_I VCVBG,1,0,0
          DC    XL08'000000000008A160'                   R1 result
          DC    XL16'0000000000000000000000000565600C'   V1 source
 
-         VRR_I VCVBG,1,0
+         VRR_I VCVBG,1,0,0
          DC    XL08'FFFFFFFFFFF75EA0'                   R1 result
          DC    XL16'0000000000000000000000000565600D'   V1 source
 
-         VRR_I VCVBG,1,0                                INT_MAX
+         VRR_I VCVBG,1,0,0                              INT_MAX
          DC    XL08'000000007FFFFFFF'                   R1 result
          DC    XL16'0000000000000000000002147483647C'   V1 source
 
-         VRR_I VCVBG,1,0                                INT_MIN
+         VRR_I VCVBG,1,0,0                              INT_MIN
          DC    XL08'FFFFFFFF80000000'                   R1 result
          DC    XL16'0000000000000000000002147483648D'   V1 source
 
-         VRR_I VCVBG,1,0                                UINT_MAX
+         VRR_I VCVBG,1,0,0                              UINT_MAX
          DC    XL08'00000000FFFFFFFF'                   R1 result
          DC    XL16'0000000000000000000004294967295C'   V1 source
 
-         VRR_I VCVBG,1,0                                UINT_MAX +1
+         VRR_I VCVBG,1,0,0                              UINT_MAX +1
          DC    XL08'0000000100000000'                   R1 result
          DC    XL16'0000000000000000000004294967296C'   V1 source
 
-         VRR_I VCVBG,1,0
+         VRR_I VCVBG,1,0,0
          DC    XL08'00000002DF8E1660'                   R1 result
          DC    XL16'0000000000000000000012340565600C'   V1 source
 
-         VRR_I VCVBG,1,0                                LONG_MAX
+         VRR_I VCVBG,1,0,0                              LONG_MAX
          DC    XL08'7FFFFFFFFFFFFFFF'                   R1 result
          DC    XL16'0000000000009223372036854775807C'   V1 source
 
-         VRR_I VCVBG,1,0                                LONG_MIN
+         VRR_I VCVBG,1,0,0                              LONG_MIN
          DC    XL08'8000000000000000'                   R1 result
          DC    XL16'0000000000009223372036854775808D'   V1 source
 
-         VRR_I VCVBG,3,0                                ULONG_MAX
+* VCVBG  m3=1 (p2=0, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVBG,1,0,3                              ULONG_MAX
          DC    XL08'FFFFFFFFFFFFFFFF'                   R1 result
          DC    XL16'0000000000018446744073709551615C'   V1 source
 
-         VRR_I VCVBG,3,3                                ULONG_MAX +1
+         VRR_I VCVBG,1,0,3                              ULONG_MAX +1
          DC    XL08'0000000000000000'                   R1 result
          DC    XL16'0000000000018446744073709551616C'   V1 source
 
-         VRR_I VCVBG,3,3                                ULONG_MAX +11
+         VRR_I VCVBG,1,0,3                              ULONG_MAX +11
          DC    XL08'000000000000000A'                   R1 result
          DC    XL16'0000000000018446744073709551626C'   V1 source
 
-* VCVBG simple: p2=1
-         VRR_I VCVBG,9,0
+         VRR_I VCVBG,1,0,3                             -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,1,0,3                             -(ULONG_MAX +11)
+         DC    XL08'FFFFFFFFFFFFFFF6'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+* VCVBG  m3=1 (p2=0, lb=0, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVBG,1,4,3                              ULONG_MAX +1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616C'   V1 source
+
+         VRR_I VCVBG,1,4,3                              ULONG_MAX +11
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,1,4,3                             -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,1,4,3                             -(ULONG_MAX +11)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+* VCVBG  m3=3 (p2=0, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVBG,3,0,0
          DC    XL08'000000000000000A'                   R1 result
          DC    XL16'0000000000000000000000000000010C'   V1 source
 
-         VRR_I VCVBG,9,0
+         VRR_I VCVBG,3,0,0
          DC    XL08'000000000000000A'                   R1 result
          DC    XL16'0000000000000000000000000000010D'   V1 source
 
-         VRR_I VCVBG,9,0
+         VRR_I VCVBG,3,0,0                              + SIGN - A
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255A'   V1 source
+
+         VRR_I VCVBG,3,0,0                              - SIGN - B
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255B'   V1 source
+
+         VRR_I VCVBG,3,0,0                              + SIGN - E
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255E'   V1 source
+
+         VRR_I VCVBG,3,0,0                              + SIGN - F
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255F'   V1 source
+
+         VRR_I VCVBG,3,0,0
          DC    XL08'000000000008A160'                   R1 result
          DC    XL16'0000000000000000000000000565600C'   V1 source
 
-         VRR_I VCVBG,9,0
+         VRR_I VCVBG,3,0,0
          DC    XL08'000000000008A160'                   R1 result
          DC    XL16'0000000000000000000000000565600D'   V1 source
 
-         VRR_I VCVBG,9,0                                INT_MAX
+         VRR_I VCVBG,3,0,0                              INT_MAX
          DC    XL08'000000007FFFFFFF'                   R1 result
          DC    XL16'0000000000000000000002147483647C'   V1 source
 
-         VRR_I VCVBG,9,0                                INT_MIN
+         VRR_I VCVBG,3,0,0                              INT_MIN
          DC    XL08'0000000080000000'                   R1 result
          DC    XL16'0000000000000000000002147483648D'   V1 source
 
-         VRR_I VCVBG,9,0                                UINT_MAX
+         VRR_I VCVBG,3,0,0                              UINT_MAX
          DC    XL08'00000000FFFFFFFF'                   R1 result
          DC    XL16'0000000000000000000004294967295C'   V1 source
 
-         VRR_I VCVBG,9,0                                UINT_MAX +1
+         VRR_I VCVBG,3,0,0                              UINT_MAX +1
          DC    XL08'0000000100000000'                   R1 result
          DC    XL16'0000000000000000000004294967296C'   V1 source
 
-         VRR_I VCVBG,9,0
+         VRR_I VCVBG,3,0,0
          DC    XL08'00000002DF8E1660'                   R1 result
          DC    XL16'0000000000000000000012340565600C'   V1 source
 
-         VRR_I VCVBG,9,0                                LONG_MAX
+         VRR_I VCVBG,3,0,0                              LONG_MAX
          DC    XL08'7FFFFFFFFFFFFFFF'                   R1 result
          DC    XL16'0000000000009223372036854775807C'   V1 source
 
-         VRR_I VCVBG,9,3                                LONG_MIN
+         VRR_I VCVBG,3,0,0                              LONG_MIN
          DC    XL08'8000000000000000'                   R1 result
          DC    XL16'0000000000009223372036854775808D'   V1 source
 
-         VRR_I VCVBG,11,0                               ULONG_MAX
-         DC    XL08'FFFFFFFFFFFFFFFF'                   R1 result
-         DC    XL16'0000000000018446744073709551615C'   V1 source
+         VRR_I VCVBG,3,0,0                              LONG_MIN-1
+         DC    XL08'8000000000000001'                   R1 result
+         DC    XL16'0000000000009223372036854775809D'   V1 source
 
-         VRR_I VCVBG,11,3                               ULONG_MAX +1
+* VCVBG  m3=3 (p2=0, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVBG,3,0,3                              ULONG_MAX +1
          DC    XL08'0000000000000000'                   R1 result
          DC    XL16'0000000000018446744073709551616C'   V1 source
 
-         VRR_I VCVBG,11,3                               ULONG_MAX +11
+         VRR_I VCVBG,3,0,3                              ULONG_MAX +11
          DC    XL08'000000000000000A'                   R1 result
          DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,3,0,3                             -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,3,0,3                             -(ULONG_MAX +11)
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+* VCVBG  m3=3 (p2=0, lb=1, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVBG,3,4,3                              ULONG_MAX +1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616C'   V1 source
+
+         VRR_I VCVBG,3,4,3                              ULONG_MAX +11
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,3,4,3                             -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,3,4,3                             -(ULONG_MAX +11)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+* VCVBG   m3=9 (p2=1, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVBG,9,0,0
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010C'   V1 source
+
+         VRR_I VCVBG,9,0,0
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVBG,9,0,0                              + SIGN - A
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255A'   V1 source
+
+         VRR_I VCVBG,9,0,0                              - SIGN - B
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255B'   V1 source
+
+         VRR_I VCVBG,9,0,0                              + SIGN - E
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255E'   V1 source
+
+         VRR_I VCVBG,9,0,0                              + SIGN - F
+         DC    XL08'00000000000000FF'                   R1 result
+         DC    XL16'0000000000000000000000000000255F'   V1 source
+
+         VRR_I VCVBG,9,0,0
+         DC    XL08'000000000008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600C'   V1 source
+
+         VRR_I VCVBG,9,0,0
+         DC    XL08'000000000008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600D'   V1 source
+
+         VRR_I VCVBG,9,0,0                              INT_MAX
+         DC    XL08'000000007FFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000002147483647C'   V1 source
+
+         VRR_I VCVBG,9,0,0                              INT_MIN
+         DC    XL08'0000000080000000'                   R1 result
+         DC    XL16'0000000000000000000002147483648D'   V1 source
+
+         VRR_I VCVBG,9,0,0                              UINT_MAX
+         DC    XL08'00000000FFFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000004294967295C'   V1 source
+
+         VRR_I VCVBG,9,0,0                              UINT_MAX +1
+         DC    XL08'0000000100000000'                   R1 result
+         DC    XL16'0000000000000000000004294967296C'   V1 source
+
+         VRR_I VCVBG,9,0,0
+         DC    XL08'00000002DF8E1660'                   R1 result
+         DC    XL16'0000000000000000000012340565600C'   V1 source
+
+         VRR_I VCVBG,9,0,0                              LONG_MAX
+         DC    XL08'7FFFFFFFFFFFFFFF'                   R1 result
+         DC    XL16'0000000000009223372036854775807C'   V1 source
+
+*                                                       Bad Sign - 0
+         VRR_I VCVBG,9,0,0                              LONG_MAX
+         DC    XL08'7FFFFFFFFFFFFFFF'                   R1 result
+         DC    XL16'00000000000092233720368547758070'   V1 source
+
+* VCVBG  m3=9 (p2=1, lb=0, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVBG,9,0,3                              LONG_MIN
+         DC    XL08'8000000000000000'                   R1 result
+         DC    XL16'0000000000009223372036854775808D'   V1 source
+
+         VRR_I VCVBG,9,0,3                              LONG_MIN-1
+         DC    XL08'8000000000000001'                   R1 result
+         DC    XL16'0000000000009223372036854775809D'   V1 source
+
+         VRR_I VCVBG,9,0,3                              ULONG_MAX +1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616C'   V1 source
+
+         VRR_I VCVBG,9,0,3                              ULONG_MAX +11
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,9,0,3                             -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,9,0,3                             -(ULONG_MAX +11)
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+         VRR_I VCVBG,9,0,0                              BAD SIGN - 0
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'00000000000000000000000000000100'   V1 source
+
+* VCVBG  m3=9 (p2=1, lb=0, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVBG,9,4,3                              LONG_MIN
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000009223372036854775808D'   V1 source
+
+         VRR_I VCVBG,9,4,3                              LONG_MIN-1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000009223372036854775809D'   V1 source
+
+         VRR_I VCVBG,9,4,3                              ULONG_MAX +1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616C'   V1 source
+
+         VRR_I VCVBG,9,4,3                              ULONG_MAX +11
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,9,4,3                             -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,9,4,3                             -(ULONG_MAX +11)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+*                                                       Bad Sign - 0
+         VRR_I VCVBG,9,4,3                             -(ULONG_MAX +11)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'00000000000184467440737095516260'   V1 source
+
+* VCVBG  m3=11 (p2=1, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=0 (no overflow)
+         VRR_I VCVBG,11,0,0                             ULONG_MAX
+         DC    XL08'FFFFFFFFFFFFFFFF'                   R1 result
+         DC    XL16'0000000000018446744073709551615C'   V1 source
+
+         VRR_I VCVBG,11,0,0
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010C'   V1 source
+
+         VRR_I VCVBG,11,0,0
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000000000000000000000010D'   V1 source
+
+         VRR_I VCVBG,11,0,0
+         DC    XL08'000000000008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600C'   V1 source
+
+         VRR_I VCVBG,11,0,0
+         DC    XL08'000000000008A160'                   R1 result
+         DC    XL16'0000000000000000000000000565600D'   V1 source
+
+         VRR_I VCVBG,11,0,0                             INT_MAX
+         DC    XL08'000000007FFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000002147483647C'   V1 source
+
+         VRR_I VCVBG,11,0,0                             INT_MIN
+         DC    XL08'0000000080000000'                   R1 result
+         DC    XL16'0000000000000000000002147483648D'   V1 source
+
+         VRR_I VCVBG,11,0,0                             UINT_MAX
+         DC    XL08'00000000FFFFFFFF'                   R1 result
+         DC    XL16'0000000000000000000004294967295C'   V1 source
+
+         VRR_I VCVBG,11,0,0                             UINT_MAX +1
+         DC    XL08'0000000100000000'                   R1 result
+         DC    XL16'0000000000000000000004294967296C'   V1 source
+
+         VRR_I VCVBG,11,0,0
+         DC    XL08'00000002DF8E1660'                   R1 result
+         DC    XL16'0000000000000000000012340565600C'   V1 source
+
+         VRR_I VCVBG,11,0,0                             LONG_MAX
+         DC    XL08'7FFFFFFFFFFFFFFF'                   R1 result
+         DC    XL16'0000000000009223372036854775807C'   V1 source
+
+         VRR_I VCVBG,11,0,0                             LONG_MIN
+         DC    XL08'8000000000000000'                   R1 result
+         DC    XL16'0000000000009223372036854775808D'   V1 source
+
+         VRR_I VCVBG,11,0,0                             LONG_MIN-1
+         DC    XL08'8000000000000001'                   R1 result
+         DC    XL16'0000000000009223372036854775809D'   V1 source
+
+         VRR_I VCVBG,11,0,0                             BAD SIGN - 0
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'00000000000000000000000000000100'   V1 source
+
+* VCVBG  m3=11 (p2=1, lb=1, cs=1)       m4=0 (iom=0, orc=0)
+*        cc=3 (overflow)
+         VRR_I VCVBG,11,0,3                             ULONG_MAX +1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616C'   V1 source
+
+         VRR_I VCVBG,11,0,3                             ULONG_MAX +11
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,11,0,3                            -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,11,0,3                            -(ULONG_MAX +11)
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+*                                                       Bad Sign - 0
+         VRR_I VCVBG,11,0,3                            -(ULONG_MAX +11)
+         DC    XL08'000000000000000A'                   R1 result
+         DC    XL16'00000000000184467440737095516260'   V1 source
+
+* VCVBG  m3=11 (p2=1, lb=1, cs=1)       m4=4 (iom=0, orc=1)
+*        cc=3 (overflow)
+         VRR_I VCVBG,11,4,3                             ULONG_MAX +1
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616C'   V1 source
+
+         VRR_I VCVBG,11,4,3                             ULONG_MAX +11
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626C'   V1 source
+
+         VRR_I VCVBG,11,4,3                            -(ULONG_MAX +1)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551616D'   V1 source
+
+         VRR_I VCVBG,11,4,3                            -(ULONG_MAX +11)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'0000000000018446744073709551626D'   V1 source
+
+*                                                       Bad Sign - 0
+         VRR_I VCVBG,11,4,3                            -(ULONG_MAX +11)
+         DC    XL08'0000000000000000'                   R1 result
+         DC    XL16'00000000000184467440737095516260'   V1 source
 
          DC    F'0'     END OF TABLE
          DC    F'0'

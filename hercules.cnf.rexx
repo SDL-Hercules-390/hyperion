@@ -20,6 +20,7 @@ _PWD = directory()
 
 numcpu      =   1
 cnslport    =   3279
+wscnslport  =   6080
 
 Address HERCULES
 
@@ -60,6 +61,7 @@ NOECHO"timerint"     "1000"
 
 --  integrated Hercules I/O Controller
 NOECHO"cnslport"     cnslport
+NOECHO"wscnslport"   wscnslport
 
 -- message level
 NOECHO"msglevel"     "VERBOSE"

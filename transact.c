@@ -237,6 +237,8 @@ bool        per_tend = false;           /* true = check for PER TEND */
 
     S( inst, regs, b2, effective_addr2 );
 
+    UNREFERENCED( effective_addr2 );
+
     TXF_SIE_INTERCEPT( regs, TEND );
 
     TXF_EXECUTE_INSTR_CHECK( regs );
@@ -394,7 +396,7 @@ bool        per_tend = false;           /* true = check for PER TEND */
         /*  was a store or a fetch.  The current data in the       */
         /*  cache line is saved when the alternate entry is        */
         /*  created. This saved data MUST match what is in main    */
-        /*  storage now, or the transation will be aborted with    */
+        /*  storage now, or the transaction will be aborted with   */
         /*  a conflict, since that means that some other CPU or    */
         /*  the channel subsystem has stored into the cache line.  */
         /*---------------------------------------------------------*/
@@ -708,6 +710,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
+
+    UNREFERENCED( effective_addr1 );
 
     TXF_SIE_INTERCEPT( regs, TBEGINC );
 
@@ -1614,9 +1618,9 @@ int        retry;           /* Actual retry code                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int pcode )
 {
-bool    filt;                   /* true == filter the interrupt      */
-int     txclass;                /* Transactional Execution Class     */
-int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
+bool    filt;                   /* true == filter the interrupt       */
+int     txclass;                /* Transactional Execution Class      */
+int     fcc, ucc;               /* Filtered/Unfiltered condition code */
 
     PTT_TXF( "TXF filt?", pcode, regs->txf_contran, regs->txf_tnd );
 
@@ -1746,7 +1750,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
     if (filt)
     {
-        /* Is Program-Interruption-Filtering Overide enabled? */
+        /* Is Program-Interruption-Filtering Override enabled? */
         if (regs->CR(0) & CR0_PIFO)
             filt = false; /* Then interrupt cannot be filtered */
         else
@@ -1912,7 +1916,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
             continue;
 
         /* If this CPU is executing a transaction, then force it
-           to eventually fail by setting a transation abort code.
+           to eventually fail by setting a transaction abort code.
         */
         OBTAIN_TXFLOCK( regs );
         {
@@ -1950,7 +1954,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
 }
 
 //---------------------------------------------------------------------
-//                   Keep Otimization Enabled
+//                   Keep Optimization Enabled
 //---------------------------------------------------------------------
 // PROGRAMMING NOTE: because the 'txf_maddr_l' function is an integral
 // part of address translation its performance is absolutely critical.

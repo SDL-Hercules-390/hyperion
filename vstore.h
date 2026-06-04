@@ -172,8 +172,9 @@
 /*-------------------------------------------------------------------*/
 inline void concpy( REGS* regs, void* d, void* s, int n )
 {
-    BYTE* u8d = d;
-    BYTE* u8s = s;
+    BYTE* u8d = (BYTE*)d;
+    BYTE* u8s = (BYTE*)s;
+    ptrdiff_t d1;
 
     /* Copy until ready or 8 byte integral boundary */
     while (n && ((uintptr_t) u8d & 7))
@@ -212,7 +213,7 @@ inline void concpy( REGS* regs, void* d, void* s, int n )
 #endif // end code for 32-bit builds
 
     /* Copy double words on enough length and src - dst distance */
-    if (n && labs( u8d - u8s ) > 7)
+    if (n && (d1 = u8d - u8s, d1 > 7 || d1 < -7))
     {
         while(n > 7)
         {
@@ -244,6 +245,7 @@ inline void concpy_rl( REGS* regs, void* d, void* s, int n )
 {
     BYTE* u8d = (BYTE*)d + n;
     BYTE* u8s = (BYTE*)s + n;
+    ptrdiff_t d1;
 
     /* Copy until ready or 8 byte integral boundary */
     while (n && ((uintptr_t) u8d & 7))
@@ -282,7 +284,7 @@ inline void concpy_rl( REGS* regs, void* d, void* s, int n )
 #endif // end code for 32-bit builds
 
     /* Copy double words on enough length and (src - dst) distance */
-    if (n && labs( u8d - u8s ) > 7)
+    if (n && (d1 = u8d - u8s, d1 > 7 || d1 < -7))
     {
         while (n > 7)
         {
@@ -651,7 +653,7 @@ inline void ARCH_DEP( vstore4 )( U32 value, VADR addr, int arn, REGS* regs )
 inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
-    /* Check alignement. If aligned then we are guaranteed
+    /* Check alignment. If aligned then we are guaranteed
        not to cross a page boundary */
     if (likely(!((VADR_L)addr & 0x07)))
     {
@@ -670,7 +672,7 @@ inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
            crossing a page boundary. This cannot be the same
            code as above because casting U64* to a non aligned
            pointer may break on those architectures mandating
-           strict alignement */
+           strict alignment */
         if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-7)))
         {
             /* Non aligned but not crossing page boundary */
@@ -692,7 +694,7 @@ inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 inline void ARCH_DEP( vstore16 )( QW value, VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
-    /* Check alignement. If aligned then we are guaranteed
+    /* Check alignment. If aligned then we are guaranteed
        not to cross a page boundary */
     if (likely(!((VADR_L)addr & 0x0F)))
     {
@@ -711,7 +713,7 @@ inline void ARCH_DEP( vstore16 )( QW value, VADR addr, int arn, REGS* regs )
            crossing a page boundary. This cannot be the same
            code as above because casting U64* to a non aligned
            pointer may break on those architectures mandating
-           strict alignement */
+           strict alignment */
         if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-15)))
         {
             /* Non aligned but not crossing page boundary */

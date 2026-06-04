@@ -330,7 +330,7 @@ BYTE  TapeCommands9347 [256] =
 /*                                                                   */
 /* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialization (that is, no data is       */
-/* actually transfered). In this case, IL is not indicated for a     */
+/* actually transferred). In this case, IL is not indicated for a    */
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -814,7 +814,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
         /* Copy device sense bytes to channel I/O buffer, clear
            them for the next time, and then finally, reset the
-           Contengent Allegiance condition... */
+           Contingent Allegiance condition... */
         memcpy (iobuf, dev->sense, num);
         memset (dev->sense, 0, sizeof(dev->sense));
 
@@ -2098,7 +2098,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         /* 0x8200nn00 / 0x8300nn00                                   */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_AAC:     // (Activate)
-        case PSF_ORDER_DAC:     // (Dectivate)
+        case PSF_ORDER_DAC:     // (Deactivate)
         {
             BYTE  bEnable  = (PSF_ORDER_AAC == order) ? 1 : 0;
 
@@ -2499,7 +2499,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             // because we never set/request the "Notify Nonsupport" flag
             // in our Attention Message sub-order response, the host should
             // never actually ever be issuing this particular order of the
-            // Perform Subsystem Functon command since it shouldn't be
+            // Perform Subsystem Function command since it shouldn't be
             // trying to tell us what we never asked it to. Nevertheless
             // we should probably support it anyway just in case it does
             // by treating it as a no-op (as long as it's valid of course).
@@ -2658,7 +2658,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         /* Copy device Buffered log data (Bunch of 0s for now) */
         memcpy (iobuf, dev->sense, num);
 
-        /* Indicate Contengency Allegiance has been cleared */
+        /* Indicate Contingency Allegiance has been cleared */
         dev->sns_pending = 0;
         break;
     }
@@ -2954,7 +2954,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
-        /* set write-immedediate mode and perform sync function */
+        /* set write-immediate mode and perform sync function */
         dev->write_immed = 1;
         if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
@@ -3840,10 +3840,10 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         break;
     case TAPE_BSENSE_RUN_SUCCESS:        /* Not an error */
         /* NOT an error, But according to GA32-0219-02 2.1.2.2
-           Rewind Unload always ends with with DE+UC on secondary status */
+           Rewind Unload always ends with DE+UC on secondary status */
         /* FIXME! */
         /* Note that Initial status & Secondary statuses are merged here */
-        /* when they should be presented separatly */
+        /* when they should be presented separately */
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
         dev->sense[0] = TAPE_SNS0_INTVREQ;
         dev->sense[3] = TAPE_ERA_2B_ENVIRONMENTAL_DATA_PRESENT;
@@ -3896,7 +3896,7 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         break;
     case TAPE_BSENSE_FENCED:
         *unitstat = CSW_CE|CSW_DE|CSW_UC;
-        dev->sense[0] = TAPE_SNS0_EQUIPCHK|TAPE_SNS0_DEFUNITCK; /* Deffered UC */
+        dev->sense[0] = TAPE_SNS0_EQUIPCHK|TAPE_SNS0_DEFUNITCK; /* Deferred UC */
         dev->sense[3] = TAPE_ERA_47_VOLUME_FENCED;
         break;
     case TAPE_BSENSE_BADALGORITHM:

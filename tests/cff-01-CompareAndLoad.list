@@ -1,0 +1,2070 @@
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *        Concurrent-functions facility tests
+                                                     5 *        for SSF encoded instructions:
+                                                     6 *
+                                                     7 *        C8x6 CAL   - Compare And Load
+                                                     8 *        C8x7 CALG  - Compare And Load Long
+                                                     9 *        C8xF CALGF - Compare And Load Long Fullword
+                                                    10 *
+                                                    11 *        James Wekel March 2026
+                                                    12 ***********************************************************************
+                                                    13
+                                                    14 ***********************************************************************
+                                                    15 *
+                                                    16 *        basic instruction tests
+                                                    17 *
+                                                    18 ***********************************************************************
+                                                    19 *  This program tests proper functioning of the z/arch
+                                                    20 *  Concurrent-functions facility compare and load instructions
+                                                    21 *  (CAL, CALG, CALGF). Exceptions are not tested.
+                                                    22 *
+                                                    23 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    24 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    25 *  NOT designed to test all aspects of any of the instructions.
+                                                    26 *
+                                                    27 ***********************************************************************
+                                                    28 *
+                                                    29 *   *Testcase cff-01-CompareAndLoad
+                                                    30 *   *
+                                                    31 *   * Concurrent-functions facility tests for SSF encoded instructions:
+                                                    32 *   *
+                                                    33 *   *        C8x6 CAL   - Compare And Load
+                                                    34 *   *        C8x7 CALG  - Compare And Load Long
+                                                    35 *   *        C8xF CALGF - Compare And Load Long Fullword
+                                                    36 *   *
+                                                    37 *   *   # -------------------------------------------------------
+                                                    38 *   *   #  This tests only the basic function of the instruction.
+                                                    39 *   *   #  Exceptions are NOT tested.
+                                                    40 *   *   # -------------------------------------------------------
+                                                    41 *   *
+                                                    42 *   mainsize    2
+                                                    43 *   numcpu      1
+                                                    44 *   sysclear
+                                                    45 *   archlvl     z/Arch
+                                                    46 *
+                                                    47 *   loadcore    "$(testpath)/cff-01-CompareAndLoad.core" 0x0
+                                                    48 *
+                                                    49 *   diag8cmd    enable    # (needed for messages to Hercules console)
+                                                    50 *   runtest     2
+                                                    51 *   diag8cmd    disable   # (reset back to default)
+                                                    52 *
+                                                    53 *   *Done
+                                                    54
+                                                    55 ***********************************************************************
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    57 ***********************************************************************
+                                                    58 *        FCHECK Macro - Is a Facility Bit set?
+                                                    59 *
+                                                    60 *        If the facility bit is NOT set, an message is issued and
+                                                    61 *        the test is skipped.
+                                                    62 *
+                                                    63 *        Fcheck uses R0, R1 and R2
+                                                    64 *
+                                                    65 * eg.    FCHECK 134,'vector-packed-decimal'
+                                                    66 ***********************************************************************
+                                                    67          MACRO
+                                                    68          FCHECK &BITNO,&NOTSETMSG
+                                                    69 .*                        &BITNO : facility bit number to check
+                                                    70 .*                        &NOTSETMSG : 'facility name'
+                                                    71          LCLA  &FBBYTE                Facility bit in Byte
+                                                    72          LCLA  &FBBIT                 Facility bit within Byte
+                                                    73
+                                                    74          LCLA  &L(8)
+                                                    75 &L(1)    SetA  128,64,32,16,8,4,2,1   bit positions within byte
+                                                    76
+                                                    77 &FBBYTE  SETA  &BITNO/8
+                                                    78 &FBBIT   SETA  &L((&BITNO-(&FBBYTE*8))+1)
+                                                    79 .*       MNOTE 0,'checking Bit=&BITNO: FBBYTE=&FBBYTE, FBBIT=&FBBIT'
+                                                    80
+                                                    81          B     X&SYSNDX
+                                                    82 *                                     Fcheck data area
+                                                    83 *                                     skip messgae
+                                                    84 SKT&SYSNDX DC  C'      Skipping tests: '
+                                                    85          DC    C&NOTSETMSG
+                                                    86          DC    C' facility (bit &BITNO) is not installed.'
+                                                    87 SKL&SYSNDX EQU *-SKT&SYSNDX
+                                                    88 *                                     facility bits
+                                                    89          DS    FD                     gap
+                                                    90 FB&SYSNDX DS   4FD
+                                                    91          DS    FD                     gap
+                                                    92 *
+                                                    93 X&SYSNDX EQU *
+                                                    94          LA    R0,((X&SYSNDX-FB&SYSNDX)/8)-1
+                                                    95          STFLE FB&SYSNDX              get facility bits
+                                                    96
+                                                    97          XGR   R0,R0
+                                                    98          IC    R0,FB&SYSNDX+&FBBYTE   get fbit byte
+                                                    99          N     R0,=F'&FBBIT'          is bit set?
+                                                   100          BNZ   XC&SYSNDX
+                                                   101 *
+                                                   102 * facility bit not set, issue message and exit
+                                                   103 *
+                                                   104          LA    R0,SKL&SYSNDX          message length
+                                                   105          LA    R1,SKT&SYSNDX          message address
+                                                   106          BAL   R2,MSG
+                                                   107
+                                                   108          B     EOJ
+                                                   109 XC&SYSNDX EQU *
+                                                   110          MEND
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   112 ***********************************************************************
+                                                   113 *        Low core PSWs
+                                                   114 ***********************************************************************
+
+
+                              00000000  00001F47   116 CFFTST   START 0
+00000000                      00000000             117          USING CFFTST,R0              Low core addressability
+                                                   118
+                              00000140  00000000   119 SVOLDPSW EQU   CFFTST+X'140'          z/Arch Supervisor call old PSW
+
+
+00000000                      00000000  000001A0   121          ORG   CFFTST+X'1A0'          z/Architecure RESTART PSW
+000001A0  00000001 80000000                        122          DC    X'0000000180000000'
+000001A8  00000000 00000200                        123          DC    AD(BEGIN)
+
+
+000001B0                      000001B0  000001D0   125          ORG   CFFTST+X'1D0'          z/Architecure PROGRAM CHECK PSW
+000001D0  00020001 80000000                        126          DC    X'0002000180000000'
+000001D8  00000000 0000DEAD                        127          DC    AD(X'DEAD')
+
+
+
+000001E0                      000001E0  00000200   129          ORG   CFFTST+X'200'          Start of actual test program...
+                                                   130
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   132 ***********************************************************************
+                                                   133 *               The actual "CFFTST" program itself...
+                                                   134 ***********************************************************************
+                                                   135 *
+                                                   136 *  Architecture Mode: z/Arch
+                                                   137 *  Register Usage:
+                                                   138 *
+                                                   139 *   R0       (work)
+                                                   140 *   R1-4     (work)
+                                                   141 *   R5       Testing control table - current test base
+                                                   142 *   R6-R7    (work)
+                                                   143 *   R8       First base register
+                                                   144 *   R9       Second base register
+                                                   145 *   R10      Third base register
+                                                   146 *   R11      CFFTEST call return
+                                                   147 *   R12      CFFTESTS register
+                                                   148 *   R13      (work)
+                                                   149 *   R14      Subroutine call
+                                                   150 *   R15      Secondary Subroutine call or work
+                                                   151 *
+                                                   152 ***********************************************************************
+
+00000200                      00000200             154          USING BEGIN,R8               FIRST Base Register
+00000200                      00001200             155          USING BEGIN+4096,R9          SECOND Base Register
+00000200                      00002200             156          USING BEGIN+8192,R10         THIRD Base Register
+                                                   157
+00000200  0580                                     158 BEGIN    BALR  R8,0                   Initalize FIRST base register
+00000202  0680                                     159          BCTR  R8,0                   Initalize FIRST base register
+00000204  0680                                     160          BCTR  R8,0                   Initalize FIRST base register
+                                                   161
+00000206  4190 8800                     00000800   162          LA    R9,2048(,R8)           Initalize SECOND base register
+0000020A  4190 9800                     00000800   163          LA    R9,2048(,R9)           Initalize SECOND base register
+                                                   164
+0000020E  41A0 9800                     00000800   165          LA    R10,2048(,R9)          Initalize THIRD base register
+00000212  41A0 A800                     00000800   166          LA    R10,2048(,R10)         Initalize THIRD base register
+                                                   167
+00000216  B600 830C                     0000050C   168          STCTL R0,R0,CTLR0            Store CR0 to enable AFP
+0000021A  9604 830D                     0000050D   169          OI    CTLR0+1,X'04'          Turn on AFP bit
+0000021E  9602 830D                     0000050D   170          OI    CTLR0+1,X'02'          Turn on Vector bit
+00000222  B700 830C                     0000050C   171          LCTL  R0,R0,CTLR0            Reload updated CR0
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   173 ***********************************************************************
+                                                   174 * Is Concurrent-functions facility installed  (bit 201)
+                                                   175 ***********************************************************************
+                                                   176          FCHECK 201,'concurrent-functions facility'
+00000226  47F0 80B8                     000002B8   177+         B     X0001
+                                                   178+*                                     Fcheck data area
+                                                   179+*                                     skip messgae
+0000022A  40404040 4040E292                        180+SKT0001  DC    C'      Skipping tests: '
+00000240  83969583 A4999985                        181+         DC    C'concurrent-functions facility'
+0000025D  40868183 899389A3                        182+         DC    C' facility (bit 201) is not installed.'
+                              00000058  00000001   183+SKL0001  EQU   *-SKT0001
+                                                   184+*                                     facility bits
+00000288  00000000 00000000                        185+         DS    FD                     gap
+00000290  00000000 00000000                        186+FB0001   DS    4FD
+000002B0  00000000 00000000                        187+         DS    FD                     gap
+                                                   188+*
+                              000002B8  00000001   189+X0001    EQU   *
+000002B8  4100 0004                     00000004   190+         LA    R0,((X0001-FB0001)/8)-1
+000002BC  B2B0 8090                     00000290   191+         STFLE FB0001                 get facility bits
+000002C0  B982 0000                                192+         XGR   R0,R0
+000002C4  4300 80A9                     000002A9   193+         IC    R0,FB0001+25           get fbit byte
+000002C8  5400 8314                     00000514   194+         N     R0,=F'64'              is bit set?
+000002CC  4770 80E0                     000002E0   195+         BNZ   XC0001
+                                                   196+*
+                                                   197+* facility bit not set, issue message and exit
+                                                   198+*
+000002D0  4100 0058                     00000058   199+         LA    R0,SKL0001             message length
+000002D4  4110 802A                     0000022A   200+         LA    R1,SKT0001             message address
+000002D8  4520 8228                     00000428   201+         BAL   R2,MSG
+000002DC  47F0 82F0                     000004F0   202+         B     EOJ
+                              000002E0  00000001   203+XC0001   EQU   *
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   205 ***********************************************************************
+                                                   206 *              Do tests in the CFFTESTS table
+                                                   207 ***********************************************************************
+                                                   208
+000002E0  58C0 8318                     00000518   209          L     R12,=A(CFFTESTS)       get table of test addresses
+                                                   210
+                              000002E4  00000001   211 NEXTCFF  EQU   *
+000002E4  5850 C000                     00000000   212          L     R5,0(0,R12)            get test address
+000002E8  1255                                     213          LTR   R5,R5                     have a test?
+000002EA  4780 81DE                     000003DE   214          BZ    ENDTEST                      done?
+                                                   215
+000002EE                      00000000             216          USING CFFTEST,R5
+                                                   217
+000002EE  58B0 5000                     00000000   218          L     R11,TSUB               get address of test routine
+000002F2  05BB                                     219          BALR  R11,R11                do test
+                                                   220
+000002F4  E310 5008 0076                00000008   221          LB    R1,CCMASK              (failure CC mask)
+000002FA  8910 0004                     00000004   222          SLL   R1,4                   (shift to BC instr CC position)
+000002FE  4410 811A                     0000031A   223          EX    R1,TESTCC                 fail if...
+                                                   224
+                              00000302  00000001   225 TESTREST EQU   *
+00000302  E310 5038 0004                00000038   226          LG    R1,READDR              get adress of expected result
+00000308  D507 5048 1000      00000048  00000000   227          CLC   R3OUTPUT,0(R1)         valid?
+0000030E  4770 81A2                     000003A2   228          BNE   FAILMSG                   no issue failed message
+                                                   229
+00000312  41C0 C004                     00000004   230          LA    R12,4(0,R12)           next test address
+00000316  47F0 80E4                     000002E4   231          B     NEXTCFF
+                                                   232
+0000031A  4700 811E                     0000031E   233 TESTCC   BC    0,CCMSG                fail if unexpected condition code
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   235 **********************************************************************
+                                                   236 * cc was not as expecte
+                                                   237 **********************************************************************
+                              0000031E  00000001   238 CCMSG    EQU   *
+                                                   239
+                                                   240 * extract CC from saved PSW
+0000031E  5810 5058                     00000058   241          L     R1,CCPSW
+00000322  8810 000C                     0000000C   242          SRL   R1,12
+00000326  5410 831C                     0000051C   243          N     R1,=XL4'3'
+0000032A  4210 5060                     00000060   244          STC   R1,CCFOUND             save actual cc
+                                                   245
+                                                   246 * fill in message
+0000032E  4820 5004                     00000004   247          LH    R2,TNUM                get test number and convert
+00000332  4E20 8EBC                     000010BC   248          CVD   R2,DECNUM
+00000336  D211 8EA6 8E90      000010A6  00001090   249          MVC   PRT3,EDIT
+0000033C  DE11 8EA6 8EBC      000010A6  000010BC   250          ED    PRT3,DECNUM
+00000342  D202 8E4B 8EB3      0000104B  000010B3   251          MVC   CCPRTNUM(3),PRT3+13    fill in message with test #
+00000348  D207 8E68 500A      00001068  0000000A   252          MVC   CCPRTNAME,OPNAME       fill in message with instruction
+                                                   253
+                                                   254 * fill in expected CC
+0000034E  B982 0022                                255          XGR   R2,R2                  get CC as U8
+00000352  4320 5007                     00000007   256          IC    R2,CC
+00000356  4E20 8EBC                     000010BC   257          CVD   R2,DECNUM              and convert
+0000035A  D211 8EA6 8E90      000010A6  00001090   258          MVC   PRT3,EDIT
+00000360  DE11 8EA6 8EBC      000010A6  000010BC   259          ED    PRT3,DECNUM
+00000366  D200 8E7E 8EB5      0000107E  000010B5   260          MVC   CCPRTEXP(1),PRT3+15    fill in message with CC field
+                                                   261
+                                                   262 * fill in found CC
+0000036C  B982 0022                                263          XGR   R2,R2                  get CCFOUND as U8
+00000370  4320 5060                     00000060   264          IC    R2,CCFOUND
+00000374  4E20 8EBC                     000010BC   265          CVD   R2,DECNUM              and convert
+00000378  D211 8EA6 8E90      000010A6  00001090   266          MVC   PRT3,EDIT
+0000037E  DE11 8EA6 8EBC      000010A6  000010BC   267          ED    PRT3,DECNUM
+00000384  D200 8E8E 8EB5      0000108E  000010B5   268          MVC   CCPRTGOT(1),PRT3+15    fill in message with CCFOUND
+                                                   269
+0000038A  4100 0055                     00000055   270          LA    R0,CCPRTLNG            message length
+0000038E  4110 8E3B                     0000103B   271          LA    R1,CCPRTLINE           messagfe address
+00000392  45F0 81EC                     000003EC   272          BAL   R15,RPTERROR
+                                                   273
+00000396  5800 8320                     00000520   274          L     R0,=F'1'               set GLOBAL failed test indicator
+0000039A  5000 8E00                     00001000   275          ST    R0,FAILED
+                                                   276
+0000039E  47F0 8102                     00000302   277          B     TESTREST               continue with test result check
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   279 ***********************************************************************
+                                                   280 * result not as expected:
+                                                   281 *        issue message with test number, instruction under test
+                                                   282 *              and instruction m5, m6
+                                                   283 ***********************************************************************
+                              000003A2  00000001   284 FAILMSG  EQU   *
+000003A2  4820 5004                     00000004   285          LH    R2,TNUM                get test number and convert
+000003A6  4E20 8EBC                     000010BC   286          CVD   R2,DECNUM
+000003AA  D211 8EA6 8E90      000010A6  00001090   287          MVC   PRT3,EDIT
+000003B0  DE11 8EA6 8EBC      000010A6  000010BC   288          ED    PRT3,DECNUM
+000003B6  D202 8E18 8EB3      00001018  000010B3   289          MVC   PRTNUM(3),PRT3+13      fill in message with test #
+                                                   290
+000003BC  D207 8E33 500A      00001033  0000000A   291          MVC   PRTNAME,OPNAME         fill in message with instruction
+                                                   292
+000003C2  4100 0033                     00000033   293          LA    R0,PRTLNG              message length
+000003C6  4110 8E08                     00001008   294          LA    R1,PRTLINE             messagfe address
+000003CA  45F0 81EC                     000003EC   295          BAL   R15,RPTERROR
+
+
+                                                   297 ***********************************************************************
+                                                   298 * continue after a failed test
+                                                   299 ***********************************************************************
+                              000003CE  00000001   300 FAILCONT EQU   *
+000003CE  5800 8320                     00000520   301          L     R0,=F'1'               set GLOBAL failed test indicator
+000003D2  5000 8E00                     00001000   302          ST    R0,FAILED
+                                                   303
+000003D6  41C0 C004                     00000004   304          LA    R12,4(0,R12)           next test address
+000003DA  47F0 80E4                     000002E4   305          B     NEXTCFF
+
+
+                                                   307 ***********************************************************************
+                                                   308 * end of testing; set ending psw
+                                                   309 ***********************************************************************
+                              000003DE  00000001   310 ENDTEST  EQU   *
+000003DE  5810 8E00                     00001000   311          L     R1,FAILED              did a test fail?
+000003E2  1211                                     312          LTR   R1,R1
+000003E4  4780 82F0                     000004F0   313          BZ    EOJ                    No, exit
+000003E8  47F0 8308                     00000508   314          B     FAILTEST               Yes, exit with BAD PSW
+                                                   315
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   317 ***********************************************************************
+                                                   318 *        RPTERROR          Report instruction test in error
+                                                   319 *                             R0 = MESSGAE LENGTH
+                                                   320 *                             R1 = ADDRESS OF MESSAGE
+                                                   321 ***********************************************************************
+
+000003EC  50F0 820C                     0000040C   323 RPTERROR ST    R15,RPTSAVE            Save return address
+000003F0  5050 8210                     00000410   324          ST    R5,RPTSVR5             Save R5
+                                                   325 *
+                                                   326 *        Use Hercules Diagnose for Message to console
+                                                   327 *
+000003F4  9002 8218                     00000418   328          STM   R0,R2,RPTDWSAV         save regs used by MSG
+000003F8  4520 8228                     00000428   329          BAL   R2,MSG                 call Hercules console MSG display
+000003FC  9802 8218                     00000418   330          LM    R0,R2,RPTDWSAV         restore regs
+
+
+00000400  5850 8210                     00000410   332          L     R5,RPTSVR5             Restore R5
+00000404  58F0 820C                     0000040C   333          L     R15,RPTSAVE            Restore return address
+00000408  07FF                                     334          BR    R15                    Return to caller
+
+0000040C  00000000                                 336 RPTSAVE  DC    F'0'                   R15 save area
+00000410  00000000                                 337 RPTSVR5  DC    F'0'                   R5 save area
+
+00000418  00000000 00000000                        339 RPTDWSAV DC    2D'0'                  R0-R2 save area for MSG call
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   341 ***********************************************************************
+                                                   342 *        Issue HERCULES MESSAGE pointed to by R1, length in R0
+                                                   343 *              R2 = return address
+                                                   344 ***********************************************************************
+                                                   345
+00000428  4900 8324                     00000524   346 MSG      CH    R0,=H'0'               Do we even HAVE a message?
+0000042C  07D2                                     347          BNHR  R2                     No, ignore
+                                                   348
+0000042E  9002 8264                     00000464   349          STM   R0,R2,MSGSAVE          Save registers
+                                                   350
+00000432  4900 8326                     00000526   351          CH    R0,=AL2(L'MSGMSG)      Message length within limits?
+00000436  47D0 823E                     0000043E   352          BNH   MSGOK                  Yes, continue
+0000043A  4100 005F                     0000005F   353          LA    R0,L'MSGMSG            No, set to maximum
+                                                   354
+0000043E  1820                                     355 MSGOK    LR    R2,R0                  Copy length to work register
+00000440  0620                                     356          BCTR  R2,0                   Minus-1 for execute
+00000442  4420 8270                     00000470   357          EX    R2,MSGMVC              Copy message to O/P buffer
+                                                   358
+00000446  4120 200A                     0000000A   359          LA    R2,1+L'MSGCMD(,R2)     Calculate true command length
+0000044A  4110 8276                     00000476   360          LA    R1,MSGCMD              Point to true command
+                                                   361
+0000044E  83120008                                 362          DC    X'83',X'12',X'0008'    Issue Hercules Diagnose X'008'
+00000452  4780 825E                     0000045E   363          BZ    MSGRET                 Return if successful
+                                                   364
+00000456  1222                                     365          LTR   R2,R2                  Is Diag8 Ry (R2) 0?
+00000458  4780 825E                     0000045E   366          BZ    MSGRET                   an error occurred but coninue
+                                                   367
+0000045C  0000                                     368          DC    H'0'                   CRASH for debugging purposes
+                                                   369
+0000045E  9802 8264                     00000464   370 MSGRET   LM    R0,R2,MSGSAVE          Restore registers
+00000462  07F2                                     371          BR    R2                     Return to caller
+
+
+
+
+00000464  00000000 00000000                        373 MSGSAVE  DC    3F'0'                  Registers save area
+00000470  D200 827F 1000      0000047F  00000000   374 MSGMVC   MVC   MSGMSG(0),0(R1)        Executed instruction
+
+
+00000476  D4E2C7D5 D6C8405C                        376 MSGCMD   DC    C'MSGNOH * '           *** HERCULES MESSAGE COMMAND ***
+0000047F  40404040 40404040                        377 MSGMSG   DC    CL95' '                The message text to be displayed
+                                                   378
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   380 ***********************************************************************
+                                                   381 *        Normal completion or Abnormal termination PSWs
+                                                   382 ***********************************************************************
+
+
+
+
+000004E0  00020001 80000000                        384 EOJPSW   DC    0D'0',X'0002000180000000',AD(0)
+
+000004F0  B2B2 82E0                     000004E0   386 EOJ      LPSWE EOJPSW            Normal completion
+
+
+
+
+000004F8  00020001 80000000                        388 FAILPSW  DC    0D'0',X'0002000180000000',AD(X'BAD')
+
+00000508  B2B2 82F8                     000004F8   390 FAILTEST LPSWE FAILPSW           Abnormal termination
+
+
+
+
+                                                   392 ***********************************************************************
+                                                   393 *        Working Storage
+                                                   394 ***********************************************************************
+
+
+0000050C  00000000                                 396 CTLR0    DS    F                  CR0
+00000510  00000000                                 397          DS    F
+
+
+00000514                                           399          LTORG ,                  Literals pool
+00000514  00000040                                 400                =F'64'
+00000518  00001EF8                                 401                =A(CFFTESTS)
+0000051C  00000003                                 402                =XL4'3'
+00000520  00000001                                 403                =F'1'
+00000524  0000                                     404                =H'0'
+00000526  005F                                     405                =AL2(L'MSGMSG)
+                                                   406
+                                                   407 *        some constants
+                                                   408
+                              00000400  00000001   409 K        EQU   1024               One KB
+                              00001000  00000001   410 PAGE     EQU   (4*K)              Size of one page
+                              00010000  00000001   411 K64      EQU   (64*K)             64 KB
+                              00100000  00000001   412 MB       EQU   (K*K)               1 MB
+                                                   413
+                                                   414
+                              AABBCCDD  00000001   415 REG2PATT EQU   X'AABBCCDD'        Polluted Register pattern
+                              000000DD  00000001   416 REG2LOW  EQU         X'DD'        (last byte above)
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   418 *======================================================================
+                                                   419 *
+                                                   420 *  NOTE: start data on an address that is easy to display
+                                                   421 *        within Hercules
+                                                   422 *
+                                                   423 *======================================================================
+                                                   424
+00000528                      00000528  00001000   425          ORG   CFFTST+X'1000'
+00001000  00000000                                 426 FAILED   DC    F'0'               some test failed?
+00001004  00000000                                 427 TESTING  DC    F'0'               current test number
+
+
+
+
+                                                   430 ***********************************************************************
+                                                   431 *        TEST failed : result messgae
+                                                   432 ***********************************************************************
+                                                   433 *
+                                                   434 *        failed message and associated editting
+                                                   435 *
+00001008  40404040 40404040                        436 PRTLINE  DC    C'         Test # '
+00001018  A7A7A7                                   437 PRTNUM   DC    C'xxx'
+0000101B  40868189 93858440                        438          DC    C' failed for instruction '
+00001033  A7A7A7A7 A7A7A7A7                        439 PRTNAME  DC    CL8'xxxxxxxx'
+                              00000033  00000001   440 PRTLNG   EQU   *-PRTLINE
+                                                   441
+                                                   442
+                                                   443 ***********************************************************************
+                                                   444 *        TEST failed : CC message
+                                                   445 ***********************************************************************
+                                                   446 *
+                                                   447 *        failed message and associated editting
+                                                   448 *
+0000103B  40404040 40404040                        449 CCPRTLINE DC   C'         Test # '
+0000104B  A7A7A7                                   450 CCPRTNUM DC    C'xxx'
+0000104E  40A69996 95874083                        451          DC    c' wrong cc for instruction '
+00001068  A7A7A7A7 A7A7A7A7                        452 CCPRTNAME DC    CL8'xxxxxxxx'
+00001070  4085A797 8583A385                        453          DC    C' expected: cc='
+0000107E  A7                                       454 CCPRTEXP DC    C'x'
+0000107F  6B                                       455          DC    C','
+00001080  40998583 8589A585                        456          DC    C' received: cc='
+0000108E  A7                                       457 CCPRTGOT DC    C'x'
+0000108F  4B                                       458          DC    C'.'
+                              00000055  00000001   459 CCPRTLNG   EQU   *-CCPRTLINE
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   461 ***********************************************************************
+                                                   462 *        TEST failed : message working storge
+                                                   463 ***********************************************************************
+00001090  40212020 20202020                        464 EDIT     DC    XL18'402120202020202020202020202020202020'
+                                                   465
+000010A2  7E7E7E6E                                 466          DC    C'===>'
+000010A6  40404040 40404040                        467 PRT3     DC    CL18' '
+000010B8  4C7E7E7E                                 468          DC    C'<==='
+000010BC  00000000 00000000                        469 DECNUM   DS    CL16
+
+
+                                                   471 ***********************************************************************
+                                                   472 *        Vector instruction results, pollution and input
+                                                   473 ***********************************************************************
+000010D0                                           474          DS    0FD
+000010D0  AABBCCDD EEFFAABB                        475 R1FUDGE  DC    XL8'AABBCCDDEEFFAABB'                     R1 FUDGE
+000010D8  00000000 00000000                        476          DS    XL16                                          gap
+000010E8  00000000 00000000                        477 V1OUTPUT DS    XL16                                      V1 OUTPUT
+000010F8  00000000 00000000                        478          DS    XL16                                          gap
+00001108  00000000 00000000                        479 R1OUTPUT DS    FD                                        R1 OUTPUT
+00001110  00000000 00000000                        480          DS    XL16                                          gap
+00001120  FFFFFFFF FFFFFFFF                        481 V1FUDGE  DC    XL16'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'    V1 FUDGE
+00001130  BBBBBBBB BBBBBBBB                        482 V1FUDGEB DC    XL16'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'    V1 FUDGE b
+00001140  F1F2F3F4 F5F6F7F8                        483 V1INPUT  DC    CL16'1234567890123456'                    V1 input
+00001150  F7F8F9F0 F1F2F3F4                        484          DC    CL14'78901234567890'
+0000115E  D9                                       485          DC    X'D9'
+0000115F  00000000 00000000                        486          DS    XL16                                          gap
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   488 ***********************************************************************
+                                                   489 *        CFFTEST DSECT
+                                                   490 ***********************************************************************
+
+
+                                                   492 CFFTEST   DSECT ,
+00000000  00000000                                 493 TSUB     DC    A(0)               pointer  to test
+00000004  0000                                     494 TNUM     DC    H'00'              Test Number
+                                                   495
+00000006  00                                       496          DC    XL1'00'
+00000007  00                                       497 CC       DC    HL1'00'            cc
+00000008  00                                       498 CCMASK   DC    HL1'00'            not expected CC mask
+00000009  00                                       499          DC    XL1'00'
+                                                   500
+0000000A  40404040 40404040                        501 OPNAME   DC    CL8' '             Concurrent-functions instruction name
+00000018  00000000 00000000                        502 O1ADDR   DC    AD(0)               address of op1 source
+00000020  00000000 00000000                        503 O2ADDR   DC    AD(0)               address of op2 source
+00000028  00000000 00000000                        504 O3ADDR   DC    AD(0)               address of op3/r3 source
+00000030  00000000                                 505 RELEN    DC    A(0)               RESULT LENGTH
+00000038  00000000 00000000                        506 READDR   DC    AD(0)               expected result address
+00000040  00000000 00000000                        507          DS    FD                    gap
+00000048  00000000 00000000                        508 R3OUTPUT DS    D                  Op3/R3 Output
+00000050  00000000 00000000                        509          DS    FD                    gap
+00000058  00000000 00000000                        510 CCPSW    DS    2F                 extract PSW after test (has CC)
+00000060  00                                       511 CCFOUND  DS    X                  extracted cc
+00000068  00000000 00000000                        512          DS    FD
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   514 ***********************************************************************
+                                                   515 *     Macros to help build test tables
+                                                   516 *----------------------------------------------------------------------
+                                                   517 * (pending     C8x6 CAL   - Compare And Load
+                                                   518 *  inclusion in SATK ASAM)
+                                                   519 *
+                                                   520 *     CAL Macro to help build CAL instruction
+                                                   521 *        Note: R1, R2, R3 are fixed registers:
+                                                   522 *                         r1 = 1; r2 = 2; r3 = 3
+                                                   523 ***********************************************************************
+                                                   524          MACRO
+                                                   525          CAL
+                                                   526                                                                SPACE 1
+                                                   527          DS    0H
+                                                   528          DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+                                                   529                                                                SPACE 1
+                                                   530          MEND
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   532 ***********************************************************************
+                                                   533 * (pending     C8x7 CALG  - Compare And Load Long
+                                                   534 *  inclusion in SATK ASAM)
+                                                   535 *
+                                                   536 *     CALG Macro to help build CALG instruction
+                                                   537 *        Note: R1, R2, R3 are fixed registers:
+                                                   538 *                         r1 = 1; r2 = 2; r3 = 3
+                                                   539 ***********************************************************************
+                                                   540          MACRO
+                                                   541          CALG
+                                                   542                                                                SPACE 1
+                                                   543          DS    0H
+                                                   544          DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+                                                   545                                                                SPACE 1
+                                                   546          MEND
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   548 ***********************************************************************
+                                                   549 * (pending     C8xF CALGF - Compare And Load Long Fullword
+                                                   550 *  inclusion in SATK ASAM)
+                                                   551 *
+                                                   552 *     CALGF Macro to help build CALGF instruction
+                                                   553 *        Note: R1, R2, R3 are fixed registers:
+                                                   554 *                         r1 = 1; r2 = 2; r3 = 3
+                                                   555 ***********************************************************************
+                                                   556          MACRO
+                                                   557          CALGF
+                                                   558                                                                SPACE 1
+                                                   559          DS    0H
+                                                   560          DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+                                                   561                                                                SPACE 1
+                                                   562          MEND
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   564 ***********************************************************************
+                                                   565 *     SSF Macro to help build test tables
+                                                   566 ***********************************************************************
+                                                   567          MACRO
+                                                   568          SSF   &INST,&CC
+                                                   569 .*                                &INST  - instruction under test
+                                                   570 .*                                &CC    - expected CC
+                                                   571 .*
+                                                   572          LCLA  &XCC(4)  &CC has mask values for FAILED condition codes
+                                                   573 &XCC(1)  SETA  7                  CC != 0
+                                                   574 &XCC(2)  SETA  11                 CC != 1
+                                                   575 &XCC(3)  SETA  13                 CC != 2
+                                                   576 &XCC(4)  SETA  14                 CC != 3
+                                                   577
+                                                   578          GBLA  &TNUM
+                                                   579 &TNUM    SETA  &TNUM+1
+                                                   580
+                                                   581          DS    0FD
+                                                   582          USING *,R5               base for test data and test routine
+                                                   583
+                                                   584 T&TNUM   DC    A(X&TNUM)          address of test routine
+                                                   585          DC    H'&TNUM'           test number
+                                                   586          DC    XL1'00'
+                                                   587          DC    HL1'&CC'           cc
+                                                   588          DC    HL1'&XCC(&CC+1)'   cc failed mask
+                                                   589          DC    XL1'00'
+                                                   590
+                                                   591          DC    CL8'&INST'         instruction name
+                                                   592 O1A&TNUM DC    AD(RE&TNUM+8)      address of op1 source
+                                                   593 O2A&TNUM DC    AD(RE&TNUM+16)     address of op2 source
+                                                   594 O3A&TNUM DC    AD(RE&TNUM+24)     address of op3/R3 source
+                                                   595          DC    A(8)               result length
+                                                   596 REA&TNUM DC    AD(RE&TNUM)        result address
+                                                   597          DS    FD                 gap
+                                                   598 R3O&TNUM DS    D                  Op3/R3 Output
+                                                   599          DS    FD                 gap
+                                                   600 CCP&TNUM DS    2F                 extract PSW after test (has CC)
+                                                   601 CCF&TNUM DS    X                  extracted cc
+                                                   602          DS    FD
+                                                   603 .*
+                                                   604 *                                 INSTRUCTION UNDER TEST ROUTINE
+                                                   605 X&TNUM   DS    0F
+                                                   606          LG     R1,O1A&TNUM       get R1 source
+                                                   607          LG     R2,O2A&TNUM       get R2 source
+                                                   608          LG     R3,O3A&TNUM       get R3 source address
+                                                   609          LG     R3,0(R3)          get R3 source value
+                                                   610
+                                                   611          &INST                    test instruction
+                                                   612
+                                                   613          STG   R3,R3O&TNUM
+                                                   614
+                                                   615          EPSW  R4,R0              extract psw
+                                                   616          ST    R4,CCP&TNUM           to save CC
+                                                   617
+                                                   618          BR    R11
+                                                   619
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   620 RE&TNUM  DC    0F
+                                                   621          DROP  R5
+                                                   622
+                                                   623          MEND
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   625 ***********************************************************************
+                                                   626 *     PTTABLE Macro to generate table of pointers to individual tests
+                                                   627 ***********************************************************************
+                                                   628
+                                                   629          MACRO
+                                                   630          PTTABLE
+                                                   631          GBLA  &TNUM
+                                                   632          LCLA  &CUR
+                                                   633 &CUR     SETA  1
+                                                   634 .*
+                                                   635 TTABLE   DS    0F
+                                                   636 .LOOP    ANOP
+                                                   637 .*
+                                                   638          DC    A(T&CUR)           address of test
+                                                   639 .*
+                                                   640 &CUR     SETA  &CUR+1
+                                                   641          AIF   (&CUR LE &TNUM).LOOP
+                                                   642 *
+                                                   643          DC    A(0)               END OF TABLE
+                                                   644          DC    A(0)
+                                                   645 .*
+                                                   646          MEND
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   648 ***********************************************************************
+                                                   649 *        Concurrent-functions facility tests
+                                                   650 ***********************************************************************
+                              00000000  00001F47   651 CFFTST   CSECT ,
+00001170                                           652          DS    0F
+
+
+                                                   654          PRINT DATA
+                                                   655 *
+                                                   656 *        C8x6 CAL   - Compare And Load
+                                                   657 *        C8x7 CALG  - Compare And Load Long
+                                                   658 *        C8xF CALGF - Compare And Load Long Fullword
+                                                   659 *
+                                                   660 *        SSF   instr, cc
+                                                   661 *              followed by:
+                                                   662 *                 result  - 8 bytes
+                                                   663 *                 op1     - 8 byte source
+                                                   664 *                 op2     - 8 byte source
+                                                   665 *                 r3      - 8 byte source
+                                                   666 *---------------------------------------------------------------------
+                                                   667 *  C8x6 CAL   - Compare And Load (32 bits)
+                                                   668 *---------------------------------------------------------------------
+                                                   669 * CC = 0 (equal) if r3 = op1; r3 = op2
+                                                   670          SSF   CAL,0
+00001170                                           671+         DS    0FD
+00001170                      00001170             672+         USING *,R5               base for test data and test routine
+00001170  000011E0                                 673+T1       DC    A(X1)              address of test routine
+00001174  0001                                     674+         DC    H'1'               test number
+00001176  00                                       675+         DC    XL1'00'
+00001177  00                                       676+         DC    HL1'0'             cc
+00001178  07                                       677+         DC    HL1'7'             cc failed mask
+00001179  00                                       678+         DC    XL1'00'
+0000117A  C3C1D340 40404040                        679+         DC    CL8'CAL'           instruction name
+00001188  00000000 00001218                        680+O1A1     DC    AD(RE1+8)          address of op1 source
+00001190  00000000 00001220                        681+O2A1     DC    AD(RE1+16)         address of op2 source
+00001198  00000000 00001228                        682+O3A1     DC    AD(RE1+24)         address of op3/R3 source
+000011A0  00000008                                 683+         DC    A(8)               result length
+000011A8  00000000 00001210                        684+REA1     DC    AD(RE1)            result address
+000011B0  00000000 00000000                        685+         DS    FD                 gap
+000011B8  00000000 00000000                        686+R3O1     DS    D                  Op3/R3 Output
+000011C0  00000000 00000000                        687+         DS    FD                 gap
+000011C8  00000000 00000000                        688+CCP1     DS    2F                 extract PSW after test (has CC)
+000011D0  00                                       689+CCF1     DS    X                  extracted cc
+000011D8  00000000 00000000                        690+         DS    FD
+                                                   691+*                                 INSTRUCTION UNDER TEST ROUTINE
+000011E0                                           692+X1       DS    0F
+000011E0  E310 5018 0004                00001188   693+         LG    R1,O1A1            get R1 source
+000011E6  E320 5020 0004                00001190   694+         LG    R2,O2A1            get R2 source
+000011EC  E330 5028 0004                00001198   695+         LG    R3,O3A1            get R3 source address
+000011F2  E333 0000 0004                00000000   696+         LG    R3,0(R3)           get R3 source value
+
+000011F8                                           699+         DS    0H
+000011F8  C8361000 2000                            700+         DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+
+000011FE  E330 5048 0024                000011B8   702+         STG   R3,R3O1
+00001204  B98D 0040                                703+         EPSW  R4,R0              extract psw
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001208  5040 5058                     000011C8   704+         ST    R4,CCP1               to save CC
+0000120C  07FB                                     705+         BR    R11
+00001210                                           706+RE1      DC    0F
+00001210                                           707+         DROP  R5
+00001210  FF000000 00000004                        708          DC    XL8'FF000000 00000004'   result
+00001218  00000001 000000AA                        709          DC    XL8'00000001 000000AA'   op1 (first 32 bits)
+00001220  00000004 000000BB                        710          DC    XL8'00000004 000000BB'   op2 (first 32 bits)
+00001228  FF000000 00000001                        711          DC    XL8'FF000000 00000001'   r3
+                                                   712
+                                                   713          SSF   CAL,0
+00001230                                           714+         DS    0FD
+00001230                      00001230             715+         USING *,R5               base for test data and test routine
+00001230  000012A0                                 716+T2       DC    A(X2)              address of test routine
+00001234  0002                                     717+         DC    H'2'               test number
+00001236  00                                       718+         DC    XL1'00'
+00001237  00                                       719+         DC    HL1'0'             cc
+00001238  07                                       720+         DC    HL1'7'             cc failed mask
+00001239  00                                       721+         DC    XL1'00'
+0000123A  C3C1D340 40404040                        722+         DC    CL8'CAL'           instruction name
+00001248  00000000 000012D8                        723+O1A2     DC    AD(RE2+8)          address of op1 source
+00001250  00000000 000012E0                        724+O2A2     DC    AD(RE2+16)         address of op2 source
+00001258  00000000 000012E8                        725+O3A2     DC    AD(RE2+24)         address of op3/R3 source
+00001260  00000008                                 726+         DC    A(8)               result length
+00001268  00000000 000012D0                        727+REA2     DC    AD(RE2)            result address
+00001270  00000000 00000000                        728+         DS    FD                 gap
+00001278  00000000 00000000                        729+R3O2     DS    D                  Op3/R3 Output
+00001280  00000000 00000000                        730+         DS    FD                 gap
+00001288  00000000 00000000                        731+CCP2     DS    2F                 extract PSW after test (has CC)
+00001290  00                                       732+CCF2     DS    X                  extracted cc
+00001298  00000000 00000000                        733+         DS    FD
+                                                   734+*                                 INSTRUCTION UNDER TEST ROUTINE
+000012A0                                           735+X2       DS    0F
+000012A0  E310 5018 0004                00001248   736+         LG    R1,O1A2            get R1 source
+000012A6  E320 5020 0004                00001250   737+         LG    R2,O2A2            get R2 source
+000012AC  E330 5028 0004                00001258   738+         LG    R3,O3A2            get R3 source address
+000012B2  E333 0000 0004                00000000   739+         LG    R3,0(R3)           get R3 source value
+
+000012B8                                           742+         DS    0H
+000012B8  C8361000 2000                            743+         DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+
+000012BE  E330 5048 0024                00001278   745+         STG   R3,R3O2
+000012C4  B98D 0040                                746+         EPSW  R4,R0              extract psw
+000012C8  5040 5058                     00001288   747+         ST    R4,CCP2               to save CC
+000012CC  07FB                                     748+         BR    R11
+000012D0                                           749+RE2      DC    0F
+000012D0                                           750+         DROP  R5
+000012D0  FFFFFFFF A0000004                        751          DC    XL8'FFFFFFFF A0000004'   result
+000012D8  00000001 AAAAAAAA                        752          DC    XL8'00000001 AAAAAAAA'   op1 (first 32 bits)
+000012E0  A0000004 BBBBBBBB                        753          DC    XL8'A0000004 BBBBBBBB'   op2 (first 32 bits)
+000012E8  FFFFFFFF 00000001                        754          DC    XL8'FFFFFFFF 00000001'   r3
+                                                   755
+                                                   756          SSF   CAL,0
+000012F0                                           757+         DS    0FD
+000012F0                      000012F0             758+         USING *,R5               base for test data and test routine
+000012F0  00001360                                 759+T3       DC    A(X3)              address of test routine
+000012F4  0003                                     760+         DC    H'3'               test number
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000012F6  00                                       761+         DC    XL1'00'
+000012F7  00                                       762+         DC    HL1'0'             cc
+000012F8  07                                       763+         DC    HL1'7'             cc failed mask
+000012F9  00                                       764+         DC    XL1'00'
+000012FA  C3C1D340 40404040                        765+         DC    CL8'CAL'           instruction name
+00001308  00000000 00001398                        766+O1A3     DC    AD(RE3+8)          address of op1 source
+00001310  00000000 000013A0                        767+O2A3     DC    AD(RE3+16)         address of op2 source
+00001318  00000000 000013A8                        768+O3A3     DC    AD(RE3+24)         address of op3/R3 source
+00001320  00000008                                 769+         DC    A(8)               result length
+00001328  00000000 00001390                        770+REA3     DC    AD(RE3)            result address
+00001330  00000000 00000000                        771+         DS    FD                 gap
+00001338  00000000 00000000                        772+R3O3     DS    D                  Op3/R3 Output
+00001340  00000000 00000000                        773+         DS    FD                 gap
+00001348  00000000 00000000                        774+CCP3     DS    2F                 extract PSW after test (has CC)
+00001350  00                                       775+CCF3     DS    X                  extracted cc
+00001358  00000000 00000000                        776+         DS    FD
+                                                   777+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001360                                           778+X3       DS    0F
+00001360  E310 5018 0004                00001308   779+         LG    R1,O1A3            get R1 source
+00001366  E320 5020 0004                00001310   780+         LG    R2,O2A3            get R2 source
+0000136C  E330 5028 0004                00001318   781+         LG    R3,O3A3            get R3 source address
+00001372  E333 0000 0004                00000000   782+         LG    R3,0(R3)           get R3 source value
+
+00001378                                           785+         DS    0H
+00001378  C8361000 2000                            786+         DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+
+0000137E  E330 5048 0024                00001338   788+         STG   R3,R3O3
+00001384  B98D 0040                                789+         EPSW  R4,R0              extract psw
+00001388  5040 5058                     00001348   790+         ST    R4,CCP3               to save CC
+0000138C  07FB                                     791+         BR    R11
+00001390                                           792+RE3      DC    0F
+00001390                                           793+         DROP  R5
+00001390  FFFFFFFF 99999999                        794          DC    XL8'FFFFFFFF 99999999'   result
+00001398  00000001 AAAAAAAA                        795          DC    XL8'00000001 AAAAAAAA'   op1 (first 32 bits)
+000013A0  99999999 BBBBBBBB                        796          DC    XL8'99999999 BBBBBBBB'   op2 (first 32 bits)
+000013A8  FFFFFFFF 00000001                        797          DC    XL8'FFFFFFFF 00000001'   r3
+                                                   798
+                                                   799 * CC = 1 (not equal) if r3 != op1; r3 = op1
+                                                   800          SSF   CAL,1
+000013B0                                           801+         DS    0FD
+000013B0                      000013B0             802+         USING *,R5               base for test data and test routine
+000013B0  00001420                                 803+T4       DC    A(X4)              address of test routine
+000013B4  0004                                     804+         DC    H'4'               test number
+000013B6  00                                       805+         DC    XL1'00'
+000013B7  01                                       806+         DC    HL1'1'             cc
+000013B8  0B                                       807+         DC    HL1'11'            cc failed mask
+000013B9  00                                       808+         DC    XL1'00'
+000013BA  C3C1D340 40404040                        809+         DC    CL8'CAL'           instruction name
+000013C8  00000000 00001458                        810+O1A4     DC    AD(RE4+8)          address of op1 source
+000013D0  00000000 00001460                        811+O2A4     DC    AD(RE4+16)         address of op2 source
+000013D8  00000000 00001468                        812+O3A4     DC    AD(RE4+24)         address of op3/R3 source
+000013E0  00000008                                 813+         DC    A(8)               result length
+000013E8  00000000 00001450                        814+REA4     DC    AD(RE4)            result address
+000013F0  00000000 00000000                        815+         DS    FD                 gap
+000013F8  00000000 00000000                        816+R3O4     DS    D                  Op3/R3 Output
+00001400  00000000 00000000                        817+         DS    FD                 gap
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001408  00000000 00000000                        818+CCP4     DS    2F                 extract PSW after test (has CC)
+00001410  00                                       819+CCF4     DS    X                  extracted cc
+00001418  00000000 00000000                        820+         DS    FD
+                                                   821+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001420                                           822+X4       DS    0F
+00001420  E310 5018 0004                000013C8   823+         LG    R1,O1A4            get R1 source
+00001426  E320 5020 0004                000013D0   824+         LG    R2,O2A4            get R2 source
+0000142C  E330 5028 0004                000013D8   825+         LG    R3,O3A4            get R3 source address
+00001432  E333 0000 0004                00000000   826+         LG    R3,0(R3)           get R3 source value
+
+00001438                                           829+         DS    0H
+00001438  C8361000 2000                            830+         DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+
+0000143E  E330 5048 0024                000013F8   832+         STG   R3,R3O4
+00001444  B98D 0040                                833+         EPSW  R4,R0              extract psw
+00001448  5040 5058                     00001408   834+         ST    R4,CCP4               to save CC
+0000144C  07FB                                     835+         BR    R11
+00001450                                           836+RE4      DC    0F
+00001450                                           837+         DROP  R5
+00001450  FF000000 00000001                        838          DC    XL8'FF000000 00000001'   result
+00001458  00000001 000000FF                        839          DC    XL8'00000001 000000FF'   op1 (first 32 bits)
+00001460  00000004 000000FF                        840          DC    XL8'00000004 000000FF'   op2 (first 32 bits)
+00001468  FF000000 00000000                        841          DC    XL8'FF000000 00000000'   r3
+                                                   842
+                                                   843          SSF   CAL,1
+00001470                                           844+         DS    0FD
+00001470                      00001470             845+         USING *,R5               base for test data and test routine
+00001470  000014E0                                 846+T5       DC    A(X5)              address of test routine
+00001474  0005                                     847+         DC    H'5'               test number
+00001476  00                                       848+         DC    XL1'00'
+00001477  01                                       849+         DC    HL1'1'             cc
+00001478  0B                                       850+         DC    HL1'11'            cc failed mask
+00001479  00                                       851+         DC    XL1'00'
+0000147A  C3C1D340 40404040                        852+         DC    CL8'CAL'           instruction name
+00001488  00000000 00001518                        853+O1A5     DC    AD(RE5+8)          address of op1 source
+00001490  00000000 00001520                        854+O2A5     DC    AD(RE5+16)         address of op2 source
+00001498  00000000 00001528                        855+O3A5     DC    AD(RE5+24)         address of op3/R3 source
+000014A0  00000008                                 856+         DC    A(8)               result length
+000014A8  00000000 00001510                        857+REA5     DC    AD(RE5)            result address
+000014B0  00000000 00000000                        858+         DS    FD                 gap
+000014B8  00000000 00000000                        859+R3O5     DS    D                  Op3/R3 Output
+000014C0  00000000 00000000                        860+         DS    FD                 gap
+000014C8  00000000 00000000                        861+CCP5     DS    2F                 extract PSW after test (has CC)
+000014D0  00                                       862+CCF5     DS    X                  extracted cc
+000014D8  00000000 00000000                        863+         DS    FD
+                                                   864+*                                 INSTRUCTION UNDER TEST ROUTINE
+000014E0                                           865+X5       DS    0F
+000014E0  E310 5018 0004                00001488   866+         LG    R1,O1A5            get R1 source
+000014E6  E320 5020 0004                00001490   867+         LG    R2,O2A5            get R2 source
+000014EC  E330 5028 0004                00001498   868+         LG    R3,O3A5            get R3 source address
+000014F2  E333 0000 0004                00000000   869+         LG    R3,0(R3)           get R3 source value
+
+000014F8                                           872+         DS    0H
+000014F8  C8361000 2000                            873+         DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+
+000014FE  E330 5048 0024                000014B8   875+         STG   R3,R3O5
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001504  B98D 0040                                876+         EPSW  R4,R0              extract psw
+00001508  5040 5058                     000014C8   877+         ST    R4,CCP5               to save CC
+0000150C  07FB                                     878+         BR    R11
+00001510                                           879+RE5      DC    0F
+00001510                                           880+         DROP  R5
+00001510  FFFFFFFF 00000DDD                        881          DC    XL8'FFFFFFFF 00000DDD'   result
+00001518  00000DDD AAAAAAAA                        882          DC    XL8'00000DDD AAAAAAAA'   op1 (first 32 bits)
+00001520  A0000004 BBBBBBBB                        883          DC    XL8'A0000004 BBBBBBBB'   op2 (first 32 bits)
+00001528  FFFFFFFF 0000CCCC                        884          DC    XL8'FFFFFFFF 0000CCCC'   r3
+                                                   885
+                                                   886          SSF   CAL,1
+00001530                                           887+         DS    0FD
+00001530                      00001530             888+         USING *,R5               base for test data and test routine
+00001530  000015A0                                 889+T6       DC    A(X6)              address of test routine
+00001534  0006                                     890+         DC    H'6'               test number
+00001536  00                                       891+         DC    XL1'00'
+00001537  01                                       892+         DC    HL1'1'             cc
+00001538  0B                                       893+         DC    HL1'11'            cc failed mask
+00001539  00                                       894+         DC    XL1'00'
+0000153A  C3C1D340 40404040                        895+         DC    CL8'CAL'           instruction name
+00001548  00000000 000015D8                        896+O1A6     DC    AD(RE6+8)          address of op1 source
+00001550  00000000 000015E0                        897+O2A6     DC    AD(RE6+16)         address of op2 source
+00001558  00000000 000015E8                        898+O3A6     DC    AD(RE6+24)         address of op3/R3 source
+00001560  00000008                                 899+         DC    A(8)               result length
+00001568  00000000 000015D0                        900+REA6     DC    AD(RE6)            result address
+00001570  00000000 00000000                        901+         DS    FD                 gap
+00001578  00000000 00000000                        902+R3O6     DS    D                  Op3/R3 Output
+00001580  00000000 00000000                        903+         DS    FD                 gap
+00001588  00000000 00000000                        904+CCP6     DS    2F                 extract PSW after test (has CC)
+00001590  00                                       905+CCF6     DS    X                  extracted cc
+00001598  00000000 00000000                        906+         DS    FD
+                                                   907+*                                 INSTRUCTION UNDER TEST ROUTINE
+000015A0                                           908+X6       DS    0F
+000015A0  E310 5018 0004                00001548   909+         LG    R1,O1A6            get R1 source
+000015A6  E320 5020 0004                00001550   910+         LG    R2,O2A6            get R2 source
+000015AC  E330 5028 0004                00001558   911+         LG    R3,O3A6            get R3 source address
+000015B2  E333 0000 0004                00000000   912+         LG    R3,0(R3)           get R3 source value
+
+000015B8                                           915+         DS    0H
+000015B8  C8361000 2000                            916+         DC    XL6'C83610002000'  CAL r3,0(R1),0(R2)
+
+000015BE  E330 5048 0024                00001578   918+         STG   R3,R3O6
+000015C4  B98D 0040                                919+         EPSW  R4,R0              extract psw
+000015C8  5040 5058                     00001588   920+         ST    R4,CCP6               to save CC
+000015CC  07FB                                     921+         BR    R11
+000015D0                                           922+RE6      DC    0F
+000015D0                                           923+         DROP  R5
+000015D0  FFFFFFFF 0000CCCC                        924          DC    XL8'FFFFFFFF 0000CCCC'   result
+000015D8  0000CCCC AAAAAAAA                        925          DC    XL8'0000CCCC AAAAAAAA'   op1 (first 32 bits)
+000015E0  99999999 BBBBBBBB                        926          DC    XL8'99999999 BBBBBBBB'   op2 (first 32 bits)
+000015E8  FFFFFFFF 00009999                        927          DC    XL8'FFFFFFFF 00009999'   r3
+                                                   928
+                                                   929 *---------------------------------------------------------------------
+                                                   930 *  C8x7 CALG  - Compare And Load Long (64 bits)
+                                                   931 *---------------------------------------------------------------------
+                                                   932 * CC = 0 (equal) if r3 = op1; r3 = op2
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   933          SSF   CALG,0
+000015F0                                           934+         DS    0FD
+000015F0                      000015F0             935+         USING *,R5               base for test data and test routine
+000015F0  00001660                                 936+T7       DC    A(X7)              address of test routine
+000015F4  0007                                     937+         DC    H'7'               test number
+000015F6  00                                       938+         DC    XL1'00'
+000015F7  00                                       939+         DC    HL1'0'             cc
+000015F8  07                                       940+         DC    HL1'7'             cc failed mask
+000015F9  00                                       941+         DC    XL1'00'
+000015FA  C3C1D3C7 40404040                        942+         DC    CL8'CALG'          instruction name
+00001608  00000000 00001698                        943+O1A7     DC    AD(RE7+8)          address of op1 source
+00001610  00000000 000016A0                        944+O2A7     DC    AD(RE7+16)         address of op2 source
+00001618  00000000 000016A8                        945+O3A7     DC    AD(RE7+24)         address of op3/R3 source
+00001620  00000008                                 946+         DC    A(8)               result length
+00001628  00000000 00001690                        947+REA7     DC    AD(RE7)            result address
+00001630  00000000 00000000                        948+         DS    FD                 gap
+00001638  00000000 00000000                        949+R3O7     DS    D                  Op3/R3 Output
+00001640  00000000 00000000                        950+         DS    FD                 gap
+00001648  00000000 00000000                        951+CCP7     DS    2F                 extract PSW after test (has CC)
+00001650  00                                       952+CCF7     DS    X                  extracted cc
+00001658  00000000 00000000                        953+         DS    FD
+                                                   954+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001660                                           955+X7       DS    0F
+00001660  E310 5018 0004                00001608   956+         LG    R1,O1A7            get R1 source
+00001666  E320 5020 0004                00001610   957+         LG    R2,O2A7            get R2 source
+0000166C  E330 5028 0004                00001618   958+         LG    R3,O3A7            get R3 source address
+00001672  E333 0000 0004                00000000   959+         LG    R3,0(R3)           get R3 source value
+
+00001678                                           962+         DS    0H
+00001678  C8371000 2000                            963+         DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+
+0000167E  E330 5048 0024                00001638   965+         STG   R3,R3O7
+00001684  B98D 0040                                966+         EPSW  R4,R0              extract psw
+00001688  5040 5058                     00001648   967+         ST    R4,CCP7               to save CC
+0000168C  07FB                                     968+         BR    R11
+00001690                                           969+RE7      DC    0F
+00001690                                           970+         DROP  R5
+00001690  00000004 000000BB                        971          DC    XL8'00000004 000000BB'   result
+00001698  FF000000 00000001                        972          DC    XL8'FF000000 00000001'   op1
+000016A0  00000004 000000BB                        973          DC    XL8'00000004 000000BB'   op2
+000016A8  FF000000 00000001                        974          DC    XL8'FF000000 00000001'   r3
+                                                   975
+                                                   976          SSF   CALG,0
+000016B0                                           977+         DS    0FD
+000016B0                      000016B0             978+         USING *,R5               base for test data and test routine
+000016B0  00001720                                 979+T8       DC    A(X8)              address of test routine
+000016B4  0008                                     980+         DC    H'8'               test number
+000016B6  00                                       981+         DC    XL1'00'
+000016B7  00                                       982+         DC    HL1'0'             cc
+000016B8  07                                       983+         DC    HL1'7'             cc failed mask
+000016B9  00                                       984+         DC    XL1'00'
+000016BA  C3C1D3C7 40404040                        985+         DC    CL8'CALG'          instruction name
+000016C8  00000000 00001758                        986+O1A8     DC    AD(RE8+8)          address of op1 source
+000016D0  00000000 00001760                        987+O2A8     DC    AD(RE8+16)         address of op2 source
+000016D8  00000000 00001768                        988+O3A8     DC    AD(RE8+24)         address of op3/R3 source
+000016E0  00000008                                 989+         DC    A(8)               result length
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016E8  00000000 00001750                        990+REA8     DC    AD(RE8)            result address
+000016F0  00000000 00000000                        991+         DS    FD                 gap
+000016F8  00000000 00000000                        992+R3O8     DS    D                  Op3/R3 Output
+00001700  00000000 00000000                        993+         DS    FD                 gap
+00001708  00000000 00000000                        994+CCP8     DS    2F                 extract PSW after test (has CC)
+00001710  00                                       995+CCF8     DS    X                  extracted cc
+00001718  00000000 00000000                        996+         DS    FD
+                                                   997+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001720                                           998+X8       DS    0F
+00001720  E310 5018 0004                000016C8   999+         LG    R1,O1A8            get R1 source
+00001726  E320 5020 0004                000016D0  1000+         LG    R2,O2A8            get R2 source
+0000172C  E330 5028 0004                000016D8  1001+         LG    R3,O3A8            get R3 source address
+00001732  E333 0000 0004                00000000  1002+         LG    R3,0(R3)           get R3 source value
+
+00001738                                          1005+         DS    0H
+00001738  C8371000 2000                           1006+         DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+
+0000173E  E330 5048 0024                000016F8  1008+         STG   R3,R3O8
+00001744  B98D 0040                               1009+         EPSW  R4,R0              extract psw
+00001748  5040 5058                     00001708  1010+         ST    R4,CCP8               to save CC
+0000174C  07FB                                    1011+         BR    R11
+00001750                                          1012+RE8      DC    0F
+00001750                                          1013+         DROP  R5
+00001750  A0000004 BBBBBBBB                       1014          DC    XL8'A0000004 BBBBBBBB'   result
+00001758  FFFFFFFF 00000001                       1015          DC    XL8'FFFFFFFF 00000001'   op1
+00001760  A0000004 BBBBBBBB                       1016          DC    XL8'A0000004 BBBBBBBB'   op2
+00001768  FFFFFFFF 00000001                       1017          DC    XL8'FFFFFFFF 00000001'   r3
+                                                  1018
+                                                  1019          SSF   CALG,0
+00001770                                          1020+         DS    0FD
+00001770                      00001770            1021+         USING *,R5               base for test data and test routine
+00001770  000017E0                                1022+T9       DC    A(X9)              address of test routine
+00001774  0009                                    1023+         DC    H'9'               test number
+00001776  00                                      1024+         DC    XL1'00'
+00001777  00                                      1025+         DC    HL1'0'             cc
+00001778  07                                      1026+         DC    HL1'7'             cc failed mask
+00001779  00                                      1027+         DC    XL1'00'
+0000177A  C3C1D3C7 40404040                       1028+         DC    CL8'CALG'          instruction name
+00001788  00000000 00001818                       1029+O1A9     DC    AD(RE9+8)          address of op1 source
+00001790  00000000 00001820                       1030+O2A9     DC    AD(RE9+16)         address of op2 source
+00001798  00000000 00001828                       1031+O3A9     DC    AD(RE9+24)         address of op3/R3 source
+000017A0  00000008                                1032+         DC    A(8)               result length
+000017A8  00000000 00001810                       1033+REA9     DC    AD(RE9)            result address
+000017B0  00000000 00000000                       1034+         DS    FD                 gap
+000017B8  00000000 00000000                       1035+R3O9     DS    D                  Op3/R3 Output
+000017C0  00000000 00000000                       1036+         DS    FD                 gap
+000017C8  00000000 00000000                       1037+CCP9     DS    2F                 extract PSW after test (has CC)
+000017D0  00                                      1038+CCF9     DS    X                  extracted cc
+000017D8  00000000 00000000                       1039+         DS    FD
+                                                  1040+*                                 INSTRUCTION UNDER TEST ROUTINE
+000017E0                                          1041+X9       DS    0F
+000017E0  E310 5018 0004                00001788  1042+         LG    R1,O1A9            get R1 source
+000017E6  E320 5020 0004                00001790  1043+         LG    R2,O2A9            get R2 source
+000017EC  E330 5028 0004                00001798  1044+         LG    R3,O3A9            get R3 source address
+000017F2  E333 0000 0004                00000000  1045+         LG    R3,0(R3)           get R3 source value
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000017F8                                          1048+         DS    0H
+000017F8  C8371000 2000                           1049+         DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+
+000017FE  E330 5048 0024                000017B8  1051+         STG   R3,R3O9
+00001804  B98D 0040                               1052+         EPSW  R4,R0              extract psw
+00001808  5040 5058                     000017C8  1053+         ST    R4,CCP9               to save CC
+0000180C  07FB                                    1054+         BR    R11
+00001810                                          1055+RE9      DC    0F
+00001810                                          1056+         DROP  R5
+00001810  99999999 BBBBBBBB                       1057          DC    XL8'99999999 BBBBBBBB'   result
+00001818  FFFFFF00 00000CCC                       1058          DC    XL8'FFFFFF00 00000CCC'   op1
+00001820  99999999 BBBBBBBB                       1059          DC    XL8'99999999 BBBBBBBB'   op2
+00001828  FFFFFF00 00000CCC                       1060          DC    XL8'FFFFFF00 00000CCC'   r3
+                                                  1061
+                                                  1062 * CC = 1 (not equal) if r3 != op1; r3 = op1
+                                                  1063          SSF   CALG,1
+00001830                                          1064+         DS    0FD
+00001830                      00001830            1065+         USING *,R5               base for test data and test routine
+00001830  000018A0                                1066+T10      DC    A(X10)             address of test routine
+00001834  000A                                    1067+         DC    H'10'              test number
+00001836  00                                      1068+         DC    XL1'00'
+00001837  01                                      1069+         DC    HL1'1'             cc
+00001838  0B                                      1070+         DC    HL1'11'            cc failed mask
+00001839  00                                      1071+         DC    XL1'00'
+0000183A  C3C1D3C7 40404040                       1072+         DC    CL8'CALG'          instruction name
+00001848  00000000 000018D8                       1073+O1A10    DC    AD(RE10+8)         address of op1 source
+00001850  00000000 000018E0                       1074+O2A10    DC    AD(RE10+16)        address of op2 source
+00001858  00000000 000018E8                       1075+O3A10    DC    AD(RE10+24)        address of op3/R3 source
+00001860  00000008                                1076+         DC    A(8)               result length
+00001868  00000000 000018D0                       1077+REA10    DC    AD(RE10)           result address
+00001870  00000000 00000000                       1078+         DS    FD                 gap
+00001878  00000000 00000000                       1079+R3O10    DS    D                  Op3/R3 Output
+00001880  00000000 00000000                       1080+         DS    FD                 gap
+00001888  00000000 00000000                       1081+CCP10    DS    2F                 extract PSW after test (has CC)
+00001890  00                                      1082+CCF10    DS    X                  extracted cc
+00001898  00000000 00000000                       1083+         DS    FD
+                                                  1084+*                                 INSTRUCTION UNDER TEST ROUTINE
+000018A0                                          1085+X10      DS    0F
+000018A0  E310 5018 0004                00001848  1086+         LG    R1,O1A10           get R1 source
+000018A6  E320 5020 0004                00001850  1087+         LG    R2,O2A10           get R2 source
+000018AC  E330 5028 0004                00001858  1088+         LG    R3,O3A10           get R3 source address
+000018B2  E333 0000 0004                00000000  1089+         LG    R3,0(R3)           get R3 source value
+
+000018B8                                          1092+         DS    0H
+000018B8  C8371000 2000                           1093+         DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+
+000018BE  E330 5048 0024                00001878  1095+         STG   R3,R3O10
+000018C4  B98D 0040                               1096+         EPSW  R4,R0              extract psw
+000018C8  5040 5058                     00001888  1097+         ST    R4,CCP10              to save CC
+000018CC  07FB                                    1098+         BR    R11
+000018D0                                          1099+RE10     DC    0F
+000018D0                                          1100+         DROP  R5
+000018D0  00000001 000000FF                       1101          DC    XL8'00000001 000000FF'   result
+000018D8  00000001 000000FF                       1102          DC    XL8'00000001 000000FF'   op1
+000018E0  00000004 000000FF                       1103          DC    XL8'00000004 000000FF'   op2
+000018E8  FF000000 00000000                       1104          DC    XL8'FF000000 00000000'   r3
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1105
+                                                  1106          SSF   CALG,1
+000018F0                                          1107+         DS    0FD
+000018F0                      000018F0            1108+         USING *,R5               base for test data and test routine
+000018F0  00001960                                1109+T11      DC    A(X11)             address of test routine
+000018F4  000B                                    1110+         DC    H'11'              test number
+000018F6  00                                      1111+         DC    XL1'00'
+000018F7  01                                      1112+         DC    HL1'1'             cc
+000018F8  0B                                      1113+         DC    HL1'11'            cc failed mask
+000018F9  00                                      1114+         DC    XL1'00'
+000018FA  C3C1D3C7 40404040                       1115+         DC    CL8'CALG'          instruction name
+00001908  00000000 00001998                       1116+O1A11    DC    AD(RE11+8)         address of op1 source
+00001910  00000000 000019A0                       1117+O2A11    DC    AD(RE11+16)        address of op2 source
+00001918  00000000 000019A8                       1118+O3A11    DC    AD(RE11+24)        address of op3/R3 source
+00001920  00000008                                1119+         DC    A(8)               result length
+00001928  00000000 00001990                       1120+REA11    DC    AD(RE11)           result address
+00001930  00000000 00000000                       1121+         DS    FD                 gap
+00001938  00000000 00000000                       1122+R3O11    DS    D                  Op3/R3 Output
+00001940  00000000 00000000                       1123+         DS    FD                 gap
+00001948  00000000 00000000                       1124+CCP11    DS    2F                 extract PSW after test (has CC)
+00001950  00                                      1125+CCF11    DS    X                  extracted cc
+00001958  00000000 00000000                       1126+         DS    FD
+                                                  1127+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001960                                          1128+X11      DS    0F
+00001960  E310 5018 0004                00001908  1129+         LG    R1,O1A11           get R1 source
+00001966  E320 5020 0004                00001910  1130+         LG    R2,O2A11           get R2 source
+0000196C  E330 5028 0004                00001918  1131+         LG    R3,O3A11           get R3 source address
+00001972  E333 0000 0004                00000000  1132+         LG    R3,0(R3)           get R3 source value
+
+00001978                                          1135+         DS    0H
+00001978  C8371000 2000                           1136+         DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+
+0000197E  E330 5048 0024                00001938  1138+         STG   R3,R3O11
+00001984  B98D 0040                               1139+         EPSW  R4,R0              extract psw
+00001988  5040 5058                     00001948  1140+         ST    R4,CCP11              to save CC
+0000198C  07FB                                    1141+         BR    R11
+00001990                                          1142+RE11     DC    0F
+00001990                                          1143+         DROP  R5
+00001990  00000DDD AAAAAAAA                       1144          DC    XL8'00000DDD AAAAAAAA'   result
+00001998  00000DDD AAAAAAAA                       1145          DC    XL8'00000DDD AAAAAAAA'   op1
+000019A0  A0000004 BBBBBBBB                       1146          DC    XL8'A0000004 BBBBBBBB'   op2
+000019A8  FFFFFFFF 0000CCCC                       1147          DC    XL8'FFFFFFFF 0000CCCC'   r3
+                                                  1148
+                                                  1149          SSF   CALG,1
+000019B0                                          1150+         DS    0FD
+000019B0                      000019B0            1151+         USING *,R5               base for test data and test routine
+000019B0  00001A20                                1152+T12      DC    A(X12)             address of test routine
+000019B4  000C                                    1153+         DC    H'12'              test number
+000019B6  00                                      1154+         DC    XL1'00'
+000019B7  01                                      1155+         DC    HL1'1'             cc
+000019B8  0B                                      1156+         DC    HL1'11'            cc failed mask
+000019B9  00                                      1157+         DC    XL1'00'
+000019BA  C3C1D3C7 40404040                       1158+         DC    CL8'CALG'          instruction name
+000019C8  00000000 00001A58                       1159+O1A12    DC    AD(RE12+8)         address of op1 source
+000019D0  00000000 00001A60                       1160+O2A12    DC    AD(RE12+16)        address of op2 source
+000019D8  00000000 00001A68                       1161+O3A12    DC    AD(RE12+24)        address of op3/R3 source
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000019E0  00000008                                1162+         DC    A(8)               result length
+000019E8  00000000 00001A50                       1163+REA12    DC    AD(RE12)           result address
+000019F0  00000000 00000000                       1164+         DS    FD                 gap
+000019F8  00000000 00000000                       1165+R3O12    DS    D                  Op3/R3 Output
+00001A00  00000000 00000000                       1166+         DS    FD                 gap
+00001A08  00000000 00000000                       1167+CCP12    DS    2F                 extract PSW after test (has CC)
+00001A10  00                                      1168+CCF12    DS    X                  extracted cc
+00001A18  00000000 00000000                       1169+         DS    FD
+                                                  1170+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001A20                                          1171+X12      DS    0F
+00001A20  E310 5018 0004                000019C8  1172+         LG    R1,O1A12           get R1 source
+00001A26  E320 5020 0004                000019D0  1173+         LG    R2,O2A12           get R2 source
+00001A2C  E330 5028 0004                000019D8  1174+         LG    R3,O3A12           get R3 source address
+00001A32  E333 0000 0004                00000000  1175+         LG    R3,0(R3)           get R3 source value
+
+00001A38                                          1178+         DS    0H
+00001A38  C8371000 2000                           1179+         DC    XL6'C83710002000'  CALG r3,0(R1),0(R2)
+
+00001A3E  E330 5048 0024                000019F8  1181+         STG   R3,R3O12
+00001A44  B98D 0040                               1182+         EPSW  R4,R0              extract psw
+00001A48  5040 5058                     00001A08  1183+         ST    R4,CCP12              to save CC
+00001A4C  07FB                                    1184+         BR    R11
+00001A50                                          1185+RE12     DC    0F
+00001A50                                          1186+         DROP  R5
+00001A50  CCCC0000 AAAAAAAA                       1187          DC    XL8'CCCC0000 AAAAAAAA'   result
+00001A58  CCCC0000 AAAAAAAA                       1188          DC    XL8'CCCC0000 AAAAAAAA'   op1
+00001A60  99999999 BBBBBBBB                       1189          DC    XL8'99999999 BBBBBBBB'   op2
+00001A68  FFFFFFFF 00009999                       1190          DC    XL8'FFFFFFFF 00009999'   r3
+                                                  1191
+                                                  1192 *---------------------------------------------------------------------
+                                                  1193 *  C8xF CALGF - Compare And Load Long Fullword (64 <- 32)
+                                                  1194 *---------------------------------------------------------------------
+                                                  1195 * CC = 0 (equal) if r3 = op1; r3 = op2
+                                                  1196          SSF   CALGF,0
+00001A70                                          1197+         DS    0FD
+00001A70                      00001A70            1198+         USING *,R5               base for test data and test routine
+00001A70  00001AE0                                1199+T13      DC    A(X13)             address of test routine
+00001A74  000D                                    1200+         DC    H'13'              test number
+00001A76  00                                      1201+         DC    XL1'00'
+00001A77  00                                      1202+         DC    HL1'0'             cc
+00001A78  07                                      1203+         DC    HL1'7'             cc failed mask
+00001A79  00                                      1204+         DC    XL1'00'
+00001A7A  C3C1D3C7 C6404040                       1205+         DC    CL8'CALGF'         instruction name
+00001A88  00000000 00001B18                       1206+O1A13    DC    AD(RE13+8)         address of op1 source
+00001A90  00000000 00001B20                       1207+O2A13    DC    AD(RE13+16)        address of op2 source
+00001A98  00000000 00001B28                       1208+O3A13    DC    AD(RE13+24)        address of op3/R3 source
+00001AA0  00000008                                1209+         DC    A(8)               result length
+00001AA8  00000000 00001B10                       1210+REA13    DC    AD(RE13)           result address
+00001AB0  00000000 00000000                       1211+         DS    FD                 gap
+00001AB8  00000000 00000000                       1212+R3O13    DS    D                  Op3/R3 Output
+00001AC0  00000000 00000000                       1213+         DS    FD                 gap
+00001AC8  00000000 00000000                       1214+CCP13    DS    2F                 extract PSW after test (has CC)
+00001AD0  00                                      1215+CCF13    DS    X                  extracted cc
+00001AD8  00000000 00000000                       1216+         DS    FD
+                                                  1217+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001AE0                                          1218+X13      DS    0F
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001AE0  E310 5018 0004                00001A88  1219+         LG    R1,O1A13           get R1 source
+00001AE6  E320 5020 0004                00001A90  1220+         LG    R2,O2A13           get R2 source
+00001AEC  E330 5028 0004                00001A98  1221+         LG    R3,O3A13           get R3 source address
+00001AF2  E333 0000 0004                00000000  1222+         LG    R3,0(R3)           get R3 source value
+
+00001AF8                                          1225+         DS    0H
+00001AF8  C83F1000 2000                           1226+         DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+
+00001AFE  E330 5048 0024                00001AB8  1228+         STG   R3,R3O13
+00001B04  B98D 0040                               1229+         EPSW  R4,R0              extract psw
+00001B08  5040 5058                     00001AC8  1230+         ST    R4,CCP13              to save CC
+00001B0C  07FB                                    1231+         BR    R11
+00001B10                                          1232+RE13     DC    0F
+00001B10                                          1233+         DROP  R5
+00001B10  00000004 000000BB                       1234          DC    XL8'00000004 000000BB'   result
+00001B18  00000001 000000AA                       1235          DC    XL8'00000001 000000AA'   op1 (first 32 bits)
+00001B20  00000004 000000BB                       1236          DC    XL8'00000004 000000BB'   op2
+00001B28  FF000000 00000001                       1237          DC    XL8'FF000000 00000001'   r3
+                                                  1238
+                                                  1239          SSF   CALGF,0
+00001B30                                          1240+         DS    0FD
+00001B30                      00001B30            1241+         USING *,R5               base for test data and test routine
+00001B30  00001BA0                                1242+T14      DC    A(X14)             address of test routine
+00001B34  000E                                    1243+         DC    H'14'              test number
+00001B36  00                                      1244+         DC    XL1'00'
+00001B37  00                                      1245+         DC    HL1'0'             cc
+00001B38  07                                      1246+         DC    HL1'7'             cc failed mask
+00001B39  00                                      1247+         DC    XL1'00'
+00001B3A  C3C1D3C7 C6404040                       1248+         DC    CL8'CALGF'         instruction name
+00001B48  00000000 00001BD8                       1249+O1A14    DC    AD(RE14+8)         address of op1 source
+00001B50  00000000 00001BE0                       1250+O2A14    DC    AD(RE14+16)        address of op2 source
+00001B58  00000000 00001BE8                       1251+O3A14    DC    AD(RE14+24)        address of op3/R3 source
+00001B60  00000008                                1252+         DC    A(8)               result length
+00001B68  00000000 00001BD0                       1253+REA14    DC    AD(RE14)           result address
+00001B70  00000000 00000000                       1254+         DS    FD                 gap
+00001B78  00000000 00000000                       1255+R3O14    DS    D                  Op3/R3 Output
+00001B80  00000000 00000000                       1256+         DS    FD                 gap
+00001B88  00000000 00000000                       1257+CCP14    DS    2F                 extract PSW after test (has CC)
+00001B90  00                                      1258+CCF14    DS    X                  extracted cc
+00001B98  00000000 00000000                       1259+         DS    FD
+                                                  1260+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001BA0                                          1261+X14      DS    0F
+00001BA0  E310 5018 0004                00001B48  1262+         LG    R1,O1A14           get R1 source
+00001BA6  E320 5020 0004                00001B50  1263+         LG    R2,O2A14           get R2 source
+00001BAC  E330 5028 0004                00001B58  1264+         LG    R3,O3A14           get R3 source address
+00001BB2  E333 0000 0004                00000000  1265+         LG    R3,0(R3)           get R3 source value
+
+00001BB8                                          1268+         DS    0H
+00001BB8  C83F1000 2000                           1269+         DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+
+00001BBE  E330 5048 0024                00001B78  1271+         STG   R3,R3O14
+00001BC4  B98D 0040                               1272+         EPSW  R4,R0              extract psw
+00001BC8  5040 5058                     00001B88  1273+         ST    R4,CCP14              to save CC
+00001BCC  07FB                                    1274+         BR    R11
+00001BD0                                          1275+RE14     DC    0F
+00001BD0                                          1276+         DROP  R5
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    32
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001BD0  A0000004 BBBBBBBB                       1277          DC    XL8'A0000004 BBBBBBBB'   result
+00001BD8  000000CC AAAAAAAA                       1278          DC    XL8'000000CC AAAAAAAA'   op1 (first 32 bits)
+00001BE0  A0000004 BBBBBBBB                       1279          DC    XL8'A0000004 BBBBBBBB'   op2
+00001BE8  FFFFFFFF 000000CC                       1280          DC    XL8'FFFFFFFF 000000CC'   r3
+                                                  1281
+                                                  1282          SSF   CALGF,0
+00001BF0                                          1283+         DS    0FD
+00001BF0                      00001BF0            1284+         USING *,R5               base for test data and test routine
+00001BF0  00001C60                                1285+T15      DC    A(X15)             address of test routine
+00001BF4  000F                                    1286+         DC    H'15'              test number
+00001BF6  00                                      1287+         DC    XL1'00'
+00001BF7  00                                      1288+         DC    HL1'0'             cc
+00001BF8  07                                      1289+         DC    HL1'7'             cc failed mask
+00001BF9  00                                      1290+         DC    XL1'00'
+00001BFA  C3C1D3C7 C6404040                       1291+         DC    CL8'CALGF'         instruction name
+00001C08  00000000 00001C98                       1292+O1A15    DC    AD(RE15+8)         address of op1 source
+00001C10  00000000 00001CA0                       1293+O2A15    DC    AD(RE15+16)        address of op2 source
+00001C18  00000000 00001CA8                       1294+O3A15    DC    AD(RE15+24)        address of op3/R3 source
+00001C20  00000008                                1295+         DC    A(8)               result length
+00001C28  00000000 00001C90                       1296+REA15    DC    AD(RE15)           result address
+00001C30  00000000 00000000                       1297+         DS    FD                 gap
+00001C38  00000000 00000000                       1298+R3O15    DS    D                  Op3/R3 Output
+00001C40  00000000 00000000                       1299+         DS    FD                 gap
+00001C48  00000000 00000000                       1300+CCP15    DS    2F                 extract PSW after test (has CC)
+00001C50  00                                      1301+CCF15    DS    X                  extracted cc
+00001C58  00000000 00000000                       1302+         DS    FD
+                                                  1303+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001C60                                          1304+X15      DS    0F
+00001C60  E310 5018 0004                00001C08  1305+         LG    R1,O1A15           get R1 source
+00001C66  E320 5020 0004                00001C10  1306+         LG    R2,O2A15           get R2 source
+00001C6C  E330 5028 0004                00001C18  1307+         LG    R3,O3A15           get R3 source address
+00001C72  E333 0000 0004                00000000  1308+         LG    R3,0(R3)           get R3 source value
+
+00001C78                                          1311+         DS    0H
+00001C78  C83F1000 2000                           1312+         DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+
+00001C7E  E330 5048 0024                00001C38  1314+         STG   R3,R3O15
+00001C84  B98D 0040                               1315+         EPSW  R4,R0              extract psw
+00001C88  5040 5058                     00001C48  1316+         ST    R4,CCP15              to save CC
+00001C8C  07FB                                    1317+         BR    R11
+00001C90                                          1318+RE15     DC    0F
+00001C90                                          1319+         DROP  R5
+00001C90  99999999 BBBBBBBB                       1320          DC    XL8'99999999 BBBBBBBB'   result
+00001C98  0000DDDD AAAAAAAA                       1321          DC    XL8'0000DDDD AAAAAAAA'   op1 (first 32 bits)
+00001CA0  99999999 BBBBBBBB                       1322          DC    XL8'99999999 BBBBBBBB'   op2
+00001CA8  FFFFFFFF 0000DDDD                       1323          DC    XL8'FFFFFFFF 0000DDDD'   r3
+                                                  1324
+                                                  1325 * CC = 1 (not equal) if r3 != op1; r3 = op1
+                                                  1326          SSF   CALGF,1
+00001CB0                                          1327+         DS    0FD
+00001CB0                      00001CB0            1328+         USING *,R5               base for test data and test routine
+00001CB0  00001D20                                1329+T16      DC    A(X16)             address of test routine
+00001CB4  0010                                    1330+         DC    H'16'              test number
+00001CB6  00                                      1331+         DC    XL1'00'
+00001CB7  01                                      1332+         DC    HL1'1'             cc
+00001CB8  0B                                      1333+         DC    HL1'11'            cc failed mask
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    33
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001CB9  00                                      1334+         DC    XL1'00'
+00001CBA  C3C1D3C7 C6404040                       1335+         DC    CL8'CALGF'         instruction name
+00001CC8  00000000 00001D58                       1336+O1A16    DC    AD(RE16+8)         address of op1 source
+00001CD0  00000000 00001D60                       1337+O2A16    DC    AD(RE16+16)        address of op2 source
+00001CD8  00000000 00001D68                       1338+O3A16    DC    AD(RE16+24)        address of op3/R3 source
+00001CE0  00000008                                1339+         DC    A(8)               result length
+00001CE8  00000000 00001D50                       1340+REA16    DC    AD(RE16)           result address
+00001CF0  00000000 00000000                       1341+         DS    FD                 gap
+00001CF8  00000000 00000000                       1342+R3O16    DS    D                  Op3/R3 Output
+00001D00  00000000 00000000                       1343+         DS    FD                 gap
+00001D08  00000000 00000000                       1344+CCP16    DS    2F                 extract PSW after test (has CC)
+00001D10  00                                      1345+CCF16    DS    X                  extracted cc
+00001D18  00000000 00000000                       1346+         DS    FD
+                                                  1347+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001D20                                          1348+X16      DS    0F
+00001D20  E310 5018 0004                00001CC8  1349+         LG    R1,O1A16           get R1 source
+00001D26  E320 5020 0004                00001CD0  1350+         LG    R2,O2A16           get R2 source
+00001D2C  E330 5028 0004                00001CD8  1351+         LG    R3,O3A16           get R3 source address
+00001D32  E333 0000 0004                00000000  1352+         LG    R3,0(R3)           get R3 source value
+
+00001D38                                          1355+         DS    0H
+00001D38  C83F1000 2000                           1356+         DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+
+00001D3E  E330 5048 0024                00001CF8  1358+         STG   R3,R3O16
+00001D44  B98D 0040                               1359+         EPSW  R4,R0              extract psw
+00001D48  5040 5058                     00001D08  1360+         ST    R4,CCP16              to save CC
+00001D4C  07FB                                    1361+         BR    R11
+00001D50                                          1362+RE16     DC    0F
+00001D50                                          1363+         DROP  R5
+00001D50  00000000 00000001                       1364          DC    XL8'00000000 00000001'   result
+00001D58  00000001 000000FF                       1365          DC    XL8'00000001 000000FF'   op1 (first 32 bits)
+00001D60  00000004 000000FF                       1366          DC    XL8'00000004 000000FF'   op2
+00001D68  FF0000FF 11111111                       1367          DC    XL8'FF0000FF 11111111'   r3
+                                                  1368
+                                                  1369          SSF   CALGF,1
+00001D70                                          1370+         DS    0FD
+00001D70                      00001D70            1371+         USING *,R5               base for test data and test routine
+00001D70  00001DE0                                1372+T17      DC    A(X17)             address of test routine
+00001D74  0011                                    1373+         DC    H'17'              test number
+00001D76  00                                      1374+         DC    XL1'00'
+00001D77  01                                      1375+         DC    HL1'1'             cc
+00001D78  0B                                      1376+         DC    HL1'11'            cc failed mask
+00001D79  00                                      1377+         DC    XL1'00'
+00001D7A  C3C1D3C7 C6404040                       1378+         DC    CL8'CALGF'         instruction name
+00001D88  00000000 00001E18                       1379+O1A17    DC    AD(RE17+8)         address of op1 source
+00001D90  00000000 00001E20                       1380+O2A17    DC    AD(RE17+16)        address of op2 source
+00001D98  00000000 00001E28                       1381+O3A17    DC    AD(RE17+24)        address of op3/R3 source
+00001DA0  00000008                                1382+         DC    A(8)               result length
+00001DA8  00000000 00001E10                       1383+REA17    DC    AD(RE17)           result address
+00001DB0  00000000 00000000                       1384+         DS    FD                 gap
+00001DB8  00000000 00000000                       1385+R3O17    DS    D                  Op3/R3 Output
+00001DC0  00000000 00000000                       1386+         DS    FD                 gap
+00001DC8  00000000 00000000                       1387+CCP17    DS    2F                 extract PSW after test (has CC)
+00001DD0  00                                      1388+CCF17    DS    X                  extracted cc
+00001DD8  00000000 00000000                       1389+         DS    FD
+                                                  1390+*                                 INSTRUCTION UNDER TEST ROUTINE
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    34
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001DE0                                          1391+X17      DS    0F
+00001DE0  E310 5018 0004                00001D88  1392+         LG    R1,O1A17           get R1 source
+00001DE6  E320 5020 0004                00001D90  1393+         LG    R2,O2A17           get R2 source
+00001DEC  E330 5028 0004                00001D98  1394+         LG    R3,O3A17           get R3 source address
+00001DF2  E333 0000 0004                00000000  1395+         LG    R3,0(R3)           get R3 source value
+
+00001DF8                                          1398+         DS    0H
+00001DF8  C83F1000 2000                           1399+         DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+
+00001DFE  E330 5048 0024                00001DB8  1401+         STG   R3,R3O17
+00001E04  B98D 0040                               1402+         EPSW  R4,R0              extract psw
+00001E08  5040 5058                     00001DC8  1403+         ST    R4,CCP17              to save CC
+00001E0C  07FB                                    1404+         BR    R11
+00001E10                                          1405+RE17     DC    0F
+00001E10                                          1406+         DROP  R5
+00001E10  00000000 00000DDD                       1407          DC    XL8'00000000 00000DDD'   result
+00001E18  00000DDD AAAAAAAA                       1408          DC    XL8'00000DDD AAAAAAAA'   op1 (first 32 bits)
+00001E20  A0000004 BBBBBBBB                       1409          DC    XL8'A0000004 BBBBBBBB'   op2
+00001E28  FFFFFFFF 0000CCCC                       1410          DC    XL8'FFFFFFFF 0000CCCC'   r3
+                                                  1411
+                                                  1412          SSF   CALGF,1
+00001E30                                          1413+         DS    0FD
+00001E30                      00001E30            1414+         USING *,R5               base for test data and test routine
+00001E30  00001EA0                                1415+T18      DC    A(X18)             address of test routine
+00001E34  0012                                    1416+         DC    H'18'              test number
+00001E36  00                                      1417+         DC    XL1'00'
+00001E37  01                                      1418+         DC    HL1'1'             cc
+00001E38  0B                                      1419+         DC    HL1'11'            cc failed mask
+00001E39  00                                      1420+         DC    XL1'00'
+00001E3A  C3C1D3C7 C6404040                       1421+         DC    CL8'CALGF'         instruction name
+00001E48  00000000 00001ED8                       1422+O1A18    DC    AD(RE18+8)         address of op1 source
+00001E50  00000000 00001EE0                       1423+O2A18    DC    AD(RE18+16)        address of op2 source
+00001E58  00000000 00001EE8                       1424+O3A18    DC    AD(RE18+24)        address of op3/R3 source
+00001E60  00000008                                1425+         DC    A(8)               result length
+00001E68  00000000 00001ED0                       1426+REA18    DC    AD(RE18)           result address
+00001E70  00000000 00000000                       1427+         DS    FD                 gap
+00001E78  00000000 00000000                       1428+R3O18    DS    D                  Op3/R3 Output
+00001E80  00000000 00000000                       1429+         DS    FD                 gap
+00001E88  00000000 00000000                       1430+CCP18    DS    2F                 extract PSW after test (has CC)
+00001E90  00                                      1431+CCF18    DS    X                  extracted cc
+00001E98  00000000 00000000                       1432+         DS    FD
+                                                  1433+*                                 INSTRUCTION UNDER TEST ROUTINE
+00001EA0                                          1434+X18      DS    0F
+00001EA0  E310 5018 0004                00001E48  1435+         LG    R1,O1A18           get R1 source
+00001EA6  E320 5020 0004                00001E50  1436+         LG    R2,O2A18           get R2 source
+00001EAC  E330 5028 0004                00001E58  1437+         LG    R3,O3A18           get R3 source address
+00001EB2  E333 0000 0004                00000000  1438+         LG    R3,0(R3)           get R3 source value
+
+00001EB8                                          1441+         DS    0H
+00001EB8  C83F1000 2000                           1442+         DC    XL6'C83F10002000'  CALGF r3,0(R1),0(R2)
+
+00001EBE  E330 5048 0024                00001E78  1444+         STG   R3,R3O18
+00001EC4  B98D 0040                               1445+         EPSW  R4,R0              extract psw
+00001EC8  5040 5058                     00001E88  1446+         ST    R4,CCP18              to save CC
+00001ECC  07FB                                    1447+         BR    R11
+00001ED0                                          1448+RE18     DC    0F
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    35
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001ED0                                          1449+         DROP  R5
+00001ED0  00000000 0000CCCC                       1450          DC    XL8'00000000 0000CCCC'   result
+00001ED8  0000CCCC AAAAAAAA                       1451          DC    XL8'0000CCCC AAAAAAAA'   op1 (first 32 bits)
+00001EE0  99999999 BBBBBBBB                       1452          DC    XL8'99999999 BBBBBBBB'   op2
+00001EE8  FFFFFFFF 00009999                       1453          DC    XL8'FFFFFFFF 00009999'   r3
+                                                  1454
+                                                  1455
+00001EF0  00000000                                1456          DC    F'0'                    END OF TABLE
+00001EF4  00000000                                1457          DC    F'0'
+                                                  1458 *
+                                                  1459 * table of pointers to individual tests
+                                                  1460 *
+00001EF8                                          1461 CFFTESTS  DS    0F
+                                                  1462          PTTABLE
+00001EF8                                          1463+TTABLE   DS    0F
+00001EF8  00001170                                1464+         DC    A(T1)              address of test
+00001EFC  00001230                                1465+         DC    A(T2)              address of test
+00001F00  000012F0                                1466+         DC    A(T3)              address of test
+00001F04  000013B0                                1467+         DC    A(T4)              address of test
+00001F08  00001470                                1468+         DC    A(T5)              address of test
+00001F0C  00001530                                1469+         DC    A(T6)              address of test
+00001F10  000015F0                                1470+         DC    A(T7)              address of test
+00001F14  000016B0                                1471+         DC    A(T8)              address of test
+00001F18  00001770                                1472+         DC    A(T9)              address of test
+00001F1C  00001830                                1473+         DC    A(T10)             address of test
+00001F20  000018F0                                1474+         DC    A(T11)             address of test
+00001F24  000019B0                                1475+         DC    A(T12)             address of test
+00001F28  00001A70                                1476+         DC    A(T13)             address of test
+00001F2C  00001B30                                1477+         DC    A(T14)             address of test
+00001F30  00001BF0                                1478+         DC    A(T15)             address of test
+00001F34  00001CB0                                1479+         DC    A(T16)             address of test
+00001F38  00001D70                                1480+         DC    A(T17)             address of test
+00001F3C  00001E30                                1481+         DC    A(T18)             address of test
+                                                  1482+*
+00001F40  00000000                                1483+         DC    A(0)               END OF TABLE
+00001F44  00000000                                1484+         DC    A(0)
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    36
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  1486 ***********************************************************************
+                                                  1487 *        Register equates
+                                                  1488 ***********************************************************************
+
+
+                              00000000  00000001  1490 R0       EQU   0
+                              00000001  00000001  1491 R1       EQU   1
+                              00000002  00000001  1492 R2       EQU   2
+                              00000003  00000001  1493 R3       EQU   3
+                              00000004  00000001  1494 R4       EQU   4
+                              00000005  00000001  1495 R5       EQU   5
+                              00000006  00000001  1496 R6       EQU   6
+                              00000007  00000001  1497 R7       EQU   7
+                              00000008  00000001  1498 R8       EQU   8
+                              00000009  00000001  1499 R9       EQU   9
+                              0000000A  00000001  1500 R10      EQU   10
+                              0000000B  00000001  1501 R11      EQU   11
+                              0000000C  00000001  1502 R12      EQU   12
+                              0000000D  00000001  1503 R13      EQU   13
+                              0000000E  00000001  1504 R14      EQU   14
+                              0000000F  00000001  1505 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  1507 ***********************************************************************
+                                                  1508 *        Register equates
+                                                  1509 ***********************************************************************
+
+
+                              00000000  00000001  1511 V0       EQU   0
+                              00000001  00000001  1512 V1       EQU   1
+                              00000002  00000001  1513 V2       EQU   2
+                              00000003  00000001  1514 V3       EQU   3
+                              00000004  00000001  1515 V4       EQU   4
+                              00000005  00000001  1516 V5       EQU   5
+                              00000006  00000001  1517 V6       EQU   6
+                              00000007  00000001  1518 V7       EQU   7
+                              00000008  00000001  1519 V8       EQU   8
+                              00000009  00000001  1520 V9       EQU   9
+                              0000000A  00000001  1521 V10      EQU   10
+                              0000000B  00000001  1522 V11      EQU   11
+                              0000000C  00000001  1523 V12      EQU   12
+                              0000000D  00000001  1524 V13      EQU   13
+                              0000000E  00000001  1525 V14      EQU   14
+                              0000000F  00000001  1526 V15      EQU   15
+                              00000010  00000001  1527 V16      EQU   16
+                              00000011  00000001  1528 V17      EQU   17
+                              00000012  00000001  1529 V18      EQU   18
+                              00000013  00000001  1530 V19      EQU   19
+                              00000014  00000001  1531 V20      EQU   20
+                              00000015  00000001  1532 V21      EQU   21
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    37
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000016  00000001  1533 V22      EQU   22
+                              00000017  00000001  1534 V23      EQU   23
+                              00000018  00000001  1535 V24      EQU   24
+                              00000019  00000001  1536 V25      EQU   25
+                              0000001A  00000001  1537 V26      EQU   26
+                              0000001B  00000001  1538 V27      EQU   27
+                              0000001C  00000001  1539 V28      EQU   28
+                              0000001D  00000001  1540 V29      EQU   29
+                              0000001E  00000001  1541 V30      EQU   30
+                              0000001F  00000001  1542 V31      EQU   31
+                                                  1543
+                                                  1544          END
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    38
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+BEGIN               I    00000200           2   158   123   154   155   156
+CC                  U    00000007           1   497   256
+CCF1                X    000011D0           1   689
+CCF10               X    00001890           1  1082
+CCF11               X    00001950           1  1125
+CCF12               X    00001A10           1  1168
+CCF13               X    00001AD0           1  1215
+CCF14               X    00001B90           1  1258
+CCF15               X    00001C50           1  1301
+CCF16               X    00001D10           1  1345
+CCF17               X    00001DD0           1  1388
+CCF18               X    00001E90           1  1431
+CCF2                X    00001290           1   732
+CCF3                X    00001350           1   775
+CCF4                X    00001410           1   819
+CCF5                X    000014D0           1   862
+CCF6                X    00001590           1   905
+CCF7                X    00001650           1   952
+CCF8                X    00001710           1   995
+CCF9                X    000017D0           1  1038
+CCFOUND             X    00000060           1   511   244   264
+CCMASK              U    00000008           1   498   221
+CCMSG               U    0000031E           1   238   233
+CCP1                F    000011C8           4   688   704
+CCP10               F    00001888           4  1081  1097
+CCP11               F    00001948           4  1124  1140
+CCP12               F    00001A08           4  1167  1183
+CCP13               F    00001AC8           4  1214  1230
+CCP14               F    00001B88           4  1257  1273
+CCP15               F    00001C48           4  1300  1316
+CCP16               F    00001D08           4  1344  1360
+CCP17               F    00001DC8           4  1387  1403
+CCP18               F    00001E88           4  1430  1446
+CCP2                F    00001288           4   731   747
+CCP3                F    00001348           4   774   790
+CCP4                F    00001408           4   818   834
+CCP5                F    000014C8           4   861   877
+CCP6                F    00001588           4   904   920
+CCP7                F    00001648           4   951   967
+CCP8                F    00001708           4   994  1010
+CCP9                F    000017C8           4  1037  1053
+CCPRTEXP            C    0000107E           1   454   260
+CCPRTGOT            C    0000108E           1   457   268
+CCPRTLINE           C    0000103B          16   449   459   271
+CCPRTLNG            U    00000055           1   459   270
+CCPRTNAME           C    00001068           8   452   252
+CCPRTNUM            C    0000104B           3   450   251
+CCPSW               F    00000058           4   510   241
+CFFTEST             4    00000000         112   492   216
+CFFTESTS            F    00001EF8           4  1461   209
+CFFTST              J    00000000        8008   116   119   121   125   129   425   117
+CTLR0               F    0000050C           4   396   168   169   170   171
+DECNUM              C    000010BC          16   469   248   250   257   259   265   267   286   288
+EDIT                X    00001090          18   464   249   258   266   287
+ENDTEST             U    000003DE           1   310   214
+EOJ                 I    000004F0           4   386   202   313
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    39
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+EOJPSW              D    000004E0           8   384   386
+FAILCONT            U    000003CE           1   300
+FAILED              F    00001000           4   426   275   302   311
+FAILMSG             U    000003A2           1   284   228
+FAILPSW             D    000004F8           8   388   390
+FAILTEST            I    00000508           4   390   314
+FB0001              F    00000290           8   186   190   191   193
+IMAGE               1    00000000        8008     0
+K                   U    00000400           1   409   410   411   412
+K64                 U    00010000           1   411
+MB                  U    00100000           1   412
+MSG                 I    00000428           4   346   201   329
+MSGCMD              C    00000476           9   376   359   360
+MSGMSG              C    0000047F          95   377   353   374   351
+MSGMVC              I    00000470           6   374   357
+MSGOK               I    0000043E           2   355   352
+MSGRET              I    0000045E           4   370   363   366
+MSGSAVE             F    00000464           4   373   349   370
+NEXTCFF             U    000002E4           1   211   231   305
+O1A1                A    00001188           8   680   693
+O1A10               A    00001848           8  1073  1086
+O1A11               A    00001908           8  1116  1129
+O1A12               A    000019C8           8  1159  1172
+O1A13               A    00001A88           8  1206  1219
+O1A14               A    00001B48           8  1249  1262
+O1A15               A    00001C08           8  1292  1305
+O1A16               A    00001CC8           8  1336  1349
+O1A17               A    00001D88           8  1379  1392
+O1A18               A    00001E48           8  1422  1435
+O1A2                A    00001248           8   723   736
+O1A3                A    00001308           8   766   779
+O1A4                A    000013C8           8   810   823
+O1A5                A    00001488           8   853   866
+O1A6                A    00001548           8   896   909
+O1A7                A    00001608           8   943   956
+O1A8                A    000016C8           8   986   999
+O1A9                A    00001788           8  1029  1042
+O1ADDR              A    00000018           8   502
+O2A1                A    00001190           8   681   694
+O2A10               A    00001850           8  1074  1087
+O2A11               A    00001910           8  1117  1130
+O2A12               A    000019D0           8  1160  1173
+O2A13               A    00001A90           8  1207  1220
+O2A14               A    00001B50           8  1250  1263
+O2A15               A    00001C10           8  1293  1306
+O2A16               A    00001CD0           8  1337  1350
+O2A17               A    00001D90           8  1380  1393
+O2A18               A    00001E50           8  1423  1436
+O2A2                A    00001250           8   724   737
+O2A3                A    00001310           8   767   780
+O2A4                A    000013D0           8   811   824
+O2A5                A    00001490           8   854   867
+O2A6                A    00001550           8   897   910
+O2A7                A    00001610           8   944   957
+O2A8                A    000016D0           8   987  1000
+O2A9                A    00001790           8  1030  1043
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    40
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+O2ADDR              A    00000020           8   503
+O3A1                A    00001198           8   682   695
+O3A10               A    00001858           8  1075  1088
+O3A11               A    00001918           8  1118  1131
+O3A12               A    000019D8           8  1161  1174
+O3A13               A    00001A98           8  1208  1221
+O3A14               A    00001B58           8  1251  1264
+O3A15               A    00001C18           8  1294  1307
+O3A16               A    00001CD8           8  1338  1351
+O3A17               A    00001D98           8  1381  1394
+O3A18               A    00001E58           8  1424  1437
+O3A2                A    00001258           8   725   738
+O3A3                A    00001318           8   768   781
+O3A4                A    000013D8           8   812   825
+O3A5                A    00001498           8   855   868
+O3A6                A    00001558           8   898   911
+O3A7                A    00001618           8   945   958
+O3A8                A    000016D8           8   988  1001
+O3A9                A    00001798           8  1031  1044
+O3ADDR              A    00000028           8   504
+OPNAME              C    0000000A           8   501   252   291
+PAGE                U    00001000           1   410
+PRT3                C    000010A6          18   467   249   250   251   258   259   260   266   267   268   287   288   289
+PRTLINE             C    00001008          16   436   440   294
+PRTLNG              U    00000033           1   440   293
+PRTNAME             C    00001033           8   439   291
+PRTNUM              C    00001018           3   437   289
+R0                  U    00000000           1  1490   117   168   171   190   192   193   194   199   270   274   275   293   301
+                                                      302   328   330   346   349   351   353   355   370   703   746   789   833
+                                                      876   919   966  1009  1052  1096  1139  1182  1229  1272  1315  1359  1402
+                                                     1445
+R1                  U    00000001           1  1491   200   221   222   223   226   227   241   242   243   244   271   294   311
+                                                      312   360   374   693   736   779   823   866   909   956   999  1042  1086
+                                                     1129  1172  1219  1262  1305  1349  1392  1435
+R10                 U    0000000A           1  1500   156   165   166
+R11                 U    0000000B           1  1501   218   219   705   748   791   835   878   921   968  1011  1054  1098  1141
+                                                     1184  1231  1274  1317  1361  1404  1447
+R12                 U    0000000C           1  1502   209   212   230   304
+R13                 U    0000000D           1  1503
+R14                 U    0000000E           1  1504
+R15                 U    0000000F           1  1505   272   295   323   333   334
+R1FUDGE             X    000010D0           8   475
+R1OUTPUT            F    00001108           8   479
+R2                  U    00000002           1  1492   201   247   248   255   256   257   263   264   265   285   286   328   329
+                                                      330   347   349   355   356   357   359   365   370   371   694   737   780
+                                                      824   867   910   957  1000  1043  1087  1130  1173  1220  1263  1306  1350
+                                                     1393  1436
+R3                  U    00000003           1  1493   695   696   702   738   739   745   781   782   788   825   826   832   868
+                                                      869   875   911   912   918   958   959   965  1001  1002  1008  1044  1045
+                                                     1051  1088  1089  1095  1131  1132  1138  1174  1175  1181  1221  1222  1228
+                                                     1264  1265  1271  1307  1308  1314  1351  1352  1358  1394  1395  1401  1437
+                                                     1438  1444
+R3O1                D    000011B8           8   686   702
+R3O10               D    00001878           8  1079  1095
+R3O11               D    00001938           8  1122  1138
+R3O12               D    000019F8           8  1165  1181
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    41
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+R3O13               D    00001AB8           8  1212  1228
+R3O14               D    00001B78           8  1255  1271
+R3O15               D    00001C38           8  1298  1314
+R3O16               D    00001CF8           8  1342  1358
+R3O17               D    00001DB8           8  1385  1401
+R3O18               D    00001E78           8  1428  1444
+R3O2                D    00001278           8   729   745
+R3O3                D    00001338           8   772   788
+R3O4                D    000013F8           8   816   832
+R3O5                D    000014B8           8   859   875
+R3O6                D    00001578           8   902   918
+R3O7                D    00001638           8   949   965
+R3O8                D    000016F8           8   992  1008
+R3O9                D    000017B8           8  1035  1051
+R3OUTPUT            D    00000048           8   508   227
+R4                  U    00000004           1  1494   703   704   746   747   789   790   833   834   876   877   919   920   966
+                                                      967  1009  1010  1052  1053  1096  1097  1139  1140  1182  1183  1229  1230
+                                                     1272  1273  1315  1316  1359  1360  1402  1403  1445  1446
+R5                  U    00000005           1  1495   212   213   216   324   332   672   707   715   750   758   793   802   837
+                                                      845   880   888   923   935   970   978  1013  1021  1056  1065  1100  1108
+                                                     1143  1151  1186  1198  1233  1241  1276  1284  1319  1328  1363  1371  1406
+                                                     1414  1449
+R6                  U    00000006           1  1496
+R7                  U    00000007           1  1497
+R8                  U    00000008           1  1498   154   158   159   160   162
+R9                  U    00000009           1  1499   155   162   163   165
+RE1                 F    00001210           4   706   680   681   682   684
+RE10                F    000018D0           4  1099  1073  1074  1075  1077
+RE11                F    00001990           4  1142  1116  1117  1118  1120
+RE12                F    00001A50           4  1185  1159  1160  1161  1163
+RE13                F    00001B10           4  1232  1206  1207  1208  1210
+RE14                F    00001BD0           4  1275  1249  1250  1251  1253
+RE15                F    00001C90           4  1318  1292  1293  1294  1296
+RE16                F    00001D50           4  1362  1336  1337  1338  1340
+RE17                F    00001E10           4  1405  1379  1380  1381  1383
+RE18                F    00001ED0           4  1448  1422  1423  1424  1426
+RE2                 F    000012D0           4   749   723   724   725   727
+RE3                 F    00001390           4   792   766   767   768   770
+RE4                 F    00001450           4   836   810   811   812   814
+RE5                 F    00001510           4   879   853   854   855   857
+RE6                 F    000015D0           4   922   896   897   898   900
+RE7                 F    00001690           4   969   943   944   945   947
+RE8                 F    00001750           4  1012   986   987   988   990
+RE9                 F    00001810           4  1055  1029  1030  1031  1033
+REA1                A    000011A8           8   684
+REA10               A    00001868           8  1077
+REA11               A    00001928           8  1120
+REA12               A    000019E8           8  1163
+REA13               A    00001AA8           8  1210
+REA14               A    00001B68           8  1253
+REA15               A    00001C28           8  1296
+REA16               A    00001CE8           8  1340
+REA17               A    00001DA8           8  1383
+REA18               A    00001E68           8  1426
+REA2                A    00001268           8   727
+REA3                A    00001328           8   770
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    42
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+REA4                A    000013E8           8   814
+REA5                A    000014A8           8   857
+REA6                A    00001568           8   900
+REA7                A    00001628           8   947
+REA8                A    000016E8           8   990
+REA9                A    000017A8           8  1033
+READDR              A    00000038           8   506   226
+REG2LOW             U    000000DD           1   416
+REG2PATT            U    AABBCCDD           1   415
+RELEN               A    00000030           4   505
+RPTDWSAV            D    00000418           8   339   328   330
+RPTERROR            I    000003EC           4   323   272   295
+RPTSAVE             F    0000040C           4   336   323   333
+RPTSVR5             F    00000410           4   337   324   332
+SKL0001             U    00000058           1   183   199
+SKT0001             C    0000022A          22   180   183   200
+SVOLDPSW            U    00000140           0   119
+T1                  A    00001170           4   673  1464
+T10                 A    00001830           4  1066  1473
+T11                 A    000018F0           4  1109  1474
+T12                 A    000019B0           4  1152  1475
+T13                 A    00001A70           4  1199  1476
+T14                 A    00001B30           4  1242  1477
+T15                 A    00001BF0           4  1285  1478
+T16                 A    00001CB0           4  1329  1479
+T17                 A    00001D70           4  1372  1480
+T18                 A    00001E30           4  1415  1481
+T2                  A    00001230           4   716  1465
+T3                  A    000012F0           4   759  1466
+T4                  A    000013B0           4   803  1467
+T5                  A    00001470           4   846  1468
+T6                  A    00001530           4   889  1469
+T7                  A    000015F0           4   936  1470
+T8                  A    000016B0           4   979  1471
+T9                  A    00001770           4  1022  1472
+TESTCC              I    0000031A           4   233   223
+TESTING             F    00001004           4   427
+TESTREST            U    00000302           1   225   277
+TNUM                H    00000004           2   494   247   285
+TSUB                A    00000000           4   493   218
+TTABLE              F    00001EF8           4  1463
+V0                  U    00000000           1  1511
+V1                  U    00000001           1  1512
+V10                 U    0000000A           1  1521
+V11                 U    0000000B           1  1522
+V12                 U    0000000C           1  1523
+V13                 U    0000000D           1  1524
+V14                 U    0000000E           1  1525
+V15                 U    0000000F           1  1526
+V16                 U    00000010           1  1527
+V17                 U    00000011           1  1528
+V18                 U    00000012           1  1529
+V19                 U    00000013           1  1530
+V1FUDGE             X    00001120          16   481
+V1FUDGEB            X    00001130          16   482
+V1INPUT             C    00001140          16   483
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    43
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+V1OUTPUT            X    000010E8          16   477
+V2                  U    00000002           1  1513
+V20                 U    00000014           1  1531
+V21                 U    00000015           1  1532
+V22                 U    00000016           1  1533
+V23                 U    00000017           1  1534
+V24                 U    00000018           1  1535
+V25                 U    00000019           1  1536
+V26                 U    0000001A           1  1537
+V27                 U    0000001B           1  1538
+V28                 U    0000001C           1  1539
+V29                 U    0000001D           1  1540
+V3                  U    00000003           1  1514
+V30                 U    0000001E           1  1541
+V31                 U    0000001F           1  1542
+V4                  U    00000004           1  1515
+V5                  U    00000005           1  1516
+V6                  U    00000006           1  1517
+V7                  U    00000007           1  1518
+V8                  U    00000008           1  1519
+V9                  U    00000009           1  1520
+X0001               U    000002B8           1   189   177   190
+X1                  F    000011E0           4   692   673
+X10                 F    000018A0           4  1085  1066
+X11                 F    00001960           4  1128  1109
+X12                 F    00001A20           4  1171  1152
+X13                 F    00001AE0           4  1218  1199
+X14                 F    00001BA0           4  1261  1242
+X15                 F    00001C60           4  1304  1285
+X16                 F    00001D20           4  1348  1329
+X17                 F    00001DE0           4  1391  1372
+X18                 F    00001EA0           4  1434  1415
+X2                  F    000012A0           4   735   716
+X3                  F    00001360           4   778   759
+X4                  F    00001420           4   822   803
+X5                  F    000014E0           4   865   846
+X6                  F    000015A0           4   908   889
+X7                  F    00001660           4   955   936
+X8                  F    00001720           4   998   979
+X9                  F    000017E0           4  1041  1022
+XC0001              U    000002E0           1   203   195
+=A(CFFTESTS)        A    00000518           4   401   209
+=AL2(L'MSGMSG)      R    00000526           2   405   351
+=F'1'               F    00000520           4   403   274   301
+=F'64'              F    00000514           4   400   194
+=H'0'               H    00000524           2   404   346
+=XL4'3'             X    0000051C           4   402   243
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    44
+
+ MACRO   DEFN  REFERENCES
+
+CAL       525    697    740    783    827    870    913
+CALG      541    960   1003   1046   1090   1133   1176
+CALGF     557   1223   1266   1309   1353   1396   1439
+FCHECK     68    176
+PTTABLE   630   1462
+SSF       568    670    713    756    800    843    886    933    976   1019   1063   1106   1149   1196   1239   1282   1326   1369
+                1412
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    45
+
+   DESC    SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE   8008  0000-1F47  0000-1F47
+  Region           8008  0000-1F47  0000-1F47
+    CSECT  CFFTST  8008  0000-1F47  0000-1F47
+ASMA Ver. 0.7.0  cff-01-CompareAndLoad                                                              08 Mar 2026 23:21:37  Page    46
+
+   STMT                      FILE NAME
+
+1     /devstor/sharedvfp/tests/cff-01-CompareAndLoad.asm
+
+
+** NO ERRORS FOUND **
+
+

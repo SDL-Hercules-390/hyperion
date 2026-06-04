@@ -779,7 +779,7 @@ SGR (Select Graphic Rendition):
 // Thus we prefer to use the more reliable (but programmatically
 // bothersome) '0' (reset) attribute instead [whenever we wish
 // to paint a 'dim/faint' (non-bold) color]. As a result however,
-// we need to be careful to paint the foregoround/background
+// we need to be careful to paint the foreground/background
 // colors in the proper sequence/order and in the proper manner.
 // See the below 'set_screen_color' function for details. (Fish)
 
@@ -841,7 +841,7 @@ int set_screen_color( FILE* confp, short herc_fore, short herc_back )
     // AND foreground colors to dim/faint instead of just one or the
     // other), we need to be careful to always set the dim (NON-bold)
     // color attribute FIRST (which will of course reset both the fore-
-    // ground AND the backgound colors to non-bold/faint/dim as well),
+    // ground AND the background colors to non-bold/faint/dim as well),
     // and then to, AFTERWARDS, set the BOLD color attribute. This is
     // the ONLY way I've been able to discover (empirically via trial
     // and error) how to RELIABLY set bold/faint foreground/background
@@ -873,7 +873,7 @@ int set_screen_color( FILE* confp, short herc_fore, short herc_back )
 
         if ( ISO_IS_ISO_BRIGHT(iso_fore) )
         {
-            // The foregound color is the bright/bold one...
+            // The foreground color is the bright/bold one...
 
             iso_bold_color = ISO_FOREGROUND_COLOR( iso_fore );
             iso_dim_color  = ISO_BACKGROUND_COLOR( iso_back );

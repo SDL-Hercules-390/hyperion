@@ -70,7 +70,7 @@ Note: As explained in the previous sections, in order to build support for ZLIB 
 
 ### makefile.bat
 
-Initializes the Windows software development build envionment and invokes nmake to build the desired 32 or 64-bit version of the Hercules emulator.
+Initializes the Windows software development build environment and invokes nmake to build the desired 32 or 64-bit version of the Hercules emulator.
 
 ```
 Format:

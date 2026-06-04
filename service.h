@@ -154,7 +154,7 @@ typedef struct _SCCB_SCP_INFO
                                            is the max supported
                                            guest real size. 0 means
                                            not constrained.          */
-        FWORD   grzm;                   /* Addess increment size in
+        FWORD   grzm;                   /* Address increment size in
                                            units of 1M, valid only
                                            if realiszm is zero       */
         DBLWRD  grnmx;                  /* Maximum increment number

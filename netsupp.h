@@ -174,7 +174,7 @@ struct pseudo_hdr
 {
     U32   ph_ip_src;        // src IP addr      from IP hdr
     U32   ph_ip_dst;        // dst IP addr      from IP hdr
-    U8    ph_zero;          //                  resvered/not used;
+    U8    ph_zero;          //                  reserved/not used;
                             //                  must be binary zero
     U8    ph_ip_p;          // protocol         from IP hdr
     U16   ph_ulen;          // data len         UDP: from hdr

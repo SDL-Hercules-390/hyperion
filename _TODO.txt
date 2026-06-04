@@ -15,6 +15,57 @@
 
 --------------------------------------------------------------------------------
 
+        ***  STOP WASTING VALUABLE HOST INSTRUCTION CACHE!  ***
+        ***  STOP WASTING VALUABLE HOST INSTRUCTION CACHE!  ***
+        ***  STOP WASTING VALUABLE HOST INSTRUCTION CACHE!  ***
+
+  Redesign instruction decoding and dispatch to eliminate the need for
+  each instruction function to decode it's own damn instruction!
+
+  Instead, decode each instruction by INTRUCTION FORMAT, and place the
+  results into a UNION somewhere (such as somewhere in REGS) so that
+  when the instruction is DISPATCHED, it can just immediately execute,
+  without having to decoding it own instruction!
+
+           ------------------------------------------------
+             DECODING AN INSTRUCTION IS THE RESPONSIBILITY
+             OF THE INSTRUCTION DECODER, NOT THE INSTRUCTION
+             DISPATCHER OR THE INSTRUCTION ITSELF!
+           ------------------------------------------------
+
+  The idea here is, there are literally HUNDREDS of instructions in
+  the architecture which all use the same instruction format as other
+  instructions:
+
+  There are  220  instructions using the  "RRE"    instruction format
+  There are  114  instructions using the  "RXY-a"  instruction format
+  There are  59   instructions using the  "RRF-e"  instruction format
+  There are  57   instructions using the  "RR"     instruction format
+
+  ...etc...
+
+  Which means there are literally *MANY HUNDREDS* of places throughout
+  Hercules where the exact same REDUNDANT code exists, BUT ALL AT A
+  DIFFERENT PHYSICAL HOST INSTRUCTION/STORAGE ADDRESS! (meaning each
+  one consumes its own separate set of host instruction cache lines!)
+
+  Hercules is wasting literally *HUNDREDS* OF TIMES more of the host
+  CPU's valuable INSTRUCTION CACHE than necessary! HOST CPU Instruction
+  Cache that could better be used to cache yet other parts of Hercules,
+  thus helping to speed up not only Hercules, but also the ENTIRE HOST
+  SYSTEM ITSELF TOO!
+
+           ------------------------------------------------
+             DECODING AN INSTRUCTION IS THE RESPONSIBILITY
+             OF THE INSTRUCTION DECODER, NOT THE INSTRUCTION
+             DISPATCHER OR THE INSTRUCTION ITSELF!
+           ------------------------------------------------
+
+        ***  STOP WASTING VALUABLE HOST INSTRUCTION CACHE!  ***
+        ***  STOP WASTING VALUABLE HOST INSTRUCTION CACHE!  ***
+
+--------------------------------------------------------------------------------
+
   *BUG*:  FIX PORTABILITY ISSUES that have crept in over time.
 
   Remove all "#if defined(__APPLE__) || defined(__FreeBSD__)" statements.
@@ -65,7 +116,7 @@
   macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
   should MAYBE be calling it more frequently than we are. The trick is to
   determine HOW often it should be called for best performance ON A GIVEN
-  HOST SYSTEM. It should be a dynamially calculated value that is calculated
+  HOST SYSTEM. It should be a dynamically calculated value that is calculated
   during startup to prevent our current defined fixed value from unfairly
   penalizing those users with slower/faster Hercules host systems.
 
@@ -106,8 +157,8 @@
 
 --------------------------------------------------------------------------------
 
-  Windows block device support (i.e. ability to define an entire drive
-  (Windows drive letter / partition) as a Hercules dasd)
+  Windows block device support (i.e. ability to define an entire physical host
+  drive (Windows drive letter / partition) as a Hercules dasd)
 
 --------------------------------------------------------------------------------
 

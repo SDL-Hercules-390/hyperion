@@ -9,7 +9,7 @@
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* This header file contains the following functions, defined as     */
-/* either normal unoptimzed C code, or else as hand-tuned optimized  */
+/* either normal unoptimized C code, or else as hand-tuned optimized */
 /* assembler-assisted functions for the given machine architecture:  */
 /*                                                                   */
 /*   Atomic COMPARE-AND-EXCHANGE functions:                          */
@@ -417,7 +417,7 @@ extern inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr);
 /*-------------------------------------------------------------------
  * OBTAIN/RELEASE_MAINLOCK is by default identical to
  * OBTAIN/RELEASE_MAINLOCK_UNCONDTIONAL but can be nullified in case
- * the required assists are present unless MAINLOCK_ALWAYS overriden.
+ * the required assists are present unless MAINLOCK_ALWAYS overridden.
  *-------------------------------------------------------------------*/
 
 #if (! defined( MAINLOCK_ALWAYS )) \

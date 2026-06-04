@@ -71,7 +71,7 @@
 #endif /* CACHE_ALIGN */
 
 /*-------------------------------------------------------------------*/
-/* Struture definition for block headers                             */
+/* Structure definition for block headers                            */
 /*                                                                   */
 /* Note: Intentionally defined as a macro for inclusion              */
 /*       within blocks without adding another naming layer.          */

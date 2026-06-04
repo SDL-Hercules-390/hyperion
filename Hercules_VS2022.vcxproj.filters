@@ -354,6 +354,9 @@
     <ClCompile Include="console.c">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wscnsl.c">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="comm3705.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
@@ -828,6 +831,9 @@
     <ClCompile Include="zvector2.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="zvector3.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\lib\crypto32.pdb">
@@ -1089,6 +1095,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.VMHANDSHAKE.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="readme\README.WebSocket.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.WIN64.md">
@@ -1895,6 +1904,15 @@
     <None Include="tests\zvector-e6-21-VCRNF.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\zvector-e6-22-VTZ.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e6-23-VCVBQ.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e6-24-VCVDQ.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1980,6 +1998,18 @@
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-30-DivideRem.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-31-VBLEND.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-32-VGEM.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\zvector-e7-33-VEVAL.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\zvector-e7-99-performance.core">
@@ -2333,6 +2363,15 @@
     <None Include="tests\mhi.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\mie4-01-BDXPG-BDEPG.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\mie4-02-CLZG-CTZG.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\mie4-03-IndexedAddress.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\mvcle.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2492,6 +2531,15 @@
     <None Include="tests\zvector-e6-21-VCRNF.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\zvector-e6-22-VTZ.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e6-23-VCVBQ.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e6-24-VCVDQ.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2577,6 +2625,18 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-30-DivideRem.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-31-VBLEND.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-32-VGEM.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\zvector-e7-33-VEVAL.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\zvector-e7-99-performance.tst">
@@ -2831,6 +2891,15 @@
     <None Include="tests\zvector-e6-21-VCRNF.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\zvector-e6-22-VTZ.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-23-VCVBQ.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e6-24-VCVDQ.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2916,6 +2985,18 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-30-DivideRem.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-31-VBLEND.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-32-VGEM.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\zvector-e7-33-VEVAL.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\zvector-e7-99-performance.asm">
@@ -3332,6 +3413,24 @@
     <None Include="tests\zvector-e6-21-VCRNF.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\zvector-e6-22-VTZ.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-22-VTZ.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-23-VCVBQ.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-23-VCVBQ.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-24-VCVDQ.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e6-24-VCVDQ.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\zvector-e7-01-MinMaxAvg.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -3506,6 +3605,30 @@
     <None Include="tests\zvector-e7-29-ShiftDoubleByBit.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\zvector-e7-30-DivideRem.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-30-DivideRem.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-31-VBLEND.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-31-VBLEND.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-32-VGEM.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-32-VGEM.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-33-VEVAL.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\zvector-e7-33-VEVAL.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\zvector-e7-99-performance.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -3555,6 +3678,15 @@
       <Filter>Other Files\scripts</Filter>
     </None>
     <None Include="tests\mhi.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\mie4-01-BDXPG-BDEPG.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\mie4-02-CLZG-CTZG.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\mie4-03-IndexedAddress.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\privop.core">
@@ -3632,6 +3764,15 @@
     <None Include="tests\mhi.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\mie4-01-BDXPG-BDEPG.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\mie4-02-CLZG-CTZG.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\mie4-03-IndexedAddress.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\privop.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -3663,6 +3804,24 @@
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\mhi.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mie4-01-BDXPG-BDEPG.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mie4-01-BDXPG-BDEPG.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mie4-02-CLZG-CTZG.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mie4-02-CLZG-CTZG.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mie4-03-IndexedAddress.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mie4-03-IndexedAddress.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\privop.list">
@@ -3803,6 +3962,21 @@
     <None Include="tests\CDSG.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\cff-01-CompareAndLoad.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\cff-01-CompareAndLoad.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\cff-01-CompareAndLoad.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\cff-01-CompareAndLoad.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\cff-01-CompareAndLoad.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\CLCL-et-al.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -3887,6 +4061,9 @@
       <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="cnsllogo.h">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wscnsl.h">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="comm3705.h">
@@ -4256,6 +4433,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="x75.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zvector.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decContext.h">

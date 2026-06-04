@@ -14,7 +14,7 @@
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* The below are all known facility bits defined by IBM as of the    */
-/* latest z/Architecture Pinciples of Operation.  They correspond    */
+/* latest z/Architecture Principles of Operation.  They correspond   */
 /* to similarly named 'FEATURE_XXX" #defines listed in featall.h.    */
 /*                                                                   */
 /* Their names (minus the 'STFL_' prefix) are used by the FT macro   */
@@ -39,7 +39,7 @@
                                                are installed             */
 #define STFL_001_ZARCH_INSTALLED       1    /* z/Arch mode is available on
                                                this processor            */
-#define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architecural
+#define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architectural
                                                mode active. When bit 2 and
                                                168 are both zero, ESA/390
                                                mode is active. When bit 2
@@ -250,7 +250,11 @@
 #define STFL_082_IBM_INTERNAL         82    /* IBM internal use          */
 
 #define STFL_083_UNDEFINED            83    /* Undefined                 */
-#define STFL_084_UNDEFINED            84    /* Undefined                 */
+
+#define STFL_084_MISC_INSTR_EXT_4     84    /* Miscellaneous-instruction-
+                                               extensions facility 4 is
+                                               installed.                */
+
 #define STFL_085_UNDEFINED            85    /* Undefined                 */
 #define STFL_086_UNDEFINED            86    /* Undefined                 */
 #define STFL_087_UNDEFINED            87    /* Undefined                 */
@@ -450,11 +454,22 @@
                                                bit 197 is one, bit 196 is
                                                also one.                 */
 
-#define STFL_198_UNDEFINED           198    /* Undefined                 */
-#define STFL_199_UNDEFINED           199    /* Undefined                 */
-#define STFL_200_UNDEFINED           200    /* Undefined                 */
+#define STFL_198_VECTOR_ENH_3        198    /* Vector-enhancements fac-
+                                               ility 3 installed. When
+                                               bit 198 is one, bits 129,
+                                               135 and 148 are also one. */
 
-#define STFL_IBM_LAST_BIT            200    /* Last defined IBM facility */
+#define STFL_199_VECT_PACKDEC_ENH_3  199    /* Vector-Packed-Decimal En-
+                                               hancement Facility 3. When
+                                               bit 199 is one, bits 129,
+                                               134, 152 and 192 are also
+                                               one.                      */
+
+#define STFL_200_IBM_INTERNAL        200    /* IBM internal use          */
+
+#define STFL_201_CONCURRENT_FUNC     201    /* Concurrent Functions Facility */
+
+#define STFL_IBM_LAST_BIT            201    /* Last defined IBM facility */
 
 #define STFL_IBM_BY_SIZE        (ROUND_UP( STFL_IBM_LAST_BIT, 8 ) / 8)
 #define STFL_IBM_DW_SIZE        (ROUND_UP( STFL_IBM_BY_SIZE, sizeof( DW )) / sizeof( DW ))

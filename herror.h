@@ -1,5 +1,5 @@
 /* HERROR.H     (C) Copyright Jan Jaeger, 2010-2012                  */
-/*              Hercules Specfic Error codes                         */
+/*              Hercules Specific Error codes                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */

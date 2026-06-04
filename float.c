@@ -776,7 +776,7 @@ static inline void normal_ef( EXTENDED_FLOAT *fl )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int overflow_sf( SHORT_FLOAT *fl, REGS *regs )
 {
@@ -798,7 +798,7 @@ static inline int overflow_sf( SHORT_FLOAT *fl, REGS *regs )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int overflow_lf( LONG_FLOAT *fl, REGS *regs )
 {
@@ -820,7 +820,7 @@ static inline int overflow_lf( LONG_FLOAT *fl, REGS *regs )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int overflow_ef( EXTENDED_FLOAT *fl, REGS *regs )
 {
@@ -842,7 +842,7 @@ static inline int overflow_ef( EXTENDED_FLOAT *fl, REGS *regs )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int underflow_sf( SHORT_FLOAT *fl, REGS *regs )
 {
@@ -870,7 +870,7 @@ static inline int underflow_sf( SHORT_FLOAT *fl, REGS *regs )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int underflow_lf( LONG_FLOAT *fl, REGS *regs )
 {
@@ -899,7 +899,7 @@ static inline int underflow_lf( LONG_FLOAT *fl, REGS *regs )
 /*      fpr     Pointer to register to be stored to                  */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int underflow_ef( EXTENDED_FLOAT *fl, U64 *fpr1, U64 *fpr2,
     REGS *regs)
@@ -933,7 +933,7 @@ static inline int underflow_ef( EXTENDED_FLOAT *fl, U64 *fpr1, U64 *fpr2,
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int over_under_flow_sf( SHORT_FLOAT *fl, REGS *regs )
 {
@@ -966,7 +966,7 @@ static inline int over_under_flow_sf( SHORT_FLOAT *fl, REGS *regs )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int over_under_flow_lf( LONG_FLOAT *fl, REGS *regs )
 {
@@ -999,7 +999,7 @@ static inline int over_under_flow_lf( LONG_FLOAT *fl, REGS *regs )
 /*      fl      Internal float                                       */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int over_under_flow_ef( EXTENDED_FLOAT *fl, REGS *regs )
 {
@@ -1035,7 +1035,7 @@ static inline int over_under_flow_ef( EXTENDED_FLOAT *fl, REGS *regs )
 /*      sigex   Allow significance exception if true                 */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int significance_sf( SHORT_FLOAT *fl, BYTE sigex,
     REGS *regs )
@@ -1061,7 +1061,7 @@ static inline int significance_sf( SHORT_FLOAT *fl, BYTE sigex,
 /*      sigex   Allow significance exception if true                 */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int significance_lf( LONG_FLOAT *fl, BYTE sigex,
     REGS *regs )
@@ -1087,7 +1087,7 @@ static inline int significance_lf( LONG_FLOAT *fl, BYTE sigex,
 /*      fpr     Pointer to register to be stored to                  */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static inline int significance_ef( EXTENDED_FLOAT *fl, U64 *fpr1, U64 *fpr2,
     REGS *regs )
@@ -1123,7 +1123,7 @@ static inline int significance_ef( EXTENDED_FLOAT *fl, U64 *fpr1, U64 *fpr2,
 /*      sigex   Allow significance exception if true                 */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int add_sf( SHORT_FLOAT *fl, SHORT_FLOAT *add_fl,
     BYTE normal, BYTE sigex, REGS *regs )
@@ -1286,7 +1286,7 @@ BYTE    shift;
 /*      sigex   Allow significance exception if true                 */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int add_lf( LONG_FLOAT *fl, LONG_FLOAT *add_fl,
     BYTE normal, BYTE sigex, REGS *regs )
@@ -1448,7 +1448,7 @@ BYTE    shift;
 /*      fpr     Pointer to register                                  */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int add_ef( EXTENDED_FLOAT *fl, EXTENDED_FLOAT *add_fl,
     U64 *fpr1, U64 *fpr2, REGS *regs )
@@ -1893,7 +1893,7 @@ BYTE    shift;
 /*      result_fl       Result long float                            */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int mul_sf_to_lf( SHORT_FLOAT *fl, SHORT_FLOAT *mul_fl,
     LONG_FLOAT *result_fl, REGS *regs )
@@ -1942,7 +1942,7 @@ static int mul_sf_to_lf( SHORT_FLOAT *fl, SHORT_FLOAT *mul_fl,
 /*      result_fl       Result extended float                        */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int mul_lf_to_ef( LONG_FLOAT *fl, LONG_FLOAT *mul_fl,
     EXTENDED_FLOAT *result_fl, REGS *regs )
@@ -2005,7 +2005,7 @@ U64     wk;
 /*      ovunf   Handle overflow/underflow if true                    */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int mul_sf( SHORT_FLOAT *fl, SHORT_FLOAT *mul_fl,
     BYTE ovunf, REGS *regs )
@@ -2061,7 +2061,7 @@ U64     wk;
 /*      ovunf   Handle overflow/underflow if true                    */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int mul_lf( LONG_FLOAT *fl, LONG_FLOAT *mul_fl,
     BYTE ovunf, REGS *regs )
@@ -2124,7 +2124,7 @@ U32     v;
 /*      mul_fl  Multiplicator extended float                         */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int mul_ef( EXTENDED_FLOAT *fl, EXTENDED_FLOAT *mul_fl,
     REGS *regs )
@@ -2224,7 +2224,7 @@ U32 v;
 /*      div_fl  Divisor short float                                  */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int div_sf( SHORT_FLOAT *fl, SHORT_FLOAT *div_fl, REGS *regs )
 {
@@ -2277,7 +2277,7 @@ U64     wk;
 /*      div_fl  Divisor long float                                   */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int div_lf( LONG_FLOAT *fl, LONG_FLOAT *div_fl, REGS *regs )
 {
@@ -2345,7 +2345,7 @@ int     i;
 /*      div_fl  Divisor extended float                               */
 /*      regs    CPU register context                                 */
 /* Value:                                                            */
-/*              exeption                                             */
+/*              exception                                            */
 /*-------------------------------------------------------------------*/
 static int div_ef( EXTENDED_FLOAT *fl, EXTENDED_FLOAT *div_fl,
     REGS *regs )
@@ -5982,7 +5982,7 @@ U32     lsfract;
         normal_sf(&fl);
 
         if (fl.expo > 72) {
-            /* exeeds range by exponent */
+            /* exceeds range by exponent */
             regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
             regs->psw.cc = 3;
             return;
@@ -5993,7 +5993,7 @@ U32     lsfract;
             if (fl.sign) {
                 /* negative */
                 if (fl.short_fract > 0x80000000UL) {
-                    /* exeeds range by value */
+                    /* exceeds range by value */
                     regs->GR_L(r1) = 0x80000000UL;
                     regs->psw.cc = 3;
                     return;
@@ -6001,7 +6001,7 @@ U32     lsfract;
             } else {
                 /* positive */
                 if (fl.short_fract > 0x7FFFFFFFUL) {
-                    /* exeeds range by value */
+                    /* exceeds range by value */
                     regs->GR_L(r1) = 0x7FFFFFFFUL;
                     regs->psw.cc = 3;
                     return;
@@ -6118,7 +6118,7 @@ U64     lsfract;
         normal_lf(&fl);
 
         if (fl.expo > 72) {
-            /* exeeds range by exponent */
+            /* exceeds range by exponent */
             regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
             regs->psw.cc = 3;
             return;
@@ -6158,7 +6158,7 @@ U64     lsfract;
                 if (fl.sign) {
                     /* negative */
                     if (fl.long_fract > 0x80000000UL) {
-                        /* exeeds range by value */
+                        /* exceeds range by value */
                         regs->GR_L(r1) = 0x80000000UL;
                         regs->psw.cc = 3;
                         return;
@@ -6166,7 +6166,7 @@ U64     lsfract;
                 } else {
                     /* positive */
                     if (fl.long_fract > 0x7FFFFFFFUL) {
-                        /* exeeds range by value */
+                        /* exceeds range by value */
                         regs->GR_L(r1) = 0x7FFFFFFFUL;
                         regs->psw.cc = 3;
                         return;
@@ -6254,7 +6254,7 @@ U64     lsfract;
         normal_ef(&fl);
 
         if (fl.expo > 72) {
-            /* exeeds range by exponent */
+            /* exceeds range by exponent */
             regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
             regs->psw.cc = 3;
             return;
@@ -6340,7 +6340,7 @@ U64     lsfract;
         if (fl.sign) {
             /* negative */
             if (fl.ms_fract > 0x80000000UL) {
-                /* exeeds range by value */
+                /* exceeds range by value */
                 regs->GR_L(r1) = 0x80000000UL;
                 regs->psw.cc = 3;
                 return;
@@ -6350,7 +6350,7 @@ U64     lsfract;
         } else {
             /* positive */
             if (fl.ms_fract > 0x7FFFFFFFUL) {
-                /* exeeds range by value */
+                /* exceeds range by value */
                 regs->GR_L(r1) = 0x7FFFFFFFUL;
                 regs->psw.cc = 3;
                 return;
@@ -6393,7 +6393,7 @@ U32     lsfract;
         normal_sf(&fl);
 
         if (fl.expo > 80) {
-            /* exeeds range by exponent */
+            /* exceeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
@@ -6404,7 +6404,7 @@ U32     lsfract;
             if (fl.sign) {
                 /* negative */
                 if (intpart > 0x8000000000000000ULL) {
-                    /* exeeds range by value */
+                    /* exceeds range by value */
                     regs->GR_G(r1) = 0x8000000000000000ULL;
                     regs->psw.cc = 3;
                     return;
@@ -6412,7 +6412,7 @@ U32     lsfract;
             } else {
                 /* positive */
                 if (intpart > 0x7FFFFFFFFFFFFFFFULL) {
-                    /* exeeds range by value */
+                    /* exceeds range by value */
                     regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
                     regs->psw.cc = 3;
                     return;
@@ -6537,7 +6537,7 @@ U64     lsfract;
         normal_lf(&fl);
 
         if (fl.expo > 80) {
-            /* exeeds range by exponent */
+            /* exceeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
@@ -6548,7 +6548,7 @@ U64     lsfract;
             if (fl.sign) {
                 /* negative */
                 if (fl.long_fract > 0x8000000000000000ULL) {
-                    /* exeeds range by value */
+                    /* exceeds range by value */
                     regs->GR_G(r1) = 0x8000000000000000ULL;
                     regs->psw.cc = 3;
                     return;
@@ -6556,7 +6556,7 @@ U64     lsfract;
             } else {
                 /* positive */
                 if (fl.long_fract > 0x7FFFFFFFFFFFFFFFULL) {
-                    /* exeeds range by value */
+                    /* exceeds range by value */
                     regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
                     regs->psw.cc = 3;
                     return;
@@ -6680,7 +6680,7 @@ U64     lsfract;
         normal_ef(&fl);
 
         if (fl.expo > 80) {
-            /* exeeds range by exponent */
+            /* exceeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
@@ -6767,7 +6767,7 @@ U64     lsfract;
         if (fl.sign) {
             /* negative */
             if (intpart > 0x8000000000000000ULL) {
-                /* exeeds range by value */
+                /* exceeds range by value */
                 regs->GR_G(r1) = 0x8000000000000000ULL;
                 regs->psw.cc = 3;
                 return;
@@ -6780,7 +6780,7 @@ U64     lsfract;
         } else {
             /* positive */
             if (intpart > 0x7FFFFFFFFFFFFFFFULL) {
-                /* exeeds range by value */
+                /* exceeds range by value */
                 regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
                 regs->psw.cc = 3;
                 return;

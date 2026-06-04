@@ -34,7 +34,7 @@
 #include "oorexxapi.h"
 
 /*-------------------------------------------------------------------*/
-/* Herculess Rexx implementation equivalents for Object Rexx types   */
+/* Hercules Rexx implementation equivalents for Object Rexx types    */
 /*-------------------------------------------------------------------*/
 #define HR_REXXRC_T         RexxReturnCode    // (API return code)
 #define HR_ENTRY            REXXENTRY         // (calling convention)

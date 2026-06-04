@@ -257,7 +257,7 @@ typedef struct _VRDCBLOK {
 /*60*/  BYTE     vrdcvers;       /* version                          */
 /*61*/  BYTE     vrdcrsio[31];   /* reserved for Input/Output        */
 /*80*/  HWORD    vrdcrdev;       /* Real device number               */
-/*82*/  BYTE     vrdcrsve[126];  /* reserverd                        */
+/*82*/  BYTE     vrdcrsve[126];  /* reserved                         */
 /*100*/
    } VRDCBLOK;
 #define VRDCBLOK_SIZE sizeof(VRDCBLOK)
@@ -1697,7 +1697,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Program check if in problem state,
        the IUCV instruction generates an operation exception
-       rather then a priviliged operation exception when
+       rather then a privileged operation exception when
        executed in problem state                                 *JJ */
     if ( PROBSTATE(&regs->psw) )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);

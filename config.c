@@ -71,7 +71,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 /* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
 /*                                                                   */
 /* Basically you MUST NOT use any architecture dependent macro that  */
-/* is #defined in the "feature.h" header.  If you you need to use    */
+/* is #defined in the "feature.h" header.  If you need to use        */
 /* any of them, then your function MUST be an "ARCH_DEP" function    */
 /* that is placed within the ARCH_DEP section at the beginning of    */
 /* this module where it can be compiled multiple times, once for     */
@@ -782,7 +782,7 @@ int     i;                              /* Loop index                */
         return 0;
     }
 
-    /* Restore group ptr that that 'free_group' may have set to NULL */
+    /* Restore group ptr that 'free_group' may have set to NULL */
     dev->group = group;
 
     /* Obtain the device lock. ret_devblk will release it */
@@ -1020,7 +1020,7 @@ DLL_EXPORT bool are_cpu_thread( int* cpunum )
     if (cpunum)
         *cpunum = -1;
 
-    return false;               // (we are NOT a CPU thead)
+    return false;               // (we are NOT a CPU thread)
 }
 
 /*-------------------------------------------------------------------*/
@@ -1260,7 +1260,7 @@ int configure_maxcpu( int maxcpu )
     int rc = 0;
     OBTAIN_INTLOCK( NULL );
     {
-        /* Requested maxumim must be <= absolute maximum possible */
+        /* Requested maximum must be <= absolute maximum possible */
         if (maxcpu > MAX_CPU_ENGS)
         {
             RELEASE_INTLOCK( NULL );
@@ -1313,6 +1313,14 @@ int     i;                              /* Loop index                */
 
     /* Obtain device block from our DEVBLK pool and lock the device. */
     dev = get_devblk(lcss, devnum); /* does OBTAIN_DEVLOCK( dev ); */
+
+    /* Clear (re-initialize) any left-over garbage from previous use */
+    if (dev->dasdsfn)
+    {
+        free( dev->dasdsfn );
+        dev->dasdsfn = NULL;
+        dev-> dasdsfx = 0;
+    }
 
     // PROGRAMMING NOTE: the rule is, once a DEVBLK has been obtained
     // from the pool it can be returned back to the pool via a simple
@@ -1376,6 +1384,8 @@ int     i;                              /* Loop index                */
         */
         if (dev->buf && dev->buf == dev->prev_buf)
             free_aligned( dev->buf );
+        else if (dev->prev_buf)
+            free_aligned( dev->prev_buf );
 
         dev->buf = dev->prev_buf = malloc_aligned( dev->bufsize, _4K );
 
@@ -1760,7 +1770,7 @@ static int parse_lcss( const char* spec, char** rest, int verbose )
     {
         if (verbose)
         {
-            // "Unspecified error occured while parsing Logical Channel Subsystem Identification"
+            // "Unspecified error occurred while parsing Logical Channel Subsystem Identification"
             WRMSG( HHC01466, "E" );
         }
         free( wrk );
@@ -2074,7 +2084,7 @@ DLL_EXPORT size_t parse_devnums( const char* spec, DEVNUMSDESC* dd )
                 break;
             }
 
-            /* check current range doesn't completelly overlap existing range */
+            /* check current range doesn't completely overlap existing range */
             if (cuu1 < dgrs[i].cuu1 && cuu2 > dgrs[i].cuu2)
             {
                 duplicate = 1;

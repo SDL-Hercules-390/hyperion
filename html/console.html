@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hercules Console</title>
+
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  grid-template-rows: 95px 40px 1fr;
+  grid-template-areas:
+    "gui"
+    "cmd"
+    "syslog";
+}
+
+body.cmd-bottom {
+  grid-template-rows: 95px 1fr 40px;
+  grid-template-areas:
+    "gui"
+    "syslog"
+    "cmd";
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+#guiFrame {
+  grid-area: gui;
+}
+
+#cmdFrame {
+  grid-area: cmd;
+}
+
+#syslogFrame {
+  grid-area: syslog;
+}
+</style>
+</head>
+
+<body>
+
+<iframe id="guiFrame"    name="gui"  src="fishgui.html"></iframe>
+<iframe id="cmdFrame"    name="cmd"  src="cmd.html"></iframe>
+<iframe id="syslogFrame" name="main" src="syslog.html"></iframe>
+
+<script>
+(function () {
+  const POSITION_KEY = "cmdPosition";
+
+  function applyPosition(position) {
+    if (position === "bottom") {
+      document.body.classList.add("cmd-bottom");
+    } else {
+      document.body.classList.remove("cmd-bottom");
+      position = "top";
+    }
+
+    localStorage.setItem(POSITION_KEY, position);
+  }
+
+  window.herculesLayout = {
+    setCommandTop() {
+      applyPosition("top");
+    },
+
+    setCommandBottom() {
+      applyPosition("bottom");
+    },
+
+    toggleCommandPosition() {
+      const isBottom = document.body.classList.contains("cmd-bottom");
+      applyPosition(isBottom ? "top" : "bottom");
+    },
+
+    getCommandPosition() {
+      return document.body.classList.contains("cmd-bottom") ? "bottom" : "top";
+    }
+  };
+
+  applyPosition(localStorage.getItem(POSITION_KEY) || "top");
+})();
+</script>
+
+</body>
+</html>

@@ -159,4 +159,5 @@ hengine_OBJ = \
     $(O)x75.obj      \
     $(O)xstore.obj   \
     $(O)zvector.obj  \
-    $(O)zvector2.obj
+    $(O)zvector2.obj \
+    $(O)zvector3.obj

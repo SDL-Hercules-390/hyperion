@@ -68,7 +68,7 @@ int   blkfactor     = 1;           /* output blocking factor               */
 int   outGLOBBING   = outputGLOB;  /* output single dataset                */
 
 bool  binary        = false;       /* whether input files are binary       */
-bool  nltape        = false;       /* whether this is a non-labelled tape  */
+bool  nltape        = false;       /* whether this is a non-labeled tape   */
 bool  ansi          = false;       /* whether this is an ANSI-label tape   */
 
 int   inFileSeq;                   /* used to index inFileID               */
@@ -674,7 +674,7 @@ bool errors;                       /* indicate missing/invalid arguments   */
 } /* parseCommand */
 
 /*-------------------------------------------------------------------------*/
-/*    write data buffer to output file preceeded by AWS header block       */
+/*    write data buffer to output file preceded by AWS header block        */
 /*-------------------------------------------------------------------------*/
 static void writeBuffer( int bufferLen )
 {

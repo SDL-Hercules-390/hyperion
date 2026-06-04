@@ -40,7 +40,7 @@ Your makefile is `!INCLUDEd` as part of Hercules's main makefile and thus your d
 
 e.g.: `"X:\Hercules\dynmake.bat"  "$(SolutionDir)"  {modname}  RETAIL  32  -a`
 
-The `{projdir}` value you pass MUST be a fully qualified path to your dynamic module's project directory where all of your files are. The `dynamke.bat` command you invoke should also be a fully qualifed path to the desired Hercules `dynmake.bat` file. The other arguments (i.e. `{build_type}`, `{num_cpus}`, etc) are identical to the values normally specified for the main Hercules `makefile.bat` command used to build Hercules with. Refer to [`makefile.bat`](../makefile.bat) for details.
+The `{projdir}` value you pass MUST be a fully qualified path to your dynamic module's project directory where all of your files are. The `dynamke.bat` command you invoke should also be a fully qualified path to the desired Hercules `dynmake.bat` file. The other arguments (i.e. `{build_type}`, `{num_cpus}`, etc) are identical to the values normally specified for the main Hercules `makefile.bat` command used to build Hercules with. Refer to [`makefile.bat`](../makefile.bat) for details.
 
 ## Pre-Build event and Post-Build event callbacks
 

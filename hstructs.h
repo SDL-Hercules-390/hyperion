@@ -49,7 +49,7 @@
 //  since it should thus *always* end up being defined as a U64.
 //
 //  Using any OTHER type of build architecture dependent constant
-//  in any of the below strutures would be a SERIOUS ARCHITECTURE
+//  in any of the below structures would be a SERIOUS ARCHITECTURE
 //  DEPENDENCY VIOLATION!
 //
 //---------------------------------------------------------------------
@@ -90,6 +90,10 @@
 /*  bits.  ... There is no support in GCC for expressing an integer  */
 /*  constant of type __int128 for targets with long long integer     */
 /*  less than 128 bits wide."                                        */
+/*                                                                   */
+/* In addition to not having adequate __uint128_t s/p-rintf format   */
+/* support, the macro F_CPU_BITARG is introduced for values used by  */
+/* F_CPU_BITMAP. Decomposing 128-bit types to 64-bit when required.  */
 /*-------------------------------------------------------------------*/
 
 #if MAX_CPU_ENGS <= 0
@@ -97,14 +101,15 @@
 #elif MAX_CPU_ENGS <= 32
     typedef U32                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%8.8"PRIX32
+    #define F_CPU_BITARG(X)     (CPU_BITMAP)(X)
 #elif MAX_CPU_ENGS <= 64
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
+    #define F_CPU_BITARG(X)     (CPU_BITMAP)(X)
 #elif MAX_CPU_ENGS <= 128
-  typedef __uint128_t         CPU_BITMAP;
-  // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
-  #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
-  #define F_CPU_BITMAP        "%16.16"PRIX64
+    typedef __uint128_t         CPU_BITMAP;
+    #define F_CPU_BITMAP        "%016"PRIx64 "%016"PRIx64
+    #define F_CPU_BITARG(X)     (U64)((X) >> 64), (U64)(X)
 #else
   #error MAX_CPU_ENGS cannot exceed 128
 #endif
@@ -113,7 +118,7 @@
 /*       Structure definition for CPU register context               */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Note: REGS is very susceptable to performance problems due to     */
+/* Note: REGS is very susceptible to performance problems due to     */
 /*       key fields either crossing or split across cache line       */
 /*       boundaries. In addition, if allocated in the stack, the     */
 /*       allocation unit is frequently on an 8-byte boundary rather  */
@@ -160,7 +165,7 @@ struct REGS {                           /* Processor registers       */
         PSW     psw;                    /* Program status word       */
 
         ALIGN_128
-        BYTE    malfcpu                 /* Malfuction alert flags    */
+        BYTE    malfcpu                 /* Malfunction alert flags   */
                     [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
 
         ALIGN_128
@@ -367,7 +372,7 @@ struct REGS {                           /* Processor registers       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
         RADR    sie_xsl;                /* eXpanded Storage Limit    */
         RADR    sie_rcpo;               /* Ref and Change Preserv.   */
-        RADR    sie_scao;               /* System Contol Area        */
+        RADR    sie_scao;               /* System Control Area       */
         S64     sie_epoch;              /* TOD offset in state desc. */
 #endif
         unsigned int
@@ -668,13 +673,17 @@ struct SYSBLK {
   const char  **bld_opts;               /* Build options             */
   const char  **extpkg_vers;            /* External Package versions */
 
+        char*   gui_verstr;             /* EXTERNALGUI version str   */
+        U32     gui_vernum;             /* EXTERNALGUI version num   */
+        LOCK    gui_msglock;            /* EXTERNALGUI message lock  */
+
         bool    ulimit_unlimited;       /* ulimit -c unlimited       */
         bool    is_debugger_present;    /* gdb debugger present?     */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    bindlock;               /* Sockdev bind lock         */
         LOCK    config;                 /* (Re)Configuration Lock    */
-        int     arch_mode;              /* Architecturual mode       */
+        int     arch_mode;              /* Architectural mode        */
                                         /* 0 == S/370   (ARCH_370_IDX)   */
                                         /* 1 == ESA/390 (ARCH_390_IDX)   */
                                         /* 2 == ESAME   (ARCH_900_IDX)   */
@@ -1047,13 +1056,15 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                                         /*     Operation Exceptions  */
                 noch9oflow:1,           /* Suppress CH9 O'Flow trace */
                 devnameonly:1,          /* Display only dev filename */
-                config_processed;       /* config file processed     */
+                config_processed,       /* config file processed     */
+                no_oops_icon;           /* Silent "OOPS!" dialog     */
         int     quitmout;               /* quit timeout value        */
         U32     ints_state;             /* Common Interrupts Status  */
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
         U16     breakasid;              /* Break ASID                */
+        BYTE    breakasid_arn;          /* Break ASID ARN            */
         U64     breakaddr[2];           /* Break address range       */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
@@ -1177,6 +1188,8 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 
         char    *cnslport;              /* console port string       */
         char    *sysgport;              /* SYSG console port string  */
+        char    *wscnslport;            /* WebSocket console port    */
+                                        /* (NULL = WS not enabled)   */
         char    **herclogo;             /* Constructed logo screen   */
         char    *logofile;              /* File name of logo file    */
         size_t  logolines;              /* Logo file number of lines */
@@ -1337,6 +1350,19 @@ struct TELNET {
         BYTE    send_err;               /* Socket send() failure     */
         BYTE    overflow;               /* Too much data accumulated */
         BYTE    overrun;                /* Unexpected extra data     */
+
+        /* ---- WebSocket bridge state (only used if is_websocket) ---- */
+        BYTE    is_websocket;           /* 1 = wrap I/O in WS frames */
+        BYTE    ws_close_sent;          /* 1 = WS Close frame sent   */
+        BYTE   *ws_inbuf;               /* Raw bytes from socket     */
+                                        /* (partial WS frames buffer)*/
+        size_t  ws_inbuf_size;          /* Allocated size of ws_inbuf*/
+        size_t  ws_inbuf_used;          /* Bytes currently held      */
+        BYTE   *ws_payload;             /* Decoded payload FIFO      */
+                                        /* (already-unmasked data    */
+                                        /*  ready for telnet_recv)   */
+        size_t  ws_payload_size;        /* Allocated size            */
+        size_t  ws_payload_used;        /* Bytes currently held      */
 };
 
 
@@ -1419,7 +1445,7 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  device i/o scheduling fields...                          */
 
         TID     tid;                    /* Thread-id executing CCW   */
-        int     priority;               /* I/O q scehduling priority */
+        int     priority;               /* I/O q scheduling priority */
         DEVBLK *nextioq;                /* -> next device in I/O q   */
         IOINT   ioint;                  /* Normal i/o interrupt
                                                queue entry           */
@@ -1667,7 +1693,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ctce_attn_delay;        /* CTCE pre-ATTN delay       */
         TID     ctce_listen_tid;        /* CTCE_ListenThread ID      */
         u_int   ctce_contention_loser:1;/* CTCE cmd collision        */
-        u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progres       */
+        u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progress      */
         u_int   ctce_ficon:1;           /* CTCE type FICON           */
         u_int   ctce_remote_xmode:1;    /* CTCE y-side Ext mode      */
         u_int   ctce_system_reset:1;    /* CTCE initialized          */
@@ -1777,7 +1803,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   sns_pending:1;          /* Contingency Allegiance    */
                                         /* - means : don't build a   */
                                         /* sense on X'04' : it's     */
-                                        /* aleady there              */
+                                        /* already there             */
                                         /* NOTE : flag cleared by    */
                                         /*        sense command only */
                                         /*        or a device init   */
@@ -1931,6 +1957,12 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdlcount;              /* Locate record count       */
         BYTE    ckdextcd;               /* extended code             */
         void   *cckd_ext;               /* -> CCKD_EXT, else NULL    */
+        /* 
+         * #TODO: MSVC handles bit-field packing by aligning members to the
+         * boundary of their underlying type, inserting padding to ensure fields
+         * do not split across boundaries defined by the type size. Change to
+         * u_int when bumping HDL_VERS_DEVBLK.
+         */
         BYTE    cckd64:1;               /* 1=CCKD64/CFBA64           */
         BYTE    devcache:1;             /* 0 = device cache off
                                            1 = device cache on       */
@@ -1958,6 +1990,10 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* Line above ISW20030819-1  */
         u_int   ckdfakewr:1;            /* 1=Fake successful write
                                              for read only file      */
+        u_int   ckdUCnxt:1;             /* 1=CMDREJ next chained CCW     :AE: */
+        u_int   ckdPostRSSD:1;          /* 1=Prev CCW was RSSD           :AE: */
+        u_int   ckdPostSSM:1;           /* 1=Prev CCW was SSM            :AE: */
+        /* See #TODO above */
         BYTE    ckdnvs:1;               /* 1=NVS defined             */
         BYTE    ckdraid:1;              /* 1=RAID device             */
         U16     ckdssdlen;              /* #of bytes of data prepared

@@ -792,7 +792,7 @@ static int addrecs( RECS* recs, const BYTE* bfr, int sz )
 /*-------------------------------------------------------------------*/
 /*                    Close a RECS structure.                        */
 /*-------------------------------------------------------------------*/
-/* The RECS structue is released and the collection of tape blocks   */
+/* The RECS structure is released and the collection of tape blocks  */
 /* is returned for subsequent writing.  For empty files, a dummy     */
 /* record is created since CMS does not support empty files.  The    */
 /* last record of a RECFM F file is also padded if necessary.        */
@@ -1174,7 +1174,7 @@ struct CMS                  /* CMS TAPE DUMP block layout            */
 /*025*/ BYTE   ptrsz;       /* Size of Pointers                      */
 /*026*/ BYTE   adt[6];      /* Alt Date: YYMMDDHHMMSS          (DCB) */
 /*02C*/ BYTE   extra[4];    /* Reserved                              */
-/*030*/ BYTE   pad[16];     /* (pad to to 64 bytes)                  */
+/*030*/ BYTE   pad[16];     /* (pad to 64 bytes)                     */
 
     /* Filename appended following FST                               */
 

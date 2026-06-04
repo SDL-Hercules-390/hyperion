@@ -678,18 +678,6 @@
 
 /*----------------------------------------------------*/
 
-#ifndef    _HSCUTL2_C_
-  #ifndef  _HUTIL_DLL_
-    #define HU2_DLL_IMPORT          DLL_IMPORT
-  #else
-    #define HU2_DLL_IMPORT          extern
-  #endif
-#else
-  #define   HU2_DLL_IMPORT          DLL_EXPORT
-#endif
-
-/*----------------------------------------------------*/
-
 #ifndef    _HSOCKET_C_
   #ifndef  _HUTIL_DLL_
     #define HSOCK_DLL_IMPORT        DLL_IMPORT

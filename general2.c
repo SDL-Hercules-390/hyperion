@@ -289,7 +289,7 @@ int     cc = 0;                         /* Condition code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(pack)
 {
-int     l1, l2;                         /* Lenght values             */
+int     l1, l2;                         /* Length values             */
 int     b1, b2;                         /* Values of base registers  */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
@@ -357,7 +357,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_locked_operation)
 {
-int     r1, r3;                         /* Lenght values             */
+int     r1, r3;                         /* Length values             */
 int     b2, b4;                         /* Values of base registers  */
 VADR    effective_addr2,
         effective_addr4;                /* Effective addresses       */
@@ -411,7 +411,7 @@ VADR    effective_addr2,
     }
     else
     {
-        /* gpr1/ar1 indentify the program lock token, which is used
+        /* gpr1/ar1 identify the program lock token, which is used
            to select a lock from the model dependent number of locks
            in the configuration.  We simply use 1 lock which is the
            main storage access lock which is also used by CS, CDS
@@ -2500,7 +2500,7 @@ DEF_INST(convert_utf8_to_utf32)
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
     ODD2_CHECK(r1, r2, regs);
 
-    /* Get paramaters */
+    /* Get parameters */
     dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     destlen = GR_A(r1 + 1, regs);
     srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
@@ -2523,7 +2523,7 @@ DEF_INST(convert_utf8_to_utf32)
     /* Every valid utf-32 starts with 0x00 */
     utf32[0] = 0x00;
 
-    /* Initialize number of translated charachters */
+    /* Initialize number of translated characters */
     xlated = 0;
     while(xlated < 4096)
     {
@@ -2768,7 +2768,7 @@ DEF_INST(convert_utf8_to_utf32)
             return;
         }
 
-        /* Write UTF32 charater */
+        /* Write UTF32 character */
         // does the utf32 character cross a page boundary
         if (d1pg ==  MAINSTOR_PAGEBASE ( d1 + 3 ))
         {
@@ -2836,7 +2836,7 @@ DEF_INST(convert_utf16_to_utf32)
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
     ODD2_CHECK(r1, r2, regs);
 
-    /* Get paramaters */
+    /* Get parameters */
     dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     destlen = GR_A(r1 + 1, regs);
     srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
@@ -2851,7 +2851,7 @@ DEF_INST(convert_utf16_to_utf32)
     /* Every valid utf-32 starts with 0x00 */
     utf32[0] = 0x00;
 
-    /* Initialize number of translated charachters */
+    /* Initialize number of translated characters */
     xlated = 0;
     while(xlated < 4096)
     {
@@ -2945,13 +2945,13 @@ DEF_INST(convert_utf32_to_utf8)
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
     ODD2_CHECK(r1, r2, regs);
 
-    /* Get paramaters */
+    /* Get parameters */
     dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     destlen = GR_A(r1 + 1, regs);
     srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
     srcelen = GR_A(r2 + 1, regs);
 
-    /* Initialize number of translated charachters */
+    /* Initialize number of translated characters */
     xlated = 0;
     write = 0;
     while(xlated < 4096)
@@ -3083,13 +3083,13 @@ DEF_INST(convert_utf32_to_utf16)
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
     ODD2_CHECK(r1, r2, regs);
 
-    /* Get paramaters */
+    /* Get parameters */
     dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     destlen = GR_A(r1 + 1, regs);
     srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
     srcelen = GR_A(r2 + 1, regs);
 
-    /* Initialize number of translated charachters */
+    /* Initialize number of translated characters */
     xlated = 0;
     while(xlated < 4096)
     {

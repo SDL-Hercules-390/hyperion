@@ -2996,7 +2996,7 @@ DEF_INST( move_long_unicode );
 DEF_INST( compare_logical_long_unicode );
 #endif
 
-#if defined( FEATURE_017_MSA_FACILITY )
+#if defined( FEATURE_017_MSA_FACILITY ) && !defined( DYNINST_017_MSA_FACILITY )
 DEF_INST( cipher_message );
 DEF_INST( cipher_message_with_chaining );
 DEF_INST( compute_intermediate_message_digest );
@@ -3491,7 +3491,7 @@ DEF_INST( load_logical_and_zero_rightmost_byte );
 DEF_INST( load_and_zero_rightmost_byte );
 #endif
 
-#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) && !defined( DYNINST_057_MSA_EXTENSION_FACILITY_5 )
 DEF_INST( perform_random_number_operation );
 #endif
 
@@ -3557,11 +3557,11 @@ DEF_INST( transaction_begin );
 DEF_INST( store_hypervisor_information );
 #endif
 
-#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) && !defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )
 DEF_INST( perform_cryptographic_key_management_operation );
 #endif
 
-#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) && !defined( DYNINST_077_MSA_EXTENSION_FACILITY_4 )
 DEF_INST( perform_cryptographic_computation );
 DEF_INST( cipher_message_with_cipher_feedback );
 DEF_INST( cipher_message_with_output_feedback );
@@ -3573,6 +3573,23 @@ DEF_INST(convert_packed_to_dfp_ext);
 DEF_INST(convert_packed_to_dfp_long);
 DEF_INST(convert_dfp_ext_to_packed);
 DEF_INST(convert_dfp_long_to_packed);
+#endif
+
+#if defined( FEATURE_084_MISC_INSTR_EXT_FACILITY_4 )
+DEF_INST( bit_deposit );
+DEF_INST( bit_extract );
+DEF_INST( count_leading_zeros );
+DEF_INST( count_trailing_zeros );
+DEF_INST( load_logical_indexed_address_shift_0 );
+DEF_INST( load_logical_indexed_address_shift_1 );
+DEF_INST( load_logical_indexed_address_shift_2 );
+DEF_INST( load_logical_indexed_address_shift_3 );
+DEF_INST( load_logical_indexed_address_shift_4 );
+DEF_INST( load_indexed_address_shift_0 );
+DEF_INST( load_indexed_address_shift_1 );
+DEF_INST( load_indexed_address_shift_2 );
+DEF_INST( load_indexed_address_shift_3 );
+DEF_INST( load_indexed_address_shift_4 );
 #endif
 
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
@@ -3803,6 +3820,29 @@ DEF_INST(vector_convert_hfp_to_scaled_decimal);
 DEF_INST( load_bear );
 DEF_INST( store_bear );
 DEF_INST( load_program_status_word_extended_y );
+#endif
+
+#if defined( FEATURE_198_VECTOR_ENH_FACILITY_3 )
+ DEF_INST( vector_generate_element_masks );
+ DEF_INST( vector_evaluate );
+ DEF_INST( vector_blend );
+ DEF_INST( vector_divide_logical );
+ DEF_INST( vector_remainder_logical );
+ DEF_INST( vector_divide );
+ DEF_INST( vector_remainder );
+#endif
+
+#if defined( FEATURE_199_VECT_PACKDEC_ENH_FACILITY_3 )
+ DEF_INST( vector_convert_to_decimal_128 );
+ DEF_INST( vector_convert_to_binary_128 );
+ DEF_INST( vector_test_zoned );
+#endif
+
+#if defined( FEATURE_201_CONCURRENT_FUNCTIONS_FACILITY )
+ DEF_INST( compare_and_load );
+ DEF_INST( compare_and_load_long );
+ DEF_INST( compare_and_load_long_fullword );
+ DEF_INST( perform_functions_with_concurrent_results );
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -4588,7 +4628,7 @@ DEF_INST( zero_and_add );
 /* so allows the instruction's decoder and execution logic to use    */
 /* pre-known constant values resulting in much shorter and simpler   */
 /* code, thus allowing the C compiler to more efficiently optimize   */
-/* the code even further, resulting in a much faster intruction.     */
+/* the code even further, resulting in a much faster instruction.    */
 /*-------------------------------------------------------------------*/
 
 #ifdef OPTION_OPTINST

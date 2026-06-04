@@ -254,9 +254,45 @@ static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
 /*-------------------------------------------------------------------*/
 static char *http_timestring(char *time_buff,int buff_size, time_t t)
 {
-    struct tm *tm = localtime(&t);
+    struct tm *tm = gmtime(&t); // HTTP standard defines GMT
     strftime(time_buff, buff_size, "%a, %d %b %Y %H:%M:%S %Z", tm);
     return time_buff;
+}
+
+/*-------------------------------------------------------------------*/
+/*                      gett_http_time                               */
+/* convert http format date from If-Modified-Since                   */
+/*-------------------------------------------------------------------*/
+static time_t get_http_time(const char *date_str) 
+{
+    // Example: "Wed, 21 Oct 2015 07:28:00 GMT"
+    static const char *months = "JanFebMarAprMayJunJulAugSepOctNovDec";
+    char wkday[4], month_str[4], tz[4];
+    int day, year, hour, min, sec;
+    struct tm http_tm;
+    char *m;
+    
+    if (sscanf(date_str, "%3s, %d %3s %d %d:%d:%d %3s",
+               wkday, &day, month_str, &year,
+               &hour, &min, &sec, tz) != 8) {
+        return (time_t)-1;
+    }
+    
+    if ( ! (m = strstr(months, month_str)))
+    {
+        return (time_t)-1;
+    }
+
+    memset(&http_tm, 0, sizeof(struct tm));
+    http_tm.tm_mday = day;
+    http_tm.tm_mon  = (m - months) / 3;
+    http_tm.tm_year = year - 1900;
+    http_tm.tm_hour = hour;
+    http_tm.tm_min  = min;
+    http_tm.tm_sec  = sec;
+    http_tm.tm_isdst = 0;    //explicit for mktime as GMT
+    
+    return mktime(&http_tm);
 }
 
 /*-------------------------------------------------------------------*/
@@ -523,21 +559,29 @@ static void http_download(WEBBLK *webblk, char *filename)
     if (fd == -1)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
+            
+    if (webblk->mod_time == st.st_mtime)
+    {   
+        // browser copy still valid in cache
+        hprintf(webblk->sock, "HTTP/1.0 304 Not Modified\n");
+    } 
+    else 
+    {
+        hprintf(webblk->sock,"HTTP/1.0 200 OK\n");
+        if ((filetype = strrchr(filename,'.')))
+            for(mime_type++;mime_type->suffix
+              && strcasecmp(mime_type->suffix,filetype + 1);
+              mime_type++);
+        if(mime_type->type)
+            hprintf(webblk->sock,"Content-Type: %s\n", mime_type->type);
 
-    hprintf(webblk->sock,"HTTP/1.0 200 OK\n");
-    if ((filetype = strrchr(filename,'.')))
-        for(mime_type++;mime_type->suffix
-          && strcasecmp(mime_type->suffix,filetype + 1);
-          mime_type++);
-    if(mime_type->type)
-        hprintf(webblk->sock,"Content-Type: %s\n", mime_type->type);
+        hprintf(webblk->sock,"Last-Modified: %s\n",
+          http_timestring(tbuf,sizeof(tbuf), st.st_mtime));
 
-    hprintf(webblk->sock,"Expires: %s\n",
-      http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_EXPIRE_SECS));
-
-    hprintf(webblk->sock,"Content-Length: %d\n\n", (int)st.st_size);
-    while ((length = read(fd, buffer, sizeof(buffer))) > 0)
-            hwrite(webblk->sock,buffer, length);
+        hprintf(webblk->sock,"Content-Length: %d\n\n", (int)st.st_size);
+        while ((length = read(fd, buffer, sizeof(buffer))) > 0)
+                hwrite(webblk->sock,buffer, length);
+    }
     close(fd);
     http_exit(webblk);
 }
@@ -611,6 +655,12 @@ static void *http_request(void* arg)
             {
                 if((pointer = strtok_r(NULL," \t\r\n",&strtok_str)))
                     content_length = atoi(pointer);
+            }
+            else
+            if(!strcasecmp(pointer,"If-Modified-Since:"))
+            {
+                // save browser sent file last modification time, if any
+                webblk->mod_time = get_http_time(strtok_str);   
             }
         }
     }

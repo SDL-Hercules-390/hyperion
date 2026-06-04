@@ -117,7 +117,7 @@
  * allow for flexibility in future enhancements.  However there
  * are a few restrictions.
  *
- * o Key SR_SYS_ARCHNAME shoud be specified before any
+ * o Key SR_SYS_ARCHNAME should be specified before any
  *   SR_CPU keys.  The corresponding CPU is configured
  *   when the SR_CPU key is read, so sysblk.arch_mode must
  *   already be correctly set.

@@ -148,7 +148,7 @@
 ::*  then do the endlocal once we return), doing it that way leaves open      *
 ::*  the possibility that someone who doesn't know better from bypassing      *
 ::*  the font-end batch file altogether and invoking us directly and then     *
-::*  asking for help when they have problems resultimg from their build       *
+::*  asking for help when they have problems resulting from their build       *
 ::*  environment from being screwed up.                                       *
 ::*                                                                           *
 ::*  Yes, it's more effort to do it this way but as long as you're careful    *

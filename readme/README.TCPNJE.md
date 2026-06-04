@@ -138,7 +138,7 @@ _________
 
 <b>3.</b> &nbsp; The connect and listen options are primarily meant to be used
    in situations as described above <b><a href=#footnotes>[2]</a></b>. The
-   TCPNJE protocoll was designed without firewalls in mind, i.e. under the
+   TCPNJE protocol was designed without firewalls in mind, i.e. under the
    assumption the both peers will always be able to communicate freely in
    both directions. Particularly, the resolution of connect collisions during
    session setup is based upon this assumption. When connects are only possible
@@ -235,7 +235,7 @@ the timeouts necessary to avoid this issue in a later release.
 * Group DIAL IN is not implemented.
 * DIAL CCW Not tested.
 * There is 1 thread per line, when there should be 1 thread for ALL lines.
-* MAXDEVT may have to be adjusted under WINDOWS to accomodate for a large number of lines (because some I/O may take an undefinite amount of time).
+* MAXDEVT may have to be adjusted under WINDOWS to accommodate for a large number of lines (because some I/O may take an undefinite amount of time).
 * There is no "REAL" BSC line support yet.
 
 ## _**BUG REPORTS**_
