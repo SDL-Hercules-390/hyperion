@@ -109,7 +109,7 @@ case "$target_os" in
         fi
         # added for utun support on versions of macOS greater than Big Sur (11.0)
         # for hercutun to work properly need to setuid hercifc and hercutun
-        if test "`echo $release | cut -d . -f 1`" -ge 11; then
+        if test "`uname -r | cut -d . -f 1`" -ge 11; then
            hc_cv_build_hercutun=yes
            hc_cv_setuid_hercifc=yes
            hc_cv_setuid_hercutun=yes
