@@ -97,7 +97,7 @@ $(X)hdt3088.dll:  $(ctc_OBJ) $(tuntap_OBJ) \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt3270.dll:  $(O)console.obj \
+$(X)hdt3270.dll:  $(O)console.obj $(O)wscnsl.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)

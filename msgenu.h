@@ -2277,7 +2277,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02915 "%s COMM: Connection received"
 #define HHC02916 "%s COMM: No acceptable terminal types"
 #define HHC02917 "COMM: Switching from %s polling"
-//efine HHC02918 - HHC02949 (available)
+#define HHC02918 "%s COMM: WebSocket handshake failed: %s"
+#define HHC02919 "%s COMM: WebSocket handshake complete"
+#define HHC02920 "%s COMM: WebSocket protocol error; closing connection"
+//efine HHC02921 - HHC02949 (available)
 
 // convto64
 #define HHC02950 "Usage: %s [-r] [-c] [-q] [-v] infile outfile"             "\n" \

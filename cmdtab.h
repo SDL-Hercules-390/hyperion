@@ -1705,6 +1705,22 @@
 
 #define sysgport_cmd_desc       "Define SYSG console port"
 
+#define wscnslport_cmd_desc     "Define WebSocket console port"
+#define wscnslport_cmd_help                                                     \
+                                                                                \
+  "Format:    \"wscnslport [port|host:port|NO]\"\n"                             \
+  "\n"                                                                          \
+  "Defines the listening port (and optionally the binding host) for the\n"      \
+  "WebSocket variant of the console. WebSocket console connections carry\n"     \
+  "exactly the same byte stream as the regular telnet console (CNSLPORT),\n"    \
+  "wrapped in RFC 6455 binary frames (websockify-style). The standard\n"        \
+  "telnet listener on CNSLPORT remains active and unaffected.\n"                \
+  "\n"                                                                          \
+  "Specify \"NO\" to disable the WebSocket listener. With no arguments,\n"      \
+  "displays the currently configured value. The port must differ from\n"        \
+  "CNSLPORT and (if set) SYSGPORT.\n"
+
+
 #define tf_cmd_desc             "Define trace-to-file parameters"
 #define tf_cmd_help             \
                                 \
@@ -2133,6 +2149,7 @@ COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       
 COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      shcmdopt_cmd_help   )
 COMMAND( "sysepoch",                sysepoch_cmd,           SYSCFGNDIAG8,       sysepoch_cmd_desc,      NULL                )
 COMMAND( "sysgport",                sysgport_cmd,           SYSCFGNDIAG8,       sysgport_cmd_desc,      NULL                )
+COMMAND( "wscnslport",              wscnslport_cmd,         SYSCFGNDIAG8,       wscnslport_cmd_desc,    wscnslport_cmd_help )
 COMMAND( "tzoffset",                tzoffset_cmd,           SYSCFGNDIAG8,       tzoffset_cmd_desc,      NULL                )
 COMMAND( "xpndsize",                xpndsize_cmd,           SYSCFGNDIAG8,       xpndsize_cmd_desc,      xpndsize_cmd_help   )
 COMMAND( "yroffset",                yroffset_cmd,           SYSCFGNDIAG8,       yroffset_cmd_desc,      NULL                )

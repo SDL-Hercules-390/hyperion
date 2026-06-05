@@ -2649,21 +2649,17 @@ static_assert (0 < -alignof (int), "alignof is signed");
 
 int function_with_unnamed_parameter (int) { return 0; }
 
-void c23_noreturn ();
+# (directory containing auxiliary build tools)
 
 /* Test parsing of string and char UTF-8 literals (including hex escapes).
    The parens pacify GCC 15.  */
 bool use_u8 = (!sizeof u8"\xFF") == (!u8'\''x'\'');
 
-bool check_that_bool_works = true | false | !nullptr;
-#if !true
-# error "true does not work in #if"
-#endif
-#if false
-#elifdef __STDC_VERSION__
-#else
-# error "#elifdef does not work"
-#endif
+VERS_MAJ=4                    # first  digit of version
+VERS_INT=10                   # second digit of version
+VERS_MIN=0                    # third  digit of version
+VERS_DEV=1                    # flag: 1 = between releases DEVELOPMENT version
+                              #       0 = formal OFFICIAL RELEASE version
 
 #ifndef __has_c_attribute
 # error "__has_c_attribute not defined"
@@ -18741,8 +18737,7 @@ then :
 
 fi
 
-
-  for ac_func in vsscanf
+for ac_func in vsscanf
 do :
   ac_fn_c_check_func "$LINENO" "vsscanf" "ac_cv_func_vsscanf"
 if test "x$ac_cv_func_vsscanf" = xyes

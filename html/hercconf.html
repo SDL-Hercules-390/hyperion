@@ -97,6 +97,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270             Listening port for 3270 device connections
+    <a href="#WSCNSLPORT">WSCNSLPORT</a> 6080             Listening port for WebSocket console connections
     <a href="#SYSGPORT">SYSGPORT</a>   3278             Listening port for SYSG device connections
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
@@ -1724,6 +1725,39 @@ a real System/390.  The configuration file is an ASCII text file.
     For timezones east of Greenwich, specify a positive value
     (example: <code>+0100</code> for Central European Time,
     <code>+0930</code> for South Australian Time).
+    <p>
+
+<a name="WSCNSLPORT"></a>
+<dt><code>WSCNSLPORT &nbsp; <i><u>6080</u></i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i> &nbsp;<i>-or-</i> &nbsp;<code>NO</code></code>
+<dd><p>
+    Specifies the port number (in decimal) on which the WebSocket
+    console server should listen for incoming connections from
+    browser-based 3270 clients. If an invalid value is specified
+    Hercules defaults to port number <u>6080</u>.
+    Specifying <code>NO</code> disables the WebSocket console server.
+    <p>
+    The WebSocket console runs alongside the traditional telnet/tn3270
+    console controlled by <a href="#CNSLPORT"><code>CNSLPORT</code></a>;
+    it does <em>not</em> replace it. WebSocket clients use the same
+    3270 device pool, so the same restriction applies: no listening
+    port is opened unless at least one
+    <a href="#device_types_table">3270 device</a> is defined in your
+    configuration.
+    <p>
+    The <code>WSCNSLPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the WebSocket console server
+    should bind to. If not specified the server will accept
+    connections on the port from any host interface.
+    <p>
+    The chosen port must differ from
+    <a href="#CNSLPORT"><code>CNSLPORT</code></a> and
+    <a href="#SYSGPORT"><code>SYSGPORT</code></a>; valid range is
+    <code>0&ndash;65535</code>.
+    <p>
+    See the
+    <a href="../readme/README.WebSocket.md">WebSocket Console How-To</a>
+    for details on configuring and connecting browser-based clients.
     <p>
 
 <a name="XPNDSIZE"></a>
@@ -4911,17 +4945,18 @@ ROUTE  00  172.21.3.32  255.255.255.224
         
         <p>
 
-        The <i>old (prior)</i> default of <code>'cu=3990-6'</code> will still work for those
+        The <i>old (prior)</i> default of <code>'cu=3990-6'</code> should still work for those
         guest operating systems which do <i>not</i> require support for the E7 Prefix CCW,
         but for those guest operating systems which <b><i><u>do</u></i></b> require support
-        for the E7 Prefix CCW <i>(such as <b>z/VM</b> for example)</i>, you should
-        <i><u>no longer</u></i> use <code>'cu=3990-6'</code>. Instead, you should now use
-        <code>'cu=2107'</code>.
+        for the E7 Prefix CCW <i>(such as <u><i><b>recent</b></i></u> versions of <b>z/VM</b> for
+        example)</i>, you should <i><u>no longer use</u></i> <code>'cu=3990-6'</code>.&nbsp;
+        &nbsp;Instead, you should use use the new <code>'cu=2107'</code> specification instead.
 
         <p>
 
-        For older legacy type operating systems using 3390 dasd, <code>'cu=3990-3'</code>
-        is probably what should be used instead.
+        For <i><u>much older <b>legacy</b></u></i> type operating systems using 3390 dasd
+        (including older versions of z/VM such as z/VM 5.1 for example), <code>'cu=3990-3'</code>
+        (or <code>'cu=3990'</code>) is probably what should be used instead.
 
         <p>
 

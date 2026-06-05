@@ -1188,6 +1188,8 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 
         char    *cnslport;              /* console port string       */
         char    *sysgport;              /* SYSG console port string  */
+        char    *wscnslport;            /* WebSocket console port    */
+                                        /* (NULL = WS not enabled)   */
         char    **herclogo;             /* Constructed logo screen   */
         char    *logofile;              /* File name of logo file    */
         size_t  logolines;              /* Logo file number of lines */
@@ -1348,6 +1350,19 @@ struct TELNET {
         BYTE    send_err;               /* Socket send() failure     */
         BYTE    overflow;               /* Too much data accumulated */
         BYTE    overrun;                /* Unexpected extra data     */
+
+        /* ---- WebSocket bridge state (only used if is_websocket) ---- */
+        BYTE    is_websocket;           /* 1 = wrap I/O in WS frames */
+        BYTE    ws_close_sent;          /* 1 = WS Close frame sent   */
+        BYTE   *ws_inbuf;               /* Raw bytes from socket     */
+                                        /* (partial WS frames buffer)*/
+        size_t  ws_inbuf_size;          /* Allocated size of ws_inbuf*/
+        size_t  ws_inbuf_used;          /* Bytes currently held      */
+        BYTE   *ws_payload;             /* Decoded payload FIFO      */
+                                        /* (already-unmasked data    */
+                                        /*  ready for telnet_recv)   */
+        size_t  ws_payload_size;        /* Allocated size            */
+        size_t  ws_payload_used;        /* Bytes currently held      */
 };
 
 

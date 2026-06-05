@@ -434,6 +434,10 @@
 								RelativePath=".\cnsllogo.h"
 								>
 							</File>
+							<File
+								RelativePath=".\wscnsl.h"
+								>
+							</File>
 						</Filter>
 						<Filter
 							Name="Source Files"
@@ -444,6 +448,10 @@
 							</File>
 							<File
 								RelativePath=".\console.c"
+								>
+							</File>
+							<File
+								RelativePath=".\wscnsl.c"
 								>
 							</File>
 						</Filter>
@@ -2252,6 +2260,10 @@
 					</File>
 					<File
 						RelativePath=".\readme\README.VMFPLC2.md"
+						>
+					</File>
+					<File
+						RelativePath=".\readme\README.WebSocket.md"
 						>
 					</File>
 					<File
@@ -5001,18 +5013,18 @@
 							RelativePath=".\tests\mhi.tst"
 							>
 						</File>
-					<File
-						RelativePath=".\tests\mie4-01-BDXPG-BDEPG.tst"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\mie4-02-CLZG-CTZG.tst"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\mie4-03-IndexedAddress.tst"
-						>
-					</File>
+						<File
+							RelativePath=".\tests\mie4-01-BDXPG-BDEPG.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-02-CLZG-CTZG.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-03-IndexedAddress.tst"
+							>
+						</File>
 						<File
 							RelativePath=".\tests\mvcle.tst"
 							>
@@ -5673,18 +5685,18 @@
 							RelativePath=".\tests\mhi.asm"
 							>
 						</File>
-                        <File
-                            RelativePath=".\tests\mie4-01-BDXPG-BDEPG.asm"
-                            >
-                        </File>
-                        <File
-                            RelativePath=".\tests\mie4-02-CLZG-CTZG.asm"
-                            >
-                        </File>
-                        <File
-                            RelativePath=".\tests\mie4-03-IndexedAddress.asm"
-                            >
-                        </File>
+						<File
+							RelativePath=".\tests\mie4-01-BDXPG-BDEPG.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-02-CLZG-CTZG.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mie4-03-IndexedAddress.asm"
+							>
+						</File>
 						<File
 							RelativePath=".\tests\mvcos-001.asm"
 							>
@@ -6420,30 +6432,30 @@
 								RelativePath=".\tests\mhi.list"
 								>
 							</File>
-                            <File
-                                RelativePath=".\tests\mie4-01-BDXPG-BDEPG.list"
-                                >
-                            </File>
-                            <File
-                                RelativePath=".\tests\mie4-01-BDXPG-BDEPG.pdf"
-                                >
-                            </File>
-                            <File
-                                RelativePath=".\tests\mie4-02-CLZG-CTZG.list"
-                                >
-                            </File>
-                            <File
-                                RelativePath=".\tests\mie4-02-CLZG-CTZG.pdf"
-                                >
-                            </File>
-                            <File
-                                RelativePath=".\tests\mie4-03-IndexedAddress.list"
-                                >
-                            </File>
-                            <File
-                                RelativePath=".\tests\mie4-03-IndexedAddress.pdf"
-                                >
-                            </File>
+							<File
+								RelativePath=".\tests\mie4-01-BDXPG-BDEPG.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-01-BDXPG-BDEPG.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-02-CLZG-CTZG.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-02-CLZG-CTZG.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-03-IndexedAddress.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mie4-03-IndexedAddress.pdf"
+								>
+							</File>
 							<File
 								RelativePath=".\tests\mvcos-001.list"
 								>

@@ -4514,6 +4514,161 @@ int sysgport_cmd( int argc, char* argv[], char* cmdline )
 }
 
 /*-------------------------------------------------------------------*/
+/* wscnslport command - define WebSocket console port                */
+/*-------------------------------------------------------------------*/
+int wscnslport_cmd( int argc, char* argv[], char* cmdline )
+{
+    static char const* def_port = "6080";
+    bool disabled = false;
+    int rc = 0;
+    int i;
+
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
+
+    if (argc > 2)
+    {
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        rc = -1;
+    }
+    else if (argc == 1) // Display current value
+    {
+        char buf[128];
+
+        if (sysblk.wscnslport && strchr( sysblk.wscnslport, ':' ) == NULL)
+        {
+            MSGBUF( buf, "on port %s", sysblk.wscnslport );
+        }
+        else // (!sysblk.wscnslport || host:port specified)
+        {
+            if (sysblk.wscnslport)
+            {
+                char* serv = NULL;
+                char* host = NULL;
+                char* port = NULL;
+
+                port = strdup( sysblk.wscnslport );
+
+                if ((serv = strchr( port, ':' )))
+                {
+                    *serv++ = '\0';
+
+                    if (*port)
+                        host = port;
+                }
+
+                MSGBUF( buf, "on port %s for host %s", serv, host );
+                free( port );
+            }
+        }
+
+        if (sysblk.wscnslport)
+        {
+            // "%s server %slistening %s"
+            WRMSG( HHC17001, "I", "WebSocket console", "", buf );
+        }
+        else
+        {
+            // "%s server %slistening %s"
+            WRMSG( HHC17001, "I", "WebSocket console", "NOT ", "on any port" );
+        }
+        rc = 0;
+    }
+    else // Set new value
+    {
+        if (str_caseless_eq( argv[1], "NO" ))
+        {
+            disabled = true;
+            rc = 1;
+        }
+        else
+        {
+            char* port;
+            char* host = strdup( argv[1] );
+
+            if ((port = strchr( host, ':' )) == NULL)
+                port = host;
+            else
+                *port++ = '\0';
+
+            for (i=0; i < (int) strlen( port ); i++)
+            {
+                if (!isdigit( (unsigned char)port[i] ))
+                {
+                    // "Invalid value %s specified for %s"
+                    WRMSG( HHC01451, "E", port, argv[0] );
+                    rc = -1;
+                    break;
+                }
+            }
+
+            if (rc != -1)  // (if no parsing error)
+            {
+                i = atoi( port );
+
+                if (i < 0 || i > 65535)
+                {
+                    // "Invalid value %s specified for %s"
+                    WRMSG( HHC01451, "E", port, argv[0] );
+                    rc = -1;
+                }
+                else
+                    rc = 1;
+            }
+
+            free( host );
+        }
+    }
+
+    if (rc != 0) // (new value specified or error)
+    {
+        const char* port = (rc == -1) ? def_port : argv[1];
+
+        if (!disabled && str_eq( port, sysblk.cnslport ))
+        {
+            // "%s cannot be the same as %s"
+            WRMSG( HHC01453, "E", argv[0], "CNSLPORT" );
+            rc = -1;
+        }
+        else if (!disabled && sysblk.sysgport && str_eq( port, sysblk.sysgport ))
+        {
+            // "%s cannot be the same as %s"
+            WRMSG( HHC01453, "E", argv[0], "SYSGPORT" );
+            rc = -1;
+        }
+        else // (disabled || port okay)
+        {
+            free( sysblk.wscnslport );
+            sysblk.wscnslport = NULL;
+
+            if (!disabled && rc == -1)
+            {
+                // "Default port %s being used for %s"
+                WRMSG( HHC01452, "W", def_port, argv[0] );
+                sysblk.wscnslport = strdup( def_port );
+                rc = 1;
+            }
+            else // (disabled || rc != -1)
+            {
+                if (!disabled)
+                    sysblk.wscnslport = strdup( argv[1] );
+
+                // "%-14s set to %s"
+                WRMSG( HHC02204, "I", argv[0],
+                    disabled ? "NO" : sysblk.wscnslport );
+                rc = 0;
+            }
+        }
+    }
+
+    /* Wake the console connection thread so it picks up the new port. */
+    SIGNAL_CONSOLE_THREAD();
+
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
 /* http command - manage HTTP server                                 */
 /*-------------------------------------------------------------------*/
 int http_cmd(int argc, char *argv[], char *cmdline)

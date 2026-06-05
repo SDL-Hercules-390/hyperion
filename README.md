@@ -88,6 +88,7 @@ to our **bug report tracking system** by adding/creating a new
 [Running Hercules in "No UI" mode](readme/README.DAEMON.md)  
 [TCPNJE Support](readme/README.TCPNJE.md)  
 [VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
+[WebSocket Console Transport (WSCNSLPORT)](readme/README.WebSocket.md)  
 
 ### HERCULES INTERNAL READMEs
 

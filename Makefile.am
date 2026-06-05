@@ -117,6 +117,7 @@ dyndev_SRC =  \
   tcpnje.c    \
   con1052c.c  \
   console.c   \
+  wscnsl.c    \
   ctc_ctci.c  \
   ctc_lcs.c   \
   ctc_ptp.c   \
@@ -314,7 +315,7 @@ hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c utun.c tuntap.c netsupp.c
 hdt3088_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdt3270_la_SOURCES  = console.c
+hdt3270_la_SOURCES  = console.c wscnsl.c
 hdt3270_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3270_la_LIBADD   = $(DYNMOD_LD_ADD)
 
@@ -922,6 +923,7 @@ EXTRA_DIST =                  \
   readme/README.TCPNJE.md         \
   readme/README.TRACEFILE.md      \
   readme/README.VMFPLC2.md        \
+  readme/README.WebSocket.md      \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
@@ -1146,6 +1148,7 @@ noinst_HEADERS =          \
   vmd250.h                \
   vstore.h                \
   vsvers.h                \
+  wscnsl.h                \
   w32ctca.c               \
   w32ctca.h               \
   w32dl.h                 \

@@ -221,7 +221,7 @@ hdt3088_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdt3088_la_LDFLAGS) $(LDFLAGS) -o $@
 hdt3270_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_hdt3270_la_OBJECTS = console.lo
+am_hdt3270_la_OBJECTS = console.lo wscnsl.lo
 hdt3270_la_OBJECTS = $(am_hdt3270_la_OBJECTS)
 hdt3270_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -722,13 +722,15 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/tfprint.Po ./$(DEPDIR)/tfswap.Po \
 	./$(DEPDIR)/timer.Plo ./$(DEPDIR)/trace.Plo \
 	./$(DEPDIR)/transact.Plo ./$(DEPDIR)/tuntap.Plo \
-	./$(DEPDIR)/txt2card.Po ./$(DEPDIR)/utun.Plo \
-	./$(DEPDIR)/vector.Plo ./$(DEPDIR)/version.Plo \
-	./$(DEPDIR)/vm.Plo ./$(DEPDIR)/vmd250.Plo \
-	./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/vstore.Plo \
-	./$(DEPDIR)/x75.Plo ./$(DEPDIR)/xstore.Plo \
-	./$(DEPDIR)/zfcp.Plo ./$(DEPDIR)/zvector.Plo \
-	./$(DEPDIR)/zvector2.Plo ./$(DEPDIR)/zvector3.Plo
+  ./$(DEPDIR)/utun.Plo ./$(DEPDIR)/txt2card.Po \
+  ./$(DEPDIR)/vector.Plo ./$(DEPDIR)/version.Plo \
+  ./$(DEPDIR)/vm.Plo ./$(DEPDIR)/vmd250.Plo \
+  ./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/vstore.Plo \
+  ./$(DEPDIR)/wscnsl.Plo ./$(DEPDIR)/x75.Plo \
+  ./$(DEPDIR)/xstore.Plo ./$(DEPDIR)/zfcp.Plo \
+  ./$(DEPDIR)/zvector.Plo ./$(DEPDIR)/zvector2.Plo \
+  ./$(DEPDIR)/zvector3.Plo
+
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -1137,6 +1139,7 @@ dyndev_SRC = \
   tcpnje.c    \
   con1052c.c  \
   console.c   \
+  wscnsl.c    \
   ctc_ctci.c  \
   ctc_lcs.c   \
   ctc_ptp.c   \
@@ -1271,7 +1274,7 @@ hdt3705_la_LIBADD = $(DYNMOD_LD_ADD)
 hdt3088_la_SOURCES = ctc_lcs.c ctc_ctci.c ctcadpt.c utun.c tuntap.c netsupp.c
 hdt3088_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD = $(DYNMOD_LD_ADD)
-hdt3270_la_SOURCES = console.c
+hdt3270_la_SOURCES = console.c wscnsl.c
 hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3270_la_LIBADD = $(DYNMOD_LD_ADD)
 hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c
@@ -1818,6 +1821,7 @@ EXTRA_DIST = \
   readme/README.TCPNJE.md         \
   readme/README.TRACEFILE.md      \
   readme/README.VMFPLC2.md        \
+  readme/README.WebSocket.md      \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
@@ -2042,6 +2046,7 @@ noinst_HEADERS = \
   vmd250.h                \
   vstore.h                \
   vsvers.h                \
+  wscnsl.h                \
   w32ctca.c               \
   w32ctca.h               \
   w32dl.h                 \
@@ -2665,6 +2670,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmd250.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmfplc2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vstore.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wscnsl.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x75.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xstore.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zfcp.Plo@am__quote@ # am--include-marker
@@ -3285,6 +3291,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/vmd250.Plo
 	-rm -f ./$(DEPDIR)/vmfplc2.Po
 	-rm -f ./$(DEPDIR)/vstore.Plo
+	-rm -f ./$(DEPDIR)/wscnsl.Plo
 	-rm -f ./$(DEPDIR)/x75.Plo
 	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
@@ -3528,6 +3535,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/vmd250.Plo
 	-rm -f ./$(DEPDIR)/vmfplc2.Po
 	-rm -f ./$(DEPDIR)/vstore.Plo
+	-rm -f ./$(DEPDIR)/wscnsl.Plo
 	-rm -f ./$(DEPDIR)/x75.Plo
 	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
