@@ -189,7 +189,6 @@ static int onconnect_callback (DEVBLK* dev)
 
 // (forward reference)
 static int open_punch( DEVBLK* dev );
-static int cardpch_close_device( DEVBLK* dev );
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -198,11 +197,12 @@ static int cardpch_init_handler( DEVBLK* dev, int argc, char* argv[] )
 {
 int     i;                              /* Array subscript           */
 bool    sockdev = false;
+char    work[16];                       /* work area for strings     */
 
     /* Close the existing file, if any */
     if (dev->fd >= 0)
     {
-        cardpch_close_device( dev );
+        (dev->hnd->close)( dev );
 
         RELEASE_DEVLOCK( dev );
         {
@@ -228,13 +228,6 @@ bool    sockdev = false;
 
     /* Save the file name in the device block */
     hostpath( dev->filename, argv[0], sizeof( dev->filename ));
-
-	/* Prepare the UROUTBLK for use with output file naming */
-    if (uro_initfile(dev, dev->filename, DEFAULT_PUNCH_FILE_EXTENSION) < 0)
-    {
-        // error already issued
-        return -1;
-    }
 
     /* Initialize the device type */
     if (!sscanf( dev->typname, "%hx", &dev->devtype ))
@@ -364,6 +357,13 @@ bool    sockdev = false;
             "sockdev/handshake");
         return -1;
     }
+    if (dev->handshake && dev->append)
+    {
+        // "%1d:%04X Card: option %s is incompatible"
+        WRMSG( HHC01210, "E", LCSS_DEVNUM,
+            "append/handshake" );
+        return -1;
+    }
 
     /* If socket device, create a listening socket
        to accept connections on.
@@ -372,6 +372,26 @@ bool    sockdev = false;
         dev->filename, onconnect_callback, dev ))
     {
         return -1;  // (error msg already issued)
+    }
+
+    /*
+       If handshaking, capture elements of the target for later
+     */
+    if (dev->handshake)
+    {
+        MSGBUF(work, "punch_%04X", LCSS_DEVNUM);
+        /* Prepare the UROUTBLK for use with output file naming */
+        if ( uro_initfile(dev, work, DEFAULT_PUNCH_FILE_EXTENSION, URO_TYPE) )
+        {
+            // error already issued
+            return -1;
+        }
+    }
+    else
+    {
+        /* Open the device file right away */
+        if (!sockdev && open_punch( dev ) != 0)
+            return -1;  // (error msg already issued)
     }
 
     return 0;
@@ -418,7 +438,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
         open_flags |= O_TRUNC;
 
     // Resolve the name of the ourput file
-    if (uro_resolvefilename(dev, URO_TYPE) < 0)
+    if (dev->handshake && uro_resolvefilename(dev) < 0)
     {
         // error already issued
         return -1;
@@ -472,10 +492,13 @@ static int cardpch_close_device( DEVBLK* dev )
     dev->fd = -1;
     dev->stopdev = FALSE;
 
-    /* 
+    /*
      * Clear out any other residual from prior file
      */
-    uro_closefromccw(dev);
+    if (dev->handshake)
+    {
+        uro_closefromccw(dev);
+    }
 
     return 0;
 } /* end function cardpch_close_device */
@@ -488,7 +511,7 @@ static void cardpch_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
 int             rc;
-BYTE*           work;                   // string manipulation
+BYTE            *work;                  // string manipulation
 U32             i;                      /* Loop counter              */
 U32             num;                    /* Number of bytes to move   */
 BYTE            c;                      /* Output character          */
@@ -514,36 +537,36 @@ BYTE            c;                      /* Output character          */
         /*---------------------------------------------------------------*/
         /* OPEN & NAME A NEW FILE                         (VM Handshake) */
         /*---------------------------------------------------------------*/
-        if (dev->handshake) 
+        if (dev->handshake)
         {
             /* Close any existing file */
-        	cardpch_close_device(dev);
+            cardpch_close_device(dev);
 
             /* Translate CCW data from EBCDIC */
-        	work = NULL;
-        	if (count > 0) 
-        	{
-        		work = malloc(count);
-        		buf_guest_to_host(iobuf, work, count);
-        	}
+            work = NULL;
+            if (count > 0)
+            {
+                work = malloc(count);
+                buf_guest_to_host(iobuf, work, count);
+            }
 
             /* Save the name of the new file */
-        	rc = uro_namefromccw(dev, work, count);
-        	free(work); work = NULL;
+            rc = uro_namefromccw(dev, work, count);
+            free(work); work = NULL;
 
-        	if (rc < 0)
+            if (rc < 0)
             {
                 // return DATACHK (oom on new file name)
                 dev->sense[0] = SENSE_DC;
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
             }
-        	else
-        	{
+            else
+            {
                 /* Return normal status */
                 *unitstat = CSW_CE | CSW_DE;
-        	}
+            }
         }
-        else  // handshake not enabled 
+        else  // handshake not enabled
         {
             /* Command Reject */
             dev->sense[0] = SENSE_CR;
@@ -557,15 +580,15 @@ BYTE            c;                      /* Output character          */
         /*---------------------------------------------------------------*/
         /* CLOSE CURRENT FILE                             (VM Handshake) */
         /*---------------------------------------------------------------*/
-        if (dev->handshake) 
+        if (dev->handshake)
         {
             /* Close the existing file */
-        	cardpch_close_device(dev);
+            cardpch_close_device(dev);
 
             /* Return normal status */
             *unitstat = CSW_CE | CSW_DE;
         }
-        else  // handshake not enabled 
+        else  // handshake not enabled
         {
             /* Command Reject */
             dev->sense[0] = SENSE_CR;
@@ -575,10 +598,10 @@ BYTE            c;                      /* Output character          */
     }
 
     /* Open the device file if necessary */
-    if (dev->fd < 0 && !IS_CCW_SENSE( code )) 
+    if (dev->fd < 0 && !IS_CCW_SENSE( code ))
     {
         rc = open_punch( dev );
-	    if (rc < 0) 
+        if (rc < 0)
         {
             /* Set unit check with intervention required */
             dev->sense[0] = SENSE_IR;

@@ -1033,7 +1033,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01291 "%1d:%04X %s: writing to file %s"
 #define HHC01292 "%1d:%04X %s: renaming output file %s to %s"
 #define HHC01293 "%1d:%04X %s: deleting old output file %s"
-//efine HHC01294 - HHC01299 (available)
+#define HHC01294 "%1d:%04X %s: created new directory '%s'"
+#define HHC01295 "%1d:%04X %s: cannot create directory '%s'"
+//efine HHC01296 - HHC01299 (available)
 
 // reserve 013xx for channel related messages
 #define HHC01300 "%1d:%04X CHAN: halt subchannel: cc=%d"

@@ -2067,12 +2067,13 @@ struct GUISTAT
 struct UROUTBLK
 {
                                         /* file arg from devinit     */
-    char *cmd_filename;                 /* .. full path/name         */
-    char *cmd_pathpart;                 /* .. path part with /       */
-    char *cmd_namepart;                 /* .. name part              */
-    char *cmd_extpart;                  /* .. exten part with .      */
-    char *cur_namepart;                 /* current handshake name    */
-    char *cur_filename;                 /* current output file       */
+    char  cmd_filename [ MAX_PATH + 1 ];/* .. full path/name         */
+    char  cmd_pathpart [ MAX_PATH + 1 ];/* .. path part with /       */
+    char  cmd_namepart [ MAX_PATH + 1 ];/* .. name part              */
+    char  cmd_extpart  [ MAX_PATH + 1 ];/* .. exten part with .      */
+    char  cur_namepart [ MAX_PATH + 1 ];/* current handshake name    */
+    char  cur_filename [ MAX_PATH + 1 ];/* current output file       */
+    const char *uro_devclass;           /* device class for msgs     */
 };
 typedef struct UROUTBLK UROUTBLK;
 #define UROUT(dev) ((UROUTBLK*)((dev)->dev_data))

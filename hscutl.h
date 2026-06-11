@@ -448,15 +448,15 @@ HUT_DLL_IMPORT bool are_big_endian();
     uro_resolvefilename:
         Determine the full name of the output file.
         This might involve reenaming existing files
-		if the 'append' option is not specified.
-	uri_closefromccw:
-	    Resets any device fields when the close
-		handshake ccw is issued. The caller is
-		responsible for actually closing the file.
+        if the 'append' option is not specified.
+    uri_closefromccw:
+        Resets any device fields when the close
+        handshake ccw is issued. The caller is
+        responsible for actually closing the file.
 */
-HUT_DLL_IMPORT int uro_initfile ( DEVBLK* dev, const char *namearg, const char *defaultExt );
+HUT_DLL_IMPORT int uro_initfile ( DEVBLK* dev, const char *defaultName, const char *defaultExt, const char *devclass );
 HUT_DLL_IMPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen );
-HUT_DLL_IMPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype );
+HUT_DLL_IMPORT int uro_resolvefilename ( DEVBLK* dev );
 HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev );
 
 /*-------------------------------------------------------------------*/

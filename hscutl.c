@@ -837,6 +837,105 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
 }
 
 /**
+ * Internal method to insure a target directory exists
+ * note.. when called from uro_initfile, dirname will
+ * always end in a path separator
+ */
+static int mkdirsIfNeeded ( DEVBLK *dev, const char *dirname )
+{
+    char workdir[MAX_PATH+1];
+    char pathpart[MAX_PATH+1];
+    char *csr, *pathend;
+    char *c1, *c2;
+    char c;
+    int len;
+    struct stat st;
+
+    /* Copy argument to work */
+    workdir[0] = '\0';
+#ifdef _WIN32
+    /*
+     * Windows CreateDirectory doesn't seem to like bare relative paths
+     * like 'listings/x.lst'.. so... we need to make it './listings/x.lst'
+     */
+    c = *dirname;
+    if ( isalpha(c) && strchr(dirname, ':') == NULL ) {
+        STRLCPY(workdir, "./");
+    }
+#endif
+    STRLCAT( workdir, dirname );
+    len = strlen(workdir);
+
+    /* remove ending slash */
+    if ( workdir[ len-1 ] == '/' || workdir[ len-1 ] == '\\' )
+    {
+        workdir[ len-1 ] = '\0';   // (remove it)
+        len--;
+    }
+
+    /* fastpath if already exists */
+    if ( stat(workdir, &st) == 0 ) {
+        return 0;
+    }
+
+    csr = workdir;          /* path scanning will start here */
+    pathend = workdir+len;  /* and end here (null terminator)*/
+
+    /* need to skip over drive letter */
+    c1 = strchr(workdir, ':');
+    if ( c1 != NULL )
+    {
+        csr = c1 + 1;
+    }
+
+    while ( csr < pathend )
+    {
+        /* find the next path separator */
+        c1 = strchr(csr, '/');
+        c2 = strchr(csr, '\\');
+        if (NULL == c1)
+        {
+            csr = c2;
+        }
+        else if (NULL == c2)
+        {
+            csr = c1;
+        }
+        else
+        {
+            csr = MIN(c1, c2);
+        }
+        if (NULL == csr) {
+            csr = pathend;
+        }
+        strlcpy(pathpart, workdir, csr - workdir + 1);
+        csr++;  /* skip separator for next time */
+
+        /* create this directory if it dopesn't exist? */
+        if (stat(pathpart, &st) < 0)
+        {
+#ifdef _WIN32
+            if ( CreateDirectory(pathpart, NULL) == TRUE )
+#else
+            if (mkdir(pathpart, 0774) == 0)
+#endif
+            {
+                // "%1d:%04X %s: created new directory %s"
+                WRMSG(HHC01294, "I", LCSS_DEVNUM, UROUT(dev)->uro_devclass, pathpart);
+            }
+            else
+            {
+                    // "%1d:%04X %s: cannot create directory %s"
+                WRMSG(HHC01295, "E", LCSS_DEVNUM, UROUT(dev)->uro_devclass, pathpart);
+                return -1;
+            }
+        }
+    } /* end of do-while */
+
+    return 0;
+}
+
+/**
  * Process the file name argument from the initdev command
  * breaking it into its parts. These are used to fill in the
  * UROUTBLK that is attached to the DEVBLK.
@@ -847,92 +946,95 @@ DLL_EXPORT int timed_wait_condition_relative_usecs_impl
  *                      with the target file name parameter from the
  *                      'devinit' command as processed by the
  *                      'hostpath()' method.
- *    namearg:     pointer to the 'devinit' filename argument. This
- *                 should be dev->filename as pre the note above
+ *    defaultName: the default file name
  *    defaultExt:  the default extension (including '.')
+ *    devclass:    type of device (Printer/Punch) for messages
  *
  * Returns:
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char* namearg, const char* defaultExt )
+DLL_EXPORT int uro_initfile ( DEVBLK *dev, const char *defaultName,
+                              const char *defaultExt, const char *devclass )
 {
-    const char* p1, * p2;
-    char* pname, * pext;
+    UROUTBLK *uro;
+    const char *p1, *p2;
+    char *pname, *pext;
     int ix;
 
-    if (dev->dev_data != NULL) 
+    if (dev->dev_data == NULL)
     {
-        free(UROUT(dev)->cmd_filename); UROUT(dev)->cmd_filename = NULL;
-        free(UROUT(dev)->cmd_pathpart); UROUT(dev)->cmd_pathpart = NULL;
-        free(UROUT(dev)->cmd_namepart); UROUT(dev)->cmd_namepart = NULL;
-        free(UROUT(dev)->cmd_extpart);  UROUT(dev)->cmd_extpart  = NULL;
-        free(UROUT(dev)->cur_filename); UROUT(dev)->cur_filename = NULL;
-        free(UROUT(dev)->cur_namepart); UROUT(dev)->cur_namepart = NULL;
-    }
-    else 
-    {
-        if (!(dev->dev_data = malloc(sizeof(UROUTBLK))))
+        dev->dev_data = malloc(sizeof(UROUTBLK));
+        if (dev->dev_data == NULL )
         {
             // "Out of memory"
             WRMSG( HHC00152, "E" );
             return -1;
         }
-        UROUT(dev)->cmd_filename = NULL;
-        UROUT(dev)->cmd_pathpart = NULL;
-        UROUT(dev)->cmd_namepart = NULL;
-        UROUT(dev)->cmd_extpart  = NULL;
-        UROUT(dev)->cur_filename = NULL;
-        UROUT(dev)->cur_namepart = NULL; 
+    }
+    uro = UROUT(dev);
+    memset(uro, '\0', sizeof(UROUTBLK));
+
+    /* Save the class of this device for messages */
+    uro->uro_devclass = devclass;
+
+    /* Only fill in path related fields if there is a path name */
+    if (dev->filename && dev->filename[0] != '\0') {
+
+        /* Save the whole file name arg in the device block */
+        STRLCPY(uro->cmd_filename, dev->filename);
+
+        /* Get/save full path part (up to & including last / or \ */
+        p1 = strrchr(uro->cmd_filename, '/');
+        p2 = strrchr(uro->cmd_filename, '\\');
+        p1 = MAX(p1, p2);
+        if (p1 > 0)
+        {
+            ix = (p1 - uro->cmd_filename) + 1;
+            strlcpy(uro->cmd_pathpart, uro->cmd_filename, ix + 1);
+        }
+        else
+        {
+            ix = 0;
+        }
+
+        /* Get/save the file extnesion (starting with & including the last . */
+        pname = uro->cmd_filename + ix;
+        pext = strrchr(uro->cmd_filename, '.');
+        if (pext > 0)
+        {
+            ix = pext - pname + 1;
+            strlcpy(uro->cmd_namepart, pname, ix);
+            STRLCPY(uro->cmd_extpart, pext);
+        }
+        else
+        {
+            STRLCPY(UROUT(dev)->cmd_namepart, pname);
+        }
     }
 
-    /* Save the whole file name arg in the device block */
-    UROUT(dev)->cmd_filename = strdup(namearg);
-
-    /* Get/save full path part (up to & including last / or \ */
-    p1 = strrchr(namearg, '/');
-    p2 = strrchr(namearg, '\\');
-    p1 = MAX(p1, p2);
-    if (p1 > 0) 
-    {
-        ix = p1 - namearg + 1;
-        UROUT(dev)->cmd_pathpart = (char*)malloc(ix + 1);
-        strlcpy(UROUT(dev)->cmd_pathpart, namearg, ix + 1);
-    }
-    else 
+    if (uro->cmd_pathpart[0] == '\0')
     {
         // no path in initdev arg... use cwd instead
-        static char cwd[MAX_PATH];
+        static char cwd[MAX_PATH+1];
         VERIFY(getcwd(cwd, sizeof(cwd)) != NULL);
         ix = (int)strlen(cwd);
-        if (cwd[ix - 1] != *PATH_SEP) {
+        if (cwd[ix - 1] != *PATH_SEP)
+        {
             STRLCAT(cwd, PATH_SEP);
         }
-        UROUT(dev)->cmd_pathpart = strdup(cwd);
-        ix = 0; // take name from here
+        STRLCPY(uro->cmd_pathpart, cwd);
+    }
+    if (uro->cmd_namepart[0] == '\0')
+    {
+        STRLCPY(uro->cmd_namepart, defaultName);
+    }
+    if (uro->cmd_extpart[0] == '\0')
+    {
+        STRLCPY(uro->cmd_extpart, defaultExt);
     }
 
-    /* Get/save the file extnesion (starting with & including the last . */
-    pname = (char*)namearg + ix;
-    pext = (char*)strrchr(namearg, '.');
-    if (pext > 0) 
-    {
-        ix = pext - pname + 1;
-        if (!(UROUT(dev)->cmd_namepart = (char*)malloc(ix)))
-        {
-            // "Out of memory"
-            WRMSG( HHC00152, "E" );
-            return -1;
-        }
-        strlcpy(UROUT(dev)->cmd_namepart, pname, ix);
-        UROUT(dev)->cmd_extpart = strdup(pext);
-    }
-    else 
-    {
-        UROUT(dev)->cmd_namepart = strdup(pname);
-        UROUT(dev)->cmd_extpart = strdup(defaultExt);
-    }
-    return 0;
+    return mkdirsIfNeeded(dev, uro->cmd_pathpart);
 }
 
 /**
@@ -954,16 +1056,16 @@ DLL_EXPORT int uro_initfile ( DEVBLK* dev, const char* namearg, const char* defa
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen ) 
+DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen )
 {
+    UROUTBLK *uro = UROUT(dev);
     char *work, *ip, *op;
     int nchars, insp, i;
-    
-    // clear any prior ccw name
-    free(UROUT(dev)->cur_namepart);
-    UROUT(dev)->cur_namepart = NULL;
 
-    if (ccwlen > 0) 
+    // clear any prior ccw name
+    uro->cur_namepart[0] = '\0';
+
+    if (ccwlen > 0)
     {
         if (!(work = (char*)malloc(ccwlen+1)))
         {
@@ -975,34 +1077,34 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen )
         op = work;
         insp = 0;
         nchars = 0;
-        for (i = 0; i < ccwlen; i++) 
+        for (i = 0; i < ccwlen; i++)
         {
-            if (*ip == ' ') 
+            if (*ip == ' ')
             {
                 insp = 1;
                 ip++;
-            } 
-            else 
+            }
+            else
             {
-                if (insp > 0) 
+                if (insp > 0)
                 {
                     if (nchars > 0) // ignoring leading blanks
                     {
-                        *op++ = '-';
+                        *op++ = '-'; // replace string of blanks with '-'
                     }
                     insp = 0;
                 }
-                else 
+                else
                 {
                     nchars++;
                     *op++ = *ip++;
                 }
             }
         }
-        if (nchars > 0) 
+        if (nchars > 0)
         {
             *op = '\0';
-            UROUT(dev)->cur_namepart = strdup(work);
+            STRLCPY(uro->cur_namepart, work);
         }
         free(work);
     }
@@ -1027,15 +1129,15 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen )
 #define URO_MAX_SUFFIX 9999
 static /*recursive*/ void pushFileStack (
         DEVBLK *dev,
-        const char * urotype,
+        const char *urotype,
         const char *fullname,
         const char *rootname,
         const char *ext,
-        int suffix ) 
+        int suffix )
 {
     struct stat st;
-    char work[MAX_PATH];
-    if (stat(fullname, &st) >= 0) 
+    char work[MAX_PATH+1];
+    if (stat(fullname, &st) == 0)
     {
         MSGBUF(work, "%s_%d%s", rootname, suffix, ext);
         pushFileStack(dev, urotype, work, rootname, ext, suffix + 1);
@@ -1047,9 +1149,9 @@ static /*recursive*/ void pushFileStack (
         }
         else
         {
-        	// "%1d:%04X %s: deleting old file [%s]"
-        	WRMSG (HHC01293, "I", LCSS_DEVNUM, urotype, fullname);
-        	remove(fullname);
+            // "%1d:%04X %s: deleting old file [%s]"
+            WRMSG (HHC01293, "I", LCSS_DEVNUM, urotype, fullname);
+            remove(fullname);
         }
     }
 }
@@ -1063,63 +1165,44 @@ static /*recursive*/ void pushFileStack (
  *    dev:         pointer to the DEVBLK for the URO device
  *                 N.B. uro_initfile must have been previously
  *                      called so the UROUTBLK exists.
- *    urotype:     The device type name (PRinter/Card) to include
- *                 in logged messages
  *
  * Returns:
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype ) 
+DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev )
 {
-    char *name, *rootname;
-    int len;
+    UROUTBLK *uro = UROUT(dev);
+    char *name;
+    char rootname[MAX_PATH+1];
 
-    // name is from Open Printer CCW or devinit command
-    name = UROUT(dev)->cur_namepart != NULL
-         ? UROUT(dev)->cur_namepart
-         : UROUT(dev)->cmd_namepart;
-    len = strlen(UROUT(dev)->cmd_pathpart) + strlen(name);
-    if (!(rootname = (char*)malloc(len + 1)))
-    {
-        // "Out of memory"
-        WRMSG( HHC00152, "E" );
-        return -1;
-    }
-    strcpy(rootname, UROUT(dev)->cmd_pathpart);
-    strcat(rootname, name);
+    // name is from handshake CCW or devinit command
+    name = uro->cur_namepart != NULL
+         ? uro->cur_namepart
+         : uro->cmd_namepart;
+    STRLCPY(rootname, uro->cmd_pathpart);
+    STRLCAT(rootname, name);
 
     // add in extension from devinit command
-    len += strlen(UROUT(dev)->cmd_extpart);
-    if (!(UROUT(dev)->cur_filename = (char*)malloc(len + 1)))
-    {
-        // "Out of memory"
-        WRMSG( HHC00152, "E" );
-        return false;
-    }
-    strcpy(UROUT(dev)->cur_filename, rootname);
-    strcat(UROUT(dev)->cur_filename, UROUT(dev)->cmd_extpart);
+    STRLCPY(uro->cur_filename, rootname);
+    STRLCAT(uro->cur_filename, uro->cmd_extpart);
 
     /*
-     * if not appending to existing file, make sure we are
-     * starting a new, empty file. If the target file currently
-     * exists, then it is renamed to: <rootname>_1<ext>. if
-     * the "_1" file currently exists, it is renamed to
-     * <rootname>_2<ext> and if that exists, it is renamed
-     * with a "_3" suffix and so on.
+     * Make sure we are starting a new, empty file. If the
+     * target file currently exists, then it is renamed to:
+     * <rootname>_1<ext>. if the "_1" file currently exists,
+     * it is renamed to <rootname>_2<ext> and if that exists,
+     * it is renamed with a "_3" suffix and so on up to a
+     * limit of URO_MAX_SUFFIX
      */
-    if (!dev->append) 
-    {
-        pushFileStack(dev, urotype, UROUT(dev)->cur_filename, rootname, UROUT(dev)->cmd_extpart, 1);
-    }
-    free(rootname);
+    pushFileStack(dev, uro->uro_devclass, uro->cur_filename, rootname, uro->cmd_extpart, 1);
 
     /**
      * set the computed target filenbame into the DEVBLK
      */
-    strcpy(dev->filename, UROUT(dev)->cur_filename);
+    STRLCPY(dev->filename, uro->cur_filename);
     // "%1d:%04X %s: writing to file [%s]"
-    WRMSG (HHC01291, "I", LCSS_DEVNUM, urotype, dev->filename);
+    WRMSG (HHC01291, "I", LCSS_DEVNUM, uro->uro_devclass, dev->filename);
 
     return 0;
 }
@@ -1138,20 +1221,18 @@ DLL_EXPORT int uro_resolvefilename ( DEVBLK* dev, const char * urotype )
  *    0 = success
  *   !0 = failure. error message already issued
  */
-DLL_EXPORT int uro_closefromccw ( DEVBLK* dev ) 
+DLL_EXPORT int uro_closefromccw ( DEVBLK* dev )
 {
 
     /*
      * clear prior name from Open Printer handshake CCW
      */
-    free(UROUT(dev)->cur_namepart);
-    UROUT(dev)->cur_namepart = NULL;
+    UROUT(dev)->cur_namepart[0] = '\0';
 
     /*
      * clear the computed name of the prior file
      */
-    free(UROUT(dev)->cur_filename);
-    UROUT(dev)->cur_filename = NULL;
+    UROUT(dev)->cur_filename[0] = '\0';
 
     return 0;
 }
