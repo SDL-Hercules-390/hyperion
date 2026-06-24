@@ -1126,7 +1126,7 @@ DLL_EXPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen )
  *    ext:         the file extension (with the dot separator)
  *    suffix:      the integer number to be added as a suffix
  */
-#define URO_MAX_SUFFIX 9999
+#define URO_MAX_SUFFIX 99
 static /*recursive*/ void pushFileStack (
         DEVBLK *dev,
         const char *urotype,
