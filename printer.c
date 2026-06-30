@@ -1710,7 +1710,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
             open_flags |= O_TRUNC;
 
         // Resolve the name of the ourput file
-        if (dev->handshake && !(uro_resolvefilename(dev)))
+        if (dev->handshake && uro_resolvefilename(dev) < 0)
         {
             // error already issued
             return -1;
