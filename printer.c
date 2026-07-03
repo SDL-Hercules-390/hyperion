@@ -263,6 +263,12 @@ static void pipe_signal_handler(int signum)
 #endif
 
 /*-------------------------------------------------------------------*/
+/* Default(s) for printer output files                               */
+/*-------------------------------------------------------------------*/
+#define DEFAULT_PRINTER_FILE_EXTENSION ".lst"
+#define URO_TYPE "Printer"
+
+/*-------------------------------------------------------------------*/
 /*  Write data to printer.    Return 0 if successful, else unitstat. */
 /*-------------------------------------------------------------------*/
 static BYTE write_buffer( DEVBLK* dev, const char* buf, int len, BYTE* unitstat )
