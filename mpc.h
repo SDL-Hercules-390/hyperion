@@ -493,10 +493,10 @@ typedef struct _MPC_IPA {
 #define IPA_QUERY_ARP_COUNTERS  0x00000100L  /*  *  *                */
 #define IPA_QUERY_ARP_ADDR_INFO 0x00000200L  /*     *                */
 #define IPA_SETADAPTERPARMS     0x00000400L  /*  *  *                */
-#define IPA_VLAN_PRIO           0x00000800L  /*  *  *                */
+#define IPA_VLAN_PRIO           0x00000800L  /*     *                */
 #define IPA_PASSTHRU            0x00001000L  /*  *  *                */
 #define IPA_FLUSH_ARP_SUPPORT   0x00002000L  /*     *                */
-#define IPA_FULL_VLAN           0x00004000L  /*  *  *                */
+#define IPA_FULL_VLAN           0x00004000L  /*     *                */
 #define IPA_INBOUND_PASSTHRU    0x00008000L  /*     *                */
 #define IPA_SOURCE_MAC          0x00010000L  /*     *                */
 #define IPA_OSA_MC_ROUTER       0x00020000L  /*     *                */
@@ -529,7 +529,6 @@ typedef struct _MPC_IPA {
                       | IPA_FILTERING \
                       | IPA_IPV6 \
                       | IPA_MULTICASTING \
-                      | IPA_QUERY_ARP_COUNTERS \
                       | IPA_SETADAPTERPARMS \
                       | IPA_PASSTHRU \
                       )
@@ -544,7 +543,6 @@ typedef struct _MPC_IPA {
                       | IPA_ARP_PROCESSING \
                       | IPA_FILTERING \
                       | IPA_MULTICASTING \
-                      | IPA_QUERY_ARP_COUNTERS \
                       | IPA_SETADAPTERPARMS \
                       | IPA_PASSTHRU \
                       )
@@ -739,24 +737,40 @@ typedef struct _SAP_SCI {
 /*-------------------------------------------------------------------*/
 struct MPC_IPA_SAS_HDR {
 /*000*/ FWORD   ano;            /* Assist number                     */
-/*004*/ HWORD   len;            /* Length                            */
-                                /* Note: The length value is the     */
-                                /* total length of the length field  */
-                                /* and the following fields. It does */
-                                /* not include the length of the     */
-                                /* preceding assist number field.    */
-/*006*/ HWORD   cmd;            /* Command code                      */
-#define IPA_SAS_CMD_START      0x0001
-#define IPA_SAS_CMD_STOP       0x0002
-#define IPA_SAS_CMD_CONFIGURE  0x0003
-#define IPA_SAS_CMD_ENABLE     0x0004
-#define IPA_SAS_CMD_0005       0x0005   /* I wonder what this does?  */
-#define IPA_SAS_CMD_0006       0x0006   /* And this?                 */
-#define IPA_SAS_CMD_0008       0x0008   /* And this?                 */
+/*004*/ HWORD   len;            /* Length. See note below.           */
+/*006*/ HWORD   cmd;            /* Command code. See note below.     */
 /*008*/ HWORD   rc;             /* Return code                       */
 /*00A*/ BYTE    norep;          /* Number of replies                 */
 /*00B*/ BYTE    seqno;          /* Sequence number                   */
     };
+
+/*  Note: The length value is the total length of the length field   */
+/*  and the following fields. It does not include the length of the  */
+/*  preceding assist number field.                                   */
+
+/*  Note: The Set Assist Parameters command codes that are used may  */
+/*  depend on the assist number.                                     */
+/*  - The START and STOP command codes appear to be common to all    */
+/*    assist numbers.                                                */
+/*  - The CONFIGURE and ENABLE command codes may only used with      */
+/*    the IPA_FILTERING assist number.                               */
+/*  - The various ARP command codes may only used with the           */
+/*    IPA_ARP_PROCESSING assist number.                              */
+#define IPA_SAS_CMD_START      0x0001
+#define IPA_SAS_CMD_STOP       0x0002
+#define IPA_SAS_CMD_CONFIGURE  0x0003
+#define IPA_SAS_CMD_ENABLE     0x0004
+#define IPA_SAS_CMD_0005       0x0005   /* ARP_ADD_ENTRY ?           */
+#define IPA_SAS_CMD_0006       0x0006   /* ARP_REOMOVE_ENRTY ?       */
+#define IPA_SAS_CMD_0008       0x0008   /* I wonder what this does ? */
+
+#define IPA_SAS_CMD_ARP_SET_NO_ENTRIES  0x0003
+#define IPA_SAS_CMD_ARP_QUERY_CACHE     0x0004
+#define IPA_SAS_CMD_ARP_ADD_ENTRY       0x0005
+#define IPA_SAS_CMD_ARP_REMOVE_ENTRY    0x0006
+#define IPA_SAS_CMD_ARP_FLUSH_CACHE     0x0007
+#define IPA_SAS_CMD_ARP_QUERY_INFO      0x0104
+#define IPA_SAS_CMD_ARP_QUERY_STATS     0x0204
 
 typedef struct _MPC_IPA_SAS {
 /*000*/ struct MPC_IPA_SAS_HDR hdr;
