@@ -323,6 +323,20 @@ static BYTE qeth_immed_commands [256] =
 
 
 /*-------------------------------------------------------------------*/
+/* Tokens                                                            */
+/*-------------------------------------------------------------------*/
+static  LOCK  TokenLock;
+static  int   TokenLockInitialized = FALSE;
+static  U32   uTokenIssuerRm       = 0xD8C51001;
+static  U32   uTokenCmFilter       = 0xD8C51002;
+static  U32   uTokenCmConnection   = 0xD8C51003;
+static  U32   uTokenUlpFilter      = 0xD8C51004;
+static  U32   uTokenUlpConnection  = 0xD8C51005;
+
+#define       INCREMENT_TOKEN        0x00000010
+
+
+/*-------------------------------------------------------------------*/
 /* Internal socket pipe signals used to request something            */
 /*-------------------------------------------------------------------*/
 #define QDSIG_RESET     0       /* Used to reset signal flag         */
@@ -350,6 +364,7 @@ static const char* qsig2str( BYTE sig ) {
     MSGBUF(buf,"QDSIG_0x%02X",sig);
     return buf;
 }
+
 
 /*-------------------------------------------------------------------*/
 /* The following is the original macro comment - kept for historical */
@@ -877,32 +892,74 @@ static int qeth_select (int nfds, fd_set* rdset, struct timeval* tv)
     PTT_QETH_TRACE( "af select", 0,0,0 );
     return rc;
 }
-static int qeth_read_pipe (int fd, BYTE *sig)
+static int qeth_read_pipe (int fd, OSA_PIME* pime)
 {
-    int rc, errnum;
-    PTT_QETH_TRACE( "b4 rdpipe", 0,0,*sig );
-    for (;;) {
-        rc = read_pipe( fd, sig, 1 );
+    char* msg = (char*)pime;
+    int len = 0;
+    int rem = 0;
+    int errnum = 0;
+    int rc;
+    PTT_QETH_TRACE( "b4 rdpipe", 0,0,pime->signal );
+    for (;;)
+    {   /* Start of for(;;) to read first byte */
+        rc = read_pipe( fd, msg, 1 );
         if (rc > 0)
+        {
+            len = pime->length;
+            msg += 1;
+            rem = len - 1;
             break;
+        }
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
         sched_yield();
+    }   /* End of for(;;) to read first byte */
+    if (rc > 0)
+    {
+        for (;;)
+        {   /* Start of for(;;) to read remaining byte(s) */
+            rc = read_pipe( fd, msg, rem );
+            if (rc > 0)
+            {
+                msg += rc;
+                rem -= rc;
+                if (rem) continue;
+                rc = len;
+                break;
+            }
+            errnum = HSO_errno;
+            if (!QETH_TEMP_PIPE_ERROR( errnum ))
+                break;
+            sched_yield();
+        }   /* End of for(;;) to read remaining byte(s) */
     }
     if (rc <= 0)
         errno = errnum;
-    PTT_QETH_TRACE( "af rdpipe", 0,0,*sig );
+    PTT_QETH_TRACE( "af rdpipe", 0,rc,pime->signal );
     return rc;
 }
-static int qeth_write_pipe (int fd, BYTE *sig)
+static int qeth_write_pipe (int fd, OSA_PIME* pime)
 {
-    int rc, errnum;
-    PTT_QETH_TRACE( "b4 wrpipe", 0,0,*sig );
-    for (;;) {
-        rc = write_pipe( fd, sig, 1 );
+    char* msg = (char*)pime;
+    int len = pime->length;
+    int wrt = 0;
+    int errnum = 0;
+    int rc;
+
+    PTT_QETH_TRACE( "b4 wrpipe", 0,len,pime->signal );
+    for (;;)
+    {
+        rc = write_pipe( fd, msg, len );
         if (rc > 0)
+        {
+            wrt += rc;
+            msg += rc;
+            len -= rc;
+            if (len) continue;
+            rc = wrt;
             break;
+        }
         errnum = HSO_errno;
         if (!QETH_TEMP_PIPE_ERROR( errnum ))
             break;
@@ -910,7 +967,7 @@ static int qeth_write_pipe (int fd, BYTE *sig)
     }
     if (rc <= 0)
         errno = errnum;
-    PTT_QETH_TRACE( "af wrpipe", 0,0,*sig );
+    PTT_QETH_TRACE( "af wrpipe", 0,rc,pime->signal );
     return rc;
 }
 
@@ -2446,7 +2503,7 @@ U16 reqtype;
         iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
         iear->resp |= IDX_RSP_RESP_OK;
         iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
-        STORE_FW(iear->token, QTOKEN1);
+        memcpy( iear->token, grp->htissue, MPC_TOKEN_LENGTH );
         STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
         STORE_FW(iear->uclevel, QUCLEVEL);
         dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
@@ -2484,7 +2541,7 @@ U16 reqtype;
         iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
         iear->resp |= IDX_RSP_RESP_OK;
         iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
-        STORE_FW(iear->token, QTOKEN1);
+        memcpy( iear->token, grp->htissue, MPC_TOKEN_LENGTH );
         STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
         STORE_FW(iear->uclevel, QUCLEVEL);
         dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
@@ -2973,7 +3030,7 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
 /*-------------------------------------------------------------------*/
 static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
                                    QDIO_SBAL *sbal, BYTE sbalk,
-                                   int* sb, BYTE* sbsrc, U32 sblen )
+                                   int ssb, int* sb, BYTE* sbsrc, U32 sblen )
 {
     U64 sba;                            /* Storage Block Address     */
     BYTE *dst;                          /* Destination address       */
@@ -3009,8 +3066,26 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
             if (*sb >= (QMAXSTBK-1))
                 return SBALE_ERROR( QRC_ENOSPC, dev,sbal,sbalk,*sb);
             *sb = *sb + 1;
+
+            /* Retrieve the next storage block address and length */
             FETCH_DW( sba,   sbal->sbale[*sb].addr   );
             FETCH_FW( sblen, sbal->sbale[*sb].length );
+
+            /* Trace the output sbale, if necessary */
+            if (grp->debugmask & DBGQETHSBALE)
+            {
+        /*  QDIO_SBALE* sbale = &sbal->sbale[*sb];  */
+                DBGTRC( dev, "Output SBALE(%d-%d): Flags %02X-%02X-%02X-%02X: Data size %d (0x%04X) bytes",
+                    ssb, *sb,
+                    sbal->sbale[*sb].flags[0],
+                    sbal->sbale[*sb].flags[1],
+                    sbal->sbale[*sb].flags[2],
+                    sbal->sbale[*sb].flags[3],
+                    sblen, sblen );
+            /*  net_data_trace( dev, (BYTE*)sbale, sizeof(QDIO_SBALE), FROM_GUEST, 'D', "SBALE ", 0 );  */
+            }
+
+            /* Check the length and the key of the storage slock */
             if (!sblen)
                 return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
             if (STORCHK( sba, sblen-1, sbalk, STORKEY_CHANGE, dev))
@@ -3018,6 +3093,22 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
 
             /* Point to new data source */
             sbsrc = (BYTE*)(dev->mainstor + sba);
+
+            /* Debugging */
+            if (grp->debugmask & DBGQETHDATA)
+            {
+            int iTraceLen = sblen;
+              // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+              WRMSG(HHC00981, "D", LCSS_DEVNUM, dev->typname, iTraceLen);
+              if (iTraceLen > 256)
+              {
+                iTraceLen = 256;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", LCSS_DEVNUM, dev->typname,
+                                     iTraceLen, (sblen - iTraceLen) );
+              }
+              net_data_trace( dev, sbsrc, iTraceLen, FROM_GUEST, 'D', "data", 0 );
+            }
         }
 
         /* Copying packet/frame to device from this storage block */
@@ -3074,16 +3165,23 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
     STORE_FW( sbal->sbale[sb].flags,     0   );
     SET_SBALE_FRAG( sbal->sbale[sb].flags[0], frag0 );
 
-    /* Dump the SBALE's we consumed */
+    /* Trace the input SBALE's we consumed */
     if (grp->debugmask & DBGQETHSBALE)
     {
         int  i;
         for (i=ssb; i <= sb; i++)
         {
+    /*  QDIO_SBALE* sbale = &sbal->sbale[i];  */
             FETCH_FW( sbrem, sbal->sbale[i].length );
             frag0 = sbal->sbale[i].flags[0];
-            DBGTRC( dev, "Input SBALE(%d): flag: %02X Len: %04X (%d)",
-                i, frag0, sbrem, sbrem );
+            DBGTRC( dev, "Input SBALE(%d): Flags %02X-%02X-%02X-%02X: Data size %d (0x%04X) bytes",
+                i,
+                sbal->sbale[i].flags[0],
+                sbal->sbale[i].flags[1],
+                sbal->sbale[i].flags[2],
+                sbal->sbale[i].flags[3],
+                sbrem, sbrem );
+        /*  net_data_trace( dev, (BYTE*)sbale, sizeof(QDIO_SBALE), TO_GUEST, 'D', "SBALE ", 0 );  */
         }
     }
 
@@ -3184,6 +3282,8 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
     BYTE udp = 17;
     int sb = 0;     /* Start with Storage Block zero */
     int   iPktVer;
+    int   iPktLen;
+    U16   uPayLen;
     char  cPktType[8];
 
     do
@@ -3206,6 +3306,29 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         {
             ip4 = (IP4FRM*)dev->buf;
             STRLCPY( cPktType, " IPv4" );
+            if (dev->buflen < (int)sizeof(IP4FRM))     // Size of a minimal IPv4 header
+                return QRC_EPKEOF;                     // Not our packet
+            FETCH_HW( uPayLen, ip4->hwTotalLength );   // Get the IPv4 packet length.
+            iPktLen = uPayLen;
+            if (iPktLen == dev->buflen)
+            {
+                // The packet length is equal to the read length.
+            }
+            else if (iPktLen < dev->buflen)
+            {
+                // The packet length is less than the read length, i.e. a complete packet
+                // with trailing who knows what has been received from the tun interface.
+                // This happens very, very infrequently.
+                dev->buflen = iPktLen;                     // Use the packet header length
+                STORE_HW( o3hdr.length, dev->buflen );
+            }
+            else
+            {
+                // The packet length is greater than the read length, i.e. an incomplete
+                // packet has been received from the tun interface.
+                // This has probably never happened, but ...
+                return QRC_EPKEOF;  /* Not our packet */
+            }
             memcpy( &o3hdr.dest_addr[12], &ip4->lDstIP, 4 );
             memcpy( o3hdr.in_cksum, ip4->hwChecksum, 2 );
             o3hdr.flags = l3_cast_type_ipv4( &o3hdr.dest_addr[12], grp );
@@ -3217,6 +3340,29 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         {
             ip6 = (IP6FRM*)dev->buf;
             STRLCPY( cPktType, " IPv6" );
+            if (dev->buflen < (int)sizeof(IP6FRM))     // Size of an IPv6 header
+                return QRC_EPKEOF;                     // Not our packet
+            FETCH_HW( uPayLen, ip6->bPayloadLength );  // Get the IPv6 payload length.
+            iPktLen = sizeof(IP6FRM) + uPayLen;        // Calculate the IPv6 packet length.
+            if (iPktLen == dev->buflen)
+            {
+                // The packet length is equal to the read length.
+            }
+            else if (iPktLen < dev->buflen)
+            {
+                // The packet length is less than the read length, i.e. a complete packet
+                // with trailing who knows what has been received from the tun interface.
+                // This has never been seen to happen, but ...
+                dev->buflen = iPktLen;                 // Use the packet length
+                STORE_HW( o3hdr.length, dev->buflen );
+            }
+            else
+            {
+                // The packet length is greater than the read length, i.e. an incomplete
+                // packet has been received from the tun interface.
+                // This has probably never happened, but ...
+                return QRC_EPKEOF;                     // Not our packet
+            }
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
             o3hdr.flags = l3_cast_type_ipv6( o3hdr.dest_addr, grp );
             if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
@@ -3237,7 +3383,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
             WRMSG(HHC00913, "D", LCSS_DEVNUM, dev->typname,
                             cPktType, dev->buflen, grp->ttifname );
-/*          net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );        */
+        /*  net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );  */
             net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Packet", 0 );
         }
 
@@ -3330,7 +3476,7 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
                 // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
                 WRMSG(HHC00913, "D", LCSS_DEVNUM, dev->typname,
                                 cPktType, datalen, "layer 3 response" );
-/*              net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );    */
+            /*  net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );  */
                 net_data_trace( dev, bufdata, datalen, TO_GUEST, 'D', "Packet", 0 );
             }
 
@@ -3382,7 +3528,6 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
     ETHFRM* eth;                        /* Ethernet frame header     */
     U16  hwEthernetType;
     int iPktVer;
-    int iTraceLen;
     char cPktType[8];
 
 
@@ -3393,16 +3538,32 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Save starting Storage Block number */
         ssb = sb;
 
-        /* Retrieve the (next) Storage Block and check its key */
+        /* Retrieve the (next) Storage Block address and length */
         FETCH_DW( sba,   sbal->sbale[sb].addr   );
         FETCH_FW( sblen, sbal->sbale[sb].length );
+
+        /* Get pointer to OSA header */
+        hdr = (BYTE*)(dev->mainstor + sba);
+
+        /* Trace the output sbale, if necessary */
+        if (grp->debugmask & DBGQETHSBALE)
+        {
+    /*  QDIO_SBALE* sbale = &sbal->sbale[sb];  */
+            DBGTRC( dev, "Output SBALE(%d-%d): Flags %02X-%02X-%02X-%02X: Data size %d (0x%04X) bytes",
+                ssb, sb,
+                sbal->sbale[sb].flags[0],
+                sbal->sbale[sb].flags[1],
+                sbal->sbale[sb].flags[2],
+                sbal->sbale[sb].flags[3],
+                sblen, sblen );
+        /*  net_data_trace( dev, (BYTE*)sbale, sizeof(QDIO_SBALE), FROM_GUEST, 'D', "SBALE ", 0 );  */
+        }
+
+        /* Check the length and the key of the Storage Block */
         if (!sblen)
             return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,sb);
         if (STORCHK( sba, sblen-1, sbalk, STORKEY_REF, dev ))
             return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,sb);
-
-        /* Get pointer to OSA header */
-        hdr = (BYTE*)(dev->mainstor + sba);
 
         /* Verify Block is long enough to hold the full OSA header.
            FIXME: there is nothing in the specs that requires the
@@ -3415,8 +3576,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Debugging */
         if (grp->debugmask & DBGQETHDATA)
         {
-          iTraceLen = sblen;
-
+        int iTraceLen = sblen;
           // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
           WRMSG(HHC00981, "D", LCSS_DEVNUM, dev->typname, iTraceLen);
           if (iTraceLen > 256)
@@ -3426,7 +3586,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             WRMSG(HHC00980, "D", LCSS_DEVNUM, dev->typname,
                                  iTraceLen, (sblen - iTraceLen) );
           }
-          net_data_trace( dev, hdr, iTraceLen, FROM_GUEST, 'D', "data", 0 );
+          net_data_trace( dev, hdr, iTraceLen, FROM_GUEST, 'D', "Data  ", 0 );
         }
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
@@ -3460,7 +3620,6 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             return SBALE_ERROR( QRC_EPKTYP, dev,sbal,sbalk,sb);
         }
 
-
         /* Make sure the packet/frame fits in the device buffer */
         if (pktlen > dev->bufsize)
             return SBALE_ERROR( QRC_EPKSIZ, dev,sbal,sbalk,sb);
@@ -3471,16 +3630,15 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         dev->buflen = 0;
 
         if ((qrc = copy_storage_fragments( dev, grp, sbal, sbalk,
-                                           &sb, pkt, sblen )) < 0)
+                                           ssb, &sb, pkt, sblen )) < 0)
             return qrc;
 
         /* Save ending flag */
         flag0 = sbal->sbale[sb].flags[0];
 
-        /* Trace the pack/frame if debugging is enabled */
-        if (grp->debugmask & DBGQETHSBALE)
-            DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)",
-                ssb, sb, dev->buflen, dev->buflen );
+        /* The packet/frame has been copied from the one or more SBALE */
+        /* fragments to dev->buf (the device buffer), and the length   */
+        /* of the packet/frame has been placed in dev->buflen.         */
 
         /* Initialize packet pointer and packet length */
         pkt    = dev->buf;
@@ -3524,10 +3682,10 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                         dev->qdio.dropcnt++;
                         if (grp->debugmask & DBGQETHDROP)
                         {
+                        int iTraceLen = pktlen;
                             // "%1d:%04X %s: %s: Output dropped: %s"
                             WRMSG( HHC03811, "W", LCSS_DEVNUM,
                                 dev->typname, grp->ttifname, "L2 frame on tun device" );
-                            iTraceLen = pktlen;
                             if (iTraceLen > 128)
                             {
                               iTraceLen = 128;
@@ -3535,7 +3693,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                               WRMSG(HHC00980, "D", LCSS_DEVNUM, dev->typname,
                                                    iTraceLen, (pktlen - iTraceLen) );
                             }
-                            net_data_trace( dev, pkt, iTraceLen, FROM_GUEST, 'D', "drop", 0 );
+                            net_data_trace( dev, pkt, iTraceLen, FROM_GUEST, 'D', "Drop  ", 0 );
                         }
                         continue; /* (don't write this, probably ARP, packet) */
                     }
@@ -3631,15 +3789,23 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 static void process_input_queues( DEVBLK *dev )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+U32 qmask = dev->qdio.i_qmask;          /* Queue mask                */
 int sqn = dev->qdio.i_qpos;             /* Starting queue number     */
 int mq = dev->qdio.i_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int did_read = 0;                       /* Indicates some data read  */
 
     PTT_QETH_TRACE( "prinq entr", 0,0,0 );
+
+    if (dev->qdio.i_qsiga)
+    {
+        qmask = dev->qdio.i_qsiga;
+        dev->qdio.i_qsiga = 0;
+    }
+
     do
     {
-        if(dev->qdio.i_qmask & (0x80000000 >> qn))
+        if(qmask & (0x80000000 >> qn))
         {
         QDIO_SLSB *slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.i_slsbla[qn]);
         int sbn = dev->qdio.i_bpos[qn]; /* Starting buffer number    */
@@ -3724,7 +3890,7 @@ int did_read = 0;                       /* Indicates some data read  */
             }
             while ((dev->qdio.i_bpos[qn] = bn) != sbn);
 
-        } /* end if(dev->qdio.i_qmask & (0x80000000 >> qn)) */
+        } /* end if(qmask & (0x80000000 >> qn)) */
 
         /* Go on to the next queue... */
         if(++qn >= mq)
@@ -3749,7 +3915,7 @@ int did_read = 0;                       /* Indicates some data read  */
         if (packet_len)
         {
             dev->qdio.dropcnt++;
-            PTT_QETH_TRACE( "*prcinq drop", dev->qdio.i_qmask, 0, 0 );
+            PTT_QETH_TRACE( "*prcinq drop", qmask, 0, 0 );
             if (grp->debugmask & DBGQETHDROP)
             {
                 // "%1d:%04X %s: %s: Input dropped: %s"
@@ -3761,6 +3927,7 @@ int did_read = 0;                       /* Indicates some data read  */
         /* Wake up the program so it can process its queues */
         grp->iqPCI = TRUE;
     }
+
     PTT_QETH_TRACE( "prinq exit", 0,0,0 );
 }
 /* end process_input_queues */
@@ -3768,19 +3935,30 @@ int did_read = 0;                       /* Indicates some data read  */
 
 /*-------------------------------------------------------------------*/
 /*                  Process Output Queues                            */
+/*                                                                   */
+/* Note: This function is called twenty times per second (see the    */
+/* OSA_TIMEOUTUS value).                                             */
 /*-------------------------------------------------------------------*/
 static void process_output_queues( DEVBLK *dev )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+U32 qmask = dev->qdio.o_qmask;          /* Queue mask                */
 int sqn = dev->qdio.o_qpos;             /* Starting queue number     */
 int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
 int found_buff = 0;                     /* Found primed O/P buffer   */
 
     PTT_QETH_TRACE( "proutq entr", 0,0,0 );
+
+    if (dev->qdio.o_qsiga)
+    {
+        qmask = dev->qdio.o_qsiga;
+        dev->qdio.o_qsiga = 0;
+    }
+
     do
     {
-        if(dev->qdio.o_qmask & (0x80000000 >> qn))
+        if(qmask & (0x80000000 >> qn))
         {
         QDIO_SLSB *slsb = (QDIO_SLSB*)(dev->mainstor + dev->qdio.o_slsbla[qn]);
         int sbn = dev->qdio.o_bpos[qn]; /* Starting buffer number    */
@@ -3841,7 +4019,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
             }
             while ((dev->qdio.o_bpos[qn] = bn) != sbn);
 
-        } /* end if(dev->qdio.o_qmask & (0x80000000 >> qn)) */
+        } /* end if(qmask & (0x80000000 >> qn)) */
 
         /* Go on to the next queue... */
         if(++qn >= mq)
@@ -3850,7 +4028,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
     while ((dev->qdio.o_qpos = qn) != sqn);
 
     if (!found_buff)
-        PTT_QETH_TRACE( "*proutq EOF", dev->qdio.o_qmask,0,0 );
+        PTT_QETH_TRACE( "*proutq EOF", qmask,0,0 );
 
     PTT_QETH_TRACE( "proutq exit", 0,0,0 );
 }
@@ -3901,6 +4079,8 @@ static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 {
+    OSA_PIME pime;
+
     obtain_lock( &grp->qlock );
     {
         /* Is data device still active? */
@@ -3909,13 +4089,14 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
                                         dev->qdio.acqstate );
         if (dev->qdio.acqstate == ACQ_STATE_ACTIVE)
         {
-            BYTE  sig  = QDSIG_HALT;
-
             DBGTRC( dev, "Halting data device" );
             {
                 /* Ask, then wait for, the Activate Queues loop to exit */
                 PTT_QETH_TRACE( "b4 halt data", 0,0,0 );
-                VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+                memset(&pime, 0, sizeof(OSA_PIME));
+                pime.length = 2;
+                pime.signal = QDSIG_HALT;
+                VERIFY( qeth_write_pipe( grp->ppfd[1], &pime ) == 2);
                 wait_condition( &grp->q_hdata_cond, &grp->qlock );
                 dev->scsw.flag2 &= ~SCSW2_Q;
 #if defined( OPTION_W32_CTCI )
@@ -4152,6 +4333,13 @@ int i;
 int retcode = 0;
 U32 mask4;
 
+    // Initialize locking for the tokens, if necessary.
+    if (!TokenLockInitialized)
+    {
+        TokenLockInitialized = TRUE;
+        initialize_lock( &TokenLock );
+    }
+
 //  if (dev->numconfdev > groupsize)
 //      groupsize = dev->numconfdev;
 
@@ -4204,6 +4392,19 @@ U32 mask4;
             MSGBUF( buf,    "&grp->l3r.lockbhr %1d:%04X", LCSS_DEVNUM );
             set_lock_name(   &grp->l3r.lockbhr, buf );
 
+            obtain_lock( &TokenLock );                        // Obtain the tokens lock
+            STORE_FW( grp->htissue, uTokenIssuerRm );         // Get the token
+            uTokenIssuerRm += INCREMENT_TOKEN;                // Increment the token
+//          STORE_FW( grp->htcmfilt, uTokenCmFilter );        // Copy the token
+//          uTokenCmFilter += INCREMENT_TOKEN;                // Increment the token
+//          STORE_FW( grp->htcmconn, uTokenCmConnection );    // Copy the token
+//          uTokenCmConnection += INCREMENT_TOKEN;            // Increment the token
+//          STORE_FW( grp->htulpfilt, uTokenUlpFilter );      // Copy the token
+//          uTokenUlpFilter += INCREMENT_TOKEN;               // Increment the token
+//          STORE_FW( grp->htulpconn, uTokenUlpConnection );  // Copy the token
+//          uTokenUlpConnection += INCREMENT_TOKEN;           // Increment the token
+            release_lock( &TokenLock );                       // Release the tokens lock
+
             /* Create ACTIVATE QUEUES signalling pipe */
             /* Check your return codes, Jan. */
 
@@ -4218,6 +4419,7 @@ U32 mask4;
 
             grp->ttdev = strdup( DEF_NETDEV );
             grp->ttfd  = -1;
+
         }
         else
             /* This code is executed for the second and subsequent devices in the group. */
@@ -5351,7 +5553,7 @@ U32 num;                                /* Number of bytes to move   */
 
         /* Display Queue Descriptor Record, maybe */
         if (grp->debugmask) {
-            net_data_trace( dev, (BYTE*)qdr, qdr_len, ' ', 'D', "QDIO_QDR", 0 );
+            net_data_trace( dev, (BYTE*)qdr, qdr_len, ' ', 'D', "QDR   ", 0 );
         }
 
         /* Check the Queue Information Block storage */
@@ -5442,7 +5644,8 @@ U32 num;                                /* Number of bytes to move   */
     struct timeval tv;                      /* select polling        */
     int fd;                                 /* select fd             */
     int rc=0;                               /* select rc (0=timeout) */
-    BYTE sig;                               /* thread pipe signal    */
+    OSA_PIME pime;                          /* thread pipe signal    */
+    U32 qmask;
 
         /*
         ** PROGRAMMING NOTE: we use a relatively short timeout value
@@ -5455,6 +5658,9 @@ U32 num;                                /* Number of bytes to move   */
 
         DBGTRC( dev, "Activate Queues: Entry iqm=%8.8x oqm=%8.8x",dev->qdio.i_qmask, dev->qdio.o_qmask);
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
+
+        /* Initialize All Queues, again */
+        qeth_init_queues(dev);
 
         /* Indicate ACTIVATE QUEUES is now active (looping) */
 //      DBGTRC( dev, "Activate Queues: Becoming Active");
@@ -5508,27 +5714,43 @@ U32 num;                                /* Number of bytes to move   */
             tv.tv_sec  = 0;
             tv.tv_usec = OSA_TIMEOUTUS;     /* Select timeout usecs  */
             rc = qeth_select( fd+1, &readset, &tv );
-
             /* Read pipe signal if one was sent */
             if (unlikely( rc && FD_ISSET( grp->ppfd[0], &readset )))
             {
-                sig = QDSIG_RESET;
-                VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
-                if (QDSIG_HALT == sig || grp->debugmask & DBGQETHQUEUES)
-                    DBGTRC( dev, "Activate Queues: %s received", qsig2str( sig ));
+                memset(&pime, 0, sizeof(OSA_PIME));
+                pime.length = (2 * sizeof(OSA_PIME));
+                pime.signal = QDSIG_RESET;
+                VERIFY( qeth_read_pipe( grp->ppfd[0], &pime ) == pime.length);
+
+                if (QDSIG_HALT == pime.signal || grp->debugmask & DBGQETHQUEUES)
+                    DBGTRC( dev, "Activate Queues: %s received", qsig2str( pime.signal ));
 
                 /* Exit immediately when requested to do so */
-                if (QDSIG_HALT == sig)
+                if (QDSIG_HALT == pime.signal)
                     break;
 
                 /* Process pipe signal */
-                switch (sig)
+                qmask = pime.data.qmask & (~(0xffffffff >> dev->qdio.i_qcnt));
+                switch (pime.signal)
                 {
-                case QDSIG_READ:   grp->rdpack = 0; break;
-                case QDSIG_RDMULT: grp->rdpack = 1; break;
-                case QDSIG_WRIT:   grp->wrpack = 0; break;
-                case QDSIG_WRMULT: grp->wrpack = 1; break;
-                case QDSIG_WAKEUP:                  break;
+                case QDSIG_READ:
+                    grp->rdpack = 0;
+                    dev->qdio.i_qsiga |= qmask;
+                    break;
+                case QDSIG_RDMULT:
+                    grp->rdpack = 1;
+                    dev->qdio.i_qsiga |= qmask;
+                    break;
+                case QDSIG_WRIT:
+                    grp->wrpack = 0;
+                    dev->qdio.o_qsiga |= qmask;
+                    break;
+                case QDSIG_WRMULT:
+                    grp->wrpack = 1;
+                    dev->qdio.o_qsiga |= qmask;
+                    break;
+                case QDSIG_WAKEUP:
+                    break;
                 default:
                     BREAK_INTO_DEBUGGER(); // (should not occur)
                 }
@@ -5578,7 +5800,8 @@ U32 num;                                /* Number of bytes to move   */
             /* ALWAYS process all Output Queues each time regardless of
                whether the guest has recently executed a SIGA-w or not
                since most guests expect OSA devices to behave that way.
-               (SIGA-w are NOT required to cause processing O/P queues)
+               (SIGA-w are NOT required to cause O/P queues processing,
+               SIGA's simply say specific queue(s) should be processed.)
             */
             if (likely( dev->qdio.o_qmask ))
             {
@@ -5600,7 +5823,7 @@ U32 num;                                /* Number of bytes to move   */
 //      DBGTRC( dev, "Activate Queues: Become Inactive");
 
         /* Acknowledge halt signal (how else could we reach here?) */
-        if (sig == QDSIG_HALT)
+        if (pime.signal == QDSIG_HALT)
         {
             obtain_lock( &grp->qlock );
             {
@@ -5687,7 +5910,8 @@ U32 qmask;
 static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-int noselrd, rc = 0;
+OSA_PIME pime;
+int rc = 0;
 
     if (grp->debugmask & DBGQETHSIGA)
         DBGTRC( dev, "SIGA-r qmask(%8.8x)", qmask );
@@ -5702,37 +5926,21 @@ int noselrd, rc = 0;
     }
     else
     {
-        /* Is there a read select */
-        noselrd = !dev->qdio.i_qmask;
-
-        /* Validate Mask */
-        qmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
-
-        /* Reset Queue Positions */
-        if(qmask != dev->qdio.i_qmask)
-        {
-        int n;
-            for(n = 0; n < dev->qdio.i_qcnt; n++)
-                if(!(dev->qdio.i_qmask & (0x80000000 >> n)))
-                    dev->qdio.i_bpos[n] = 0;
-            if(!dev->qdio.i_qmask)
-                dev->qdio.i_qpos = 0;
-
-            /* Update Read Queue Mask */
-            dev->qdio.i_qmask = qmask;
-        }
-
         /* Send signal to ACTIVATE QUEUES device thread loop */
-        if(noselrd && dev->qdio.i_qmask)
-        {
-            BYTE sig = QDSIG_READ;
-            if (grp->debugmask & DBGQETHSIGA)
-                DBGTRC( dev, "SIGA-r: sending %s", qsig2str( sig ));
-            VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
-        }
+        memset(&pime, 0, sizeof(OSA_PIME));
+        pime.length = 6;
+        pime.signal = QDSIG_READ;
+        pime.data.qmask = qmask;
+        if (grp->debugmask & DBGQETHSIGA)
+            DBGTRC( dev, "SIGA-r: sending %s", qsig2str( pime.signal ));
+        VERIFY( qeth_write_pipe( grp->ppfd[1], &pime ) == 6);
     }
 
     PTT_QETH_TRACE( "af SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
+
+    if (grp->debugmask & DBGQETHSIGA)
+        DBGTRC( dev, "SIGA-r rc(%d)", rc );
+
     return rc;
 }
 
@@ -5743,35 +5951,20 @@ int noselrd, rc = 0;
 static int qeth_do_initiate_output( DEVBLK *dev, U32 qmask, BYTE sig )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+OSA_PIME pime;
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
         return 1;
 
-    /* Validate Mask */
-    qmask &= ~(0xffffffff >> dev->qdio.o_qcnt);
-
-    /* Reset Queue Positions */
-    if(qmask != dev->qdio.o_qmask)
-    {
-    int n;
-        for(n = 0; n < dev->qdio.o_qcnt; n++)
-            if(!(dev->qdio.o_qmask & (0x80000000 >> n)))
-                dev->qdio.o_bpos[n] = 0;
-        if(!dev->qdio.o_qmask)
-            dev->qdio.o_qpos = 0;
-
-        /* Update Write Queue Mask */
-        dev->qdio.o_qmask = qmask;
-    }
-
     /* Send signal to ACTIVATE QUEUES device thread loop */
-    if(dev->qdio.o_qmask)
-    {
-        if (grp->debugmask & DBGQETHSIGA)
-            DBGTRC( dev, "SIGA-o: sending %s", qsig2str( sig ));
-        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
-    }
+    memset(&pime, 0, sizeof(OSA_PIME));
+    pime.length = 6;
+    pime.signal = sig;
+    pime.data.qmask = qmask;
+    if (grp->debugmask & DBGQETHSIGA)
+        DBGTRC( dev, "SIGA-o: sending %s", qsig2str( pime.signal ));
+    VERIFY( qeth_write_pipe( grp->ppfd[1], &pime ) == 6);
 
     return 0;
 }
@@ -5959,7 +6152,11 @@ U16 uLength4;
     rsp_pus_01->vc.pus_01.proto = PROTOCOL_UNKNOWN;
     rsp_pus_01->vc.pus_01.unknown05 = 0x04;           /* !!! */
     rsp_pus_01->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_01->vc.pus_01.token, QTOKEN2 );
+    obtain_lock( &TokenLock );                  // Obtain the tokens lock
+    STORE_FW( grp->htcmfilt, uTokenCmFilter );  // Copy the token
+    uTokenCmFilter += INCREMENT_TOKEN;          // Increment the token
+    release_lock( &TokenLock );                 // Release the tokens lock
+    memcpy( rsp_pus_01->vc.pus_01.token, grp->htcmfilt, MPC_TOKEN_LENGTH );
 
     // Prepare second MPC_PUS (which will contain 8-bytes of nulls)
     STORE_HW( rsp_pus_02->length, SIZE_PUS_02_C );
@@ -6076,7 +6273,11 @@ U16 uLength4;
     rsp_pus_08->what = PUS_WHAT_04;
     rsp_pus_08->type = PUS_TYPE_08;
     rsp_pus_08->vc.pus_08.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_08->vc.pus_08.token, QTOKEN3 );
+    obtain_lock( &TokenLock );                      // Obtain the tokens lock
+    STORE_FW( grp->htcmconn, uTokenCmConnection );  // Copy the token
+    uTokenCmConnection += INCREMENT_TOKEN;          // Increment the token
+    release_lock( &TokenLock );                     // Release the tokens lock
+    memcpy( rsp_pus_08->vc.pus_08.token, grp->htcmconn, MPC_TOKEN_LENGTH );
 
     // Prepare third MPC_PUS
     STORE_HW( rsp_pus_07->length, SIZE_PUS_07 );
@@ -6280,7 +6481,11 @@ U16 uLength4;
     rsp_pus_01->vc.pus_01.proto = req_pus_01->vc.pus_01.proto;
     rsp_pus_01->vc.pus_01.unknown05 = 0x04;           /* !!! */
     rsp_pus_01->vc.pus_01.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_01->vc.pus_01.token, QTOKEN4 );
+    obtain_lock( &TokenLock );                    // Obtain the tokens lock
+    STORE_FW( grp->htulpfilt, uTokenUlpFilter );  // Copy the token
+    uTokenUlpFilter += INCREMENT_TOKEN;           // Increment the token
+    release_lock( &TokenLock );                   // Release the tokens lock
+    memcpy( rsp_pus_01->vc.pus_01.token, grp->htulpfilt, MPC_TOKEN_LENGTH );
 
     // Prepare second MPC_PUS
     memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
@@ -6411,15 +6616,19 @@ U16 uLength4;
 
     // Prepare second MPC_PUS
     /* FIXME: The ULP Connection tokens need to be unique for each data path. */
-    /* FIXME: If multiple data paths are ever supported, QTOKEN5 shouldn't    */
-    /* FIXME: be used. something unique is required. Something incorporating  */
-    /* FIXME: the data paths device address perhaps? It will also need to be  */
-    /* FIXME: kept in a data path related block, not grp.                     */
+    /* FIXME: If multiple data paths are ever supported, grp->htulpconn       */
+    /* FIXME: shouldn't be used. something unique is required. Something      */
+    /* FIXME: incorporating the data paths device address perhaps? It will    */
+    /* FIXME: also need to be kept in a data path related block, not grp.     */
     STORE_HW( rsp_pus_08->length, SIZE_PUS_08 );
     rsp_pus_08->what = PUS_WHAT_04;
     rsp_pus_08->type = PUS_TYPE_08;
     rsp_pus_08->vc.pus_08.tokenx5 = MPC_TOKEN_X5;
-    STORE_FW( rsp_pus_08->vc.pus_08.token, QTOKEN5 );
+    obtain_lock( &TokenLock );                        // Obtain the tokens lock
+    STORE_FW( grp->htulpconn, uTokenUlpConnection );  // Copy the token
+    uTokenUlpConnection += INCREMENT_TOKEN;           // Increment the token
+    release_lock( &TokenLock );                       // Release the tokens lock
+    memcpy( rsp_pus_08->vc.pus_08.token, grp->htulpconn, MPC_TOKEN_LENGTH );
 
     // Prepare third MPC_PUS
     STORE_HW( rsp_pus_07->length, SIZE_PUS_07 );
@@ -6938,7 +7147,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
     U16        ip6re_payload_size;  // Response ICMPv6 data size
     char       unspecified[16];
     char       solicitednode[16];
-    BYTE       sig;
+    OSA_PIME   pime;
 
     // Initialize variables
     memset( unspecified, 0, 16 );
@@ -7014,8 +7223,14 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
 
         // Add response buffer to chain.
         add_buffer_to_chain( &grp->l3r, bhrre );
-        sig = QDSIG_WAKEUP;
-        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+
+        // Send signal to ACTIVATE QUEUES device thread
+        {
+            memset(&pime, 0, sizeof(OSA_PIME));
+            pime.length = 2;
+            pime.signal = QDSIG_WAKEUP;
+            VERIFY( qeth_write_pipe( grp->ppfd[1], &pime ) == 2);
+        }
         return;
       }
 

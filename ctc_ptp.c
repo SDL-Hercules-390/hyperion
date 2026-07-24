@@ -2173,7 +2173,7 @@ void*  ptp_read_thread( void* arg )
                 iPktLen = -1;
             }
         }
-        if (iPktLen != iLength)
+        if (iPktLen > iLength)
         {
             // HHC03922 "%1d:%04X PTP: Packet of size %d bytes from device '%s' is not equal to the packet length of %d bytes, packet dropped"
             WRMSG(HHC03922, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
@@ -2189,6 +2189,10 @@ void*  ptp_read_thread( void* arg )
             }
             net_data_trace( pDEVBLK, (BYTE*)pTunBuf, iTraceLen, TO_GUEST, 'I', "data", 0 );
             continue;
+        }
+        if (iPktLen < iLength)
+        {
+            iLength = iPktLen;  // Silently truncate to the length of the packet
         }
 
         // Enqueue IP packet.

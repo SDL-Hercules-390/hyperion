@@ -47,6 +47,9 @@ typedef struct _QDIO_DEV {
     U32   i_qmask;              /* Input Queue Mask                  */
     U32   o_qmask;              /* Output Queue Mask                 */
 
+    U32   i_qsiga;              /* Input Queue Mask from SIGA        */
+    U32   o_qsiga;              /* Output Queue Mask from SIGA       */
+
     BYTE  i_slibk[QDIO_MAXQ];   /* Input SLIB Key                    */
     BYTE  i_slk[QDIO_MAXQ];     /* Input Storage List Key            */
     BYTE  i_sbalk[QDIO_MAXQ];   /* Input SBAL Key                    */

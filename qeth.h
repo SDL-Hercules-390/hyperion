@@ -33,11 +33,6 @@
 #define OSA_MAXMAC             32     /* Max supported MAC addresses */
 #define OSA_TIMEOUTUS       50000     /* Read select timeout (usecs) */
 
-#define QTOKEN1        0xD8C5E3F1     /* QETH token 1 (QET1 ebcdic)  */
-#define QTOKEN2        0xD8C5E3F2     /* QETH token 2 (QET2 ebcdic)  */
-#define QTOKEN3        0xD8C5E3F3     /* QETH token 3 (QET3 ebcdic)  */
-#define QTOKEN4        0xD8C5E3F4     /* QETH token 4 (QET4 ebcdic)  */
-#define QTOKEN5        0xD8C5E3F5     /* QETH token 5 (QET5 ebcdic)  */
 #define QUCLEVEL       0xC8D9C3F1     /* Microcode level ("HRC1")    */
 
 
@@ -262,6 +257,12 @@ typedef struct _OSA_GRP {
 #define QETH_MIN_MTU   60       /* Minimum MTU size                  */
 #define QETH_DEF_MTU   "1500"   /* Default MTU size                  */
 
+    BYTE  htissue[4];           /* Host token issuer                 */
+    BYTE  htcmfilt[4];          /* Host token cm filter              */
+    BYTE  htcmconn[4];          /* Host token cm connection          */
+    BYTE  htulpfilt[4];         /* Host token ulp filter             */
+    BYTE  htulpconn[4];         /* Host token ulp connection         */
+
     BYTE  gtissue[4];           /* Guest token issuer                */
     BYTE  gtcmfilt[4];          /* Guest token cm filter             */
     BYTE  gtcmconn[4];          /* Guest token cm connection         */
@@ -370,6 +371,20 @@ struct OSA_HDR3 {
 /*020*/ } ATTRIBUTE_PACKED;     /* Total length: 32 bytes            */
 
 typedef struct OSA_HDR3 OSA_HDR3;
+
+
+/*-------------------------------------------------------------------*/
+/* OSA Pipe Message                                                  */
+/*-------------------------------------------------------------------*/
+struct OSA_PIME {                       /* OSA Pipe Message          */
+    BYTE      length;                   /* Length of message         */
+    BYTE      signal;                   /* Signal                    */
+    union     {                         /* Message data              */
+        U32       qmask;                /* Queue Mask                */
+    }         data;                     /*                           */
+};                                      /*                           */
+
+typedef struct OSA_PIME OSA_PIME;
 
 
 #if defined(_MSVC_)
