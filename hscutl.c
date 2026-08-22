@@ -853,14 +853,22 @@ static int mkdirsIfNeeded ( DEVBLK *dev, const char *dirname )
 
     /* Copy argument to work */
     workdir[0] = '\0';
+    csr = workdir;    /* default path scan start */
 #ifdef _WIN32
     /*
      * Windows CreateDirectory doesn't seem to like bare relative paths
      * like 'listings/x.lst'.. so... we need to make it './listings/x.lst'
+     * Also, handle starting drive letter
      */
     c = *dirname;
-    if ( isalpha(c) && strchr(dirname, ':') == NULL ) {
-        STRLCPY(workdir, "./");
+    if ( isalpha(c) )
+    {
+        c = *(dirname + 1); /* look at 2nd position */
+        if (c != ':')
+        {
+            STRLCPY(workdir, "./");
+        }
+        csr = workdir + 2;  /* start path scan after the ./ or c: */
     }
 #endif
     STRLCAT( workdir, dirname );
@@ -878,15 +886,12 @@ static int mkdirsIfNeeded ( DEVBLK *dev, const char *dirname )
         return 0;
     }
 
-    csr = workdir;          /* path scanning will start here */
-    pathend = workdir+len;  /* and end here (null terminator)*/
-
-    /* need to skip over drive letter */
-    c1 = strchr(workdir, ':');
-    if ( c1 != NULL )
+    /* skip leading path separators */
+    while (*csr == '/' || *csr == '\\')
     {
-        csr = c1 + 1;
+        csr++;
     }
+    pathend = workdir+len;  /* and end here (null terminator)*/
 
     while ( csr < pathend )
     {
@@ -908,8 +913,14 @@ static int mkdirsIfNeeded ( DEVBLK *dev, const char *dirname )
         if (NULL == csr) {
             csr = pathend;
         }
-        strlcpy(pathpart, workdir, csr - workdir + 1);
+        len = csr - workdir; /* length of path part */
         csr++;  /* skip separator for next time */
+
+        if (len == 0) { /* nothing to do for leading separator */
+        	continue;
+        }
+
+        strlcpy(pathpart, workdir, len + 1);
 
         /* create this directory if it dopesn't exist? */
         if (stat(pathpart, &st) < 0)
