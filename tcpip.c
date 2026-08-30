@@ -1067,6 +1067,35 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
 /**********************************************************************************/
 /*
+  Where in the host buffer a copy has to resume.
+
+  X'75' is restartable by design: a page translation exception on the guest
+  buffer is nullifying, so the instruction runs again from the top with R0
+  saying the native call was already made and R1 saying how much is left. The
+  guest side of the copy resumes correctly because the base register was
+  advanced before the exception. The host side has no such register -- R2 is a
+  slot index into map32 [] and never moves -- so the resume point is derived
+  here instead, from what is still outstanding in R1 against the length this
+  conversation was given.
+*/
+
+u_int  lar_offset (u_int  * regs) {
+    talk_ptr t;
+    u_int    len;
+    u_int    left;
+
+    t = (talk_ptr)map32[get_reg (regs, 14)];
+
+    len  = (get_reg (regs, 3) == 0) ? t->len_in : t->len_out;
+    left = get_reg (regs, 1);
+
+    if (left >= len) return (0); /* First entry: nothing copied yet */
+
+    return (len - left);
+}
+
+/**********************************************************************************/
+/*
   R0  = 0 (Initially, but turns to > 0 after the native call.
   R1  = Byte Counter
   R2  = Source/Destination of PC buffer.  32bits.
