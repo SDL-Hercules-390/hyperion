@@ -2383,6 +2383,17 @@ int   rc;
             RELEASE_INTLOCK( NULL );
             return NULL;
         }
+
+        /* history instruction count thread */
+        rc = create_thread( &sysblk.ic_history_tid, DETACHED,
+             ic_history_thread, NULL, IC_HISTORY_THREAD_NAME );
+        if (rc)
+        {
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "E", strerror( rc ));
+            RELEASE_INTLOCK( NULL );
+            return NULL;
+        }
     }
 
     /* Set CPU thread priority */

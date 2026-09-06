@@ -952,6 +952,33 @@
   "displayed on the console panel as a result of the panel command\n"           \
   "'message * hello'.  (See also the \"msgnoh\" command)\n"
 
+#define mips_cmd_desc           "Display current, average, peak MIPS / SIOs"
+#define mips_cmd_help           \
+                                \
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "     mips [ [reset] | [average [nn]  ]\n"                                    \
+  "\n"                                                                          \
+  "where:\n"                                                                    \
+  "\n"                                                                          \
+  "<null>     will display the current MIPS / SIOs rates, current average\n"    \
+  "           MIPS / SIOs rate over the last nn seconds, the peak MIPS / SIOs\n"\
+  "           rate and the peak average rates.\n"                               \
+  "\n"                                                                          \
+  "reset      will reset the peak and peak average MIPS and SIOs rates.\n"      \
+  "\n"                                                                          \
+  "average    will display the \"average over\" time period in seconds.\n"      \
+  "\n"                                                                          \
+  "average nn will change the \"average over\" time period to nn seconds.\n"    \
+  "           The default is 15 seconds. The maximum is 900 seconds.\n"         \
+  "           The peak averge MIPS / SIOs rates will be reset.\n"               \
+  "\n"                                                                          \
+  "Note: MIPS rate is calculated on total instruction count observed over\n"    \
+  "      an 1 second 'host' interval. A 900 second history is maintained\n"     \
+  "      to calculate average MIPS rates. This MIPS rate is different from\n"   \
+  "      the MIPS reported by \"maxrates\" command which uses the emulated\n"   \
+  "      ETOD clock to calculate the MIPS rate.\n"
+
 #define model_cmd_desc          "Set/Query STSI model code"
 #define model_cmd_help          \
                                 \
@@ -2311,6 +2338,7 @@ COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        
 #endif
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      pgmprdos_cmd_help   )
 COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             maxrates_cmd_desc,      maxrates_cmd_help   )
+COMMAND( "mips",                    mips_cmd,               SYSCMD,             mips_cmd_desc,          mips_cmd_help       )
 #if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )

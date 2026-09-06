@@ -316,9 +316,32 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
     {
         /* Clear system instruction counter and CPU rates */
         sysblk.instcount = 0;
+        sysblk.sioscount = 0;
         sysblk.mipsrate  = 0;
         sysblk.siosrate  = 0;
         sysblk.ipled     = FALSE;
+
+        /* Clear ic_history table */
+        if (sysblk.pic_sio_history != NULL)
+            memset( sysblk.pic_sio_history, 0, sizeof( IC_SIO_HISTORY ) * IC_HISTORY_SIZE);
+
+        /* Clear ic_history fields */
+        sysblk.ic_history_empty = true;
+        sysblk.ic_history_next = 0;
+        //skip sysblk.ic_history_avg_over as 'mips average nn' may have changed it
+        sysblk.ic_history_avg_time = 0;
+
+        // Clear mips rates
+        sysblk.ic_history_peak_mips = 0;
+        sysblk.ic_history_current_mips = 0;
+        sysblk.ic_history_peak_avg_mips = 0;
+        sysblk.ic_history_current_avg_mips = 0;
+
+        // Clear sios rates
+        sysblk.ic_history_peak_sios = 0;
+        sysblk.ic_history_current_sios = 0;
+        sysblk.ic_history_peak_avg_sios = 0;
+        sysblk.ic_history_current_avg_sios = 0;
     }
 
     /* Set horizontal polarization and clear the

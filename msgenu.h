@@ -1497,7 +1497,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02292 "%s" // icount_cmd
 #define HHC02293 "%s" // history.c: command history
 #define HHC02294 "%s" // cachestats_cmd
-//efine HHC02295 (available)
+#define HHC02295 "%s" // mips command
 //efine HHC02296 (available)
 //efine HHC02297 (available)
 #define HHC02298 "%1d:%04X drive is empty"

@@ -445,6 +445,13 @@ static inline void atomic_update64( volatile S64* p, S64 count )
         atomic_update64( &sysblk.instcount, (_count) )
 
 /*-------------------------------------------------------------------*/
+/*           Atomically update SYSBLK SIOs Counter                   */
+/*-------------------------------------------------------------------*/
+
+#define UPDATE_SYSBLK_SIOSCOUNT( _count ) \
+        atomic_update64( &sysblk.sioscount, (_count) )
+
+/*-------------------------------------------------------------------*/
 /* Stop ALL CPUs                                      (INTLOCK held) */
 /*-------------------------------------------------------------------*/
 static inline void stop_all_cpus_intlock_held()

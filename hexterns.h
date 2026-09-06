@@ -258,6 +258,7 @@ IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 void* timer_thread( void* argp );
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 void* rubato_thread( void* argp );
+void* ic_history_thread( void* arg );
 #endif
 
 /* Functions in module clock.c */

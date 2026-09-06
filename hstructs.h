@@ -657,6 +657,16 @@ enum OPERATION_MODE
 #endif
 
 /*-------------------------------------------------------------------*/
+/* Instruction and SIOs count history (mips cmd)                     */
+/*-------------------------------------------------------------------*/
+struct IC_SIO_HISTORY
+{
+    U64     time;              /* Time in microseconds       */
+    U64     instcount;         /* Instruction count          */
+    U64     sioscount;         /* SIOs count                 */
+};
+
+/*-------------------------------------------------------------------*/
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
@@ -1237,8 +1247,38 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         U64     hmcwdt_expire_time;     /* Watchdog timer expire usec*/
         TID     hmcwdt_tid;             /* Thread-id: watchdog timer */
 
+        /*-----------------------------------------------------------*/
+        /* instcount history                                         */
+        /*-----------------------------------------------------------*/
+#define OBTAIN_IC_HISTORY_LOCK( )   obtain_lock(  &sysblk.ic_history_lock)
+#define RELEASE_IC_HISTORY_LOCK( )  release_lock( &sysblk.ic_history_lock)
+#define IC_HISTORY_SIZE  900           /* Number of history entries  */
+#define IC_HISTORY_AVG_OVER  15         /* Average over seconds      */
+
+        LOCK    ic_history_lock;        /* LOCK for below fields     */
+        TID     ic_history_tid;         /* Thread-id: history timer  */
+
+        IC_SIO_HISTORY*  pic_sio_history; /* pointer to history table*/
+
+        U32     ic_history_empty;              /* history is empty   */
+        U32     ic_history_avg_over;       /* avg is over seconds    */
+        U32     ic_history_next;        /* IDX: next history entry   */
+        U64     ic_history_avg_time;      /* current average time    */
+
+                                           /* calculated rates       */
+        double  ic_history_peak_mips;      /* peak interval MIPS     */
+        double  ic_history_current_mips;   /* current interval MIPS  */
+        double  ic_history_peak_avg_mips;  /* peak average MIPS      */
+        double  ic_history_current_avg_mips; /* current average MIPS */
+
+        double  ic_history_peak_sios;      /* peak interval SIOs     */
+        double  ic_history_current_sios;   /* current interval SIOs  */
+        double  ic_history_peak_avg_sios;  /* peak average SIOs      */
+        double  ic_history_current_avg_sios; /* current average SIOs */
+
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */
+        U64     sioscount;              /* SIOs counter              */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
 
@@ -1974,7 +2014,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    cckd64:1;               /* 1=CCKD64/CFBA64           */
         BYTE    devcache:1;             /* 0 = device cache off
                                            1 = device cache on       */
-        /* 
+        /*
          * MSVC allocates bit-fields within storage units based on their
          * underlying type, inserting padding when necessary to prevent a
          * bit-field from crossing a boundary defined by that type.

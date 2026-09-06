@@ -450,3 +450,239 @@ void* rubato_thread( void* argp )
 
 } /* end function rubato_thread */
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+/*-----------------------------------------------------------*/
+/*  IC_SIO_HISTORY                                           */
+/*-----------------------------------------------------------*/
+/*  history of instruction and SIO counts for mips cmd       */
+/*-----------------------------------------------------------*/
+
+// Convert seconds to microseconds
+#define SEC_TO_US(sec) ((sec)*1000000)
+// Convert nanoseconds to microseconds
+#define NS_TO_US(ns)    ((ns)/1000)
+/*-----------------------------------------------------------*/
+/*  Get U64 Microsecond Time                                 */
+/*-----------------------------------------------------------*/
+U64 get_us_time( )
+{
+    U64 us          = 0;
+    int rc;
+
+    {
+    // ensure CLOCK_MONOTONIC_RAW clock is available
+    #if defined( __linux__ ) && defined( __clock_t_defined )
+        struct timespec ts;
+
+        rc = clock_gettime( CLOCK_MONOTONIC_RAW, &ts );
+        if( rc == 0 )
+            us = SEC_TO_US( (uint64_t)ts.tv_sec ) + NS_TO_US( (uint64_t)ts.tv_nsec + 500 );
+        else
+        {
+            // "HMC Watchdog Timer: %s: %s"
+            WRMSG( HHC01958, "E", "clock_gettime failed", strerror(errno) );
+        }
+
+    #else
+        // microsecond resolution getimeofday
+        struct timeval  tv;
+        rc = gettimeofday( &tv, NULL );
+        if( rc == 0 )
+            us = SEC_TO_US( (uint64_t)tv.tv_sec ) + tv.tv_usec;
+        else
+        {
+            // "HMC Watchdog Timer: %s: %s"
+            WRMSG( HHC01958, "E", "gettimeofday failed", strerror(errno) );
+        }
+
+    #endif
+    }
+
+    return us;
+}
+
+/*-----------------------------------------------------------*/
+/*  History Instruction Counter Thread                       */
+/*-----------------------------------------------------------*/
+/* Note: This thread records a history of instruction counts */
+/*       to over "IC_HISTORY" seconds.                       */
+/*-----------------------------------------------------------*/
+#define IC_HISTORY_THREAD_INT    50     // 50 microseconds
+#define IC_HISTORY_PERIOD        1     //  1 second
+#define IC_HISTORY( indx )              sysblk.pic_sio_history[ (indx) ]
+#define PRIOR_IC_HISTORY( indx )        sysblk.pic_sio_history[ (indx) == 0 ? IC_HISTORY_SIZE -1 : (indx) - 1 ]
+#define PRIOR_PRIOR_IC_HISTORY( indx )  sysblk.pic_sio_history[ (indx) == 0 ? IC_HISTORY_SIZE -2 : ( (indx) == 1 ? IC_HISTORY_SIZE -1 : (indx) - 2 ) ]
+
+#define AVG_OVER_IC_HISTORY( indx )     sysblk.pic_sio_history[ (indx) < sysblk.ic_history_avg_over  ? \
+                                                                  IC_HISTORY_SIZE + ( (indx) - sysblk.ic_history_avg_over ) : \
+                                                                  ( (indx) - sysblk.ic_history_avg_over ) ]
+
+void* ic_history_thread( void* arg )
+{
+    int   rc;
+    U64   update_time;          // Next update time in microseconds
+    U64   now_time;             // Current time in microseconds
+    U64   now_instcount;        // Current instruction count
+    U64   now_sioscount;        // Current SIOs count
+    IC_SIO_HISTORY* p_ic_sio_history;
+
+    U64   ic_inst_avg_cnt;
+    U64   ic_inst_interval_cnt;
+
+    U64   ic_sios_avg_cnt;
+    U64   ic_sios_interval_cnt;
+
+    U64   ic_interval_time;
+    U64   ic_avg_time;
+
+    UNREFERENCED( arg );
+    UNREFERENCED( rc );
+
+    /* Set instruction history count priority to CPU                */
+    /* thread priority as this thread is just getting the           */
+    /* instruction count and should not be competing with           */
+    /* CPU threads.                                                 */
+    /* No real impact as it should just be waiting anyway           */
+    /* until the next update time.                                  */
+    SET_THREAD_PRIORITY( sysblk.cpuprio, sysblk.qos_user_initiated );
+    LOG_THREAD_BEGIN( IC_HISTORY_THREAD_NAME );
+
+    sysblk.pic_sio_history = malloc( sizeof( IC_SIO_HISTORY ) * IC_HISTORY_SIZE );
+
+    if( sysblk.pic_sio_history == NULL )
+    {
+        // "HMC Instruction Counter History: %s: %s"
+        WRMSG( HHC01958, "E", "malloc failed", strerror(errno));
+        return NULL;
+    }
+
+    /* Clear the system instruction counter history */
+    /* Clear ic_history */
+    memset( sysblk.pic_sio_history, 0, sizeof( IC_SIO_HISTORY ) * IC_HISTORY_SIZE);
+
+    sysblk.ic_history_empty = true;
+    sysblk.ic_history_avg_over = IC_HISTORY_AVG_OVER +1;  // (add 1 to account for the current second)
+    sysblk.ic_history_next = 0;
+    sysblk.ic_history_avg_time = 0;
+
+    //saved mips rates
+    sysblk.ic_history_peak_mips = 0;
+    sysblk.ic_history_current_mips = 0;
+    sysblk.ic_history_peak_avg_mips = 0;
+    sysblk.ic_history_current_avg_mips = 0;
+
+    //saved sios rates
+    sysblk.ic_history_peak_sios = 0;
+    sysblk.ic_history_current_sios = 0;
+    sysblk.ic_history_peak_avg_sios = 0;
+    sysblk.ic_history_current_avg_sios = 0;
+
+    /* initialize update history time */
+    update_time = get_us_time( ) + SEC_TO_US( IC_HISTORY_PERIOD );;
+
+    /* History Instruction Counter thread main loop - wait for system to be shutdown  */
+    while ( !sysblk.shutdown )
+    {
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            now_time      = get_us_time( );
+            now_instcount = sysblk.instcount;
+            now_sioscount = sysblk.sioscount;
+
+            /* timer expired? */
+            if ( update_time <= now_time )
+            {
+                /* reset the timer */
+                update_time = now_time + SEC_TO_US( IC_HISTORY_PERIOD );
+
+                /* save period ic, sios and time  */
+                p_ic_sio_history = &sysblk.pic_sio_history[ sysblk.ic_history_next ];
+                p_ic_sio_history->time       = now_time;
+                p_ic_sio_history->instcount  = now_instcount;
+                p_ic_sio_history->sioscount  = now_sioscount;
+
+                /* move to next history entry */
+                sysblk.ic_history_next++;
+                if( sysblk.ic_history_next >= IC_HISTORY_SIZE )
+                {
+                    sysblk.ic_history_next = 0;
+                    sysblk.ic_history_empty= false;
+                }
+
+                /* do not calculate interval until we have sufficient history */
+                if ( !sysblk.ic_history_empty || (sysblk.ic_history_empty && sysblk.ic_history_next > 1 ) )
+                {
+                    // interval counts and time
+                    ic_inst_interval_cnt  = PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount;
+                    ic_sios_interval_cnt  = PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount;
+                    ic_interval_time       = PRIOR_IC_HISTORY( sysblk.ic_history_next ).time - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).time;
+
+                    //check peak MIPS value
+                    sysblk.ic_history_current_mips = (double) ic_inst_interval_cnt / (double) ic_interval_time;
+                    if (sysblk.ic_history_current_mips > sysblk.ic_history_peak_mips)
+                            sysblk.ic_history_peak_mips = sysblk.ic_history_current_mips;
+
+                    //check peak SIOs value
+                    sysblk.ic_history_current_sios = (double)ic_sios_interval_cnt / ((double) ic_interval_time / 1000000.0 ); // (convert to SIOs per second)
+                    if ( sysblk.ic_history_current_sios > sysblk.ic_history_peak_sios)
+                            sysblk.ic_history_peak_sios = sysblk.ic_history_current_sios;
+
+                }
+                /* do not calculate averages until we have sufficient history */
+                if ( !sysblk.ic_history_empty || (sysblk.ic_history_empty && sysblk.ic_history_next > sysblk.ic_history_avg_over ) )
+                {
+
+                    // logmsg(">>>> History IC: next: %d, avg_over: %d , avg_over idx: %d; prior idx: %d\n",
+                    //     sysblk.ic_history_next, sysblk.ic_history_avg_over,
+                    //     (sysblk.ic_history_next) < sysblk.ic_history_avg_over ? IC_HISTORY_SIZE + ( (sysblk.ic_history_next) - sysblk.ic_history_avg_over ) : ( (sysblk.ic_history_next) - sysblk.ic_history_avg_over ),
+                    //     (sysblk.ic_history_next) == 0 ? IC_HISTORY_SIZE -1 : (sysblk.ic_history_next) - 1
+                    // );
+
+                    //average counts and time
+                    ic_inst_avg_cnt  =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).instcount;
+                    ic_sios_avg_cnt  =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).sioscount;
+                    ic_avg_time      =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).time - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).time;
+
+                    //save avg time for mips cmd
+                    sysblk.ic_history_avg_time = ic_avg_time;
+
+                    //check peak values
+                    sysblk.ic_history_current_avg_mips = (double) ic_inst_avg_cnt / (double) ic_avg_time;
+                    if (sysblk.ic_history_current_avg_mips > sysblk.ic_history_peak_avg_mips)
+                            sysblk.ic_history_peak_avg_mips = sysblk.ic_history_current_avg_mips;
+
+                    sysblk.ic_history_current_avg_sios = (double) ic_sios_avg_cnt / ( (double) ic_avg_time / 1000000.0 ); // (convert to SIOs per second)
+                    if (sysblk.ic_history_current_avg_sios > sysblk.ic_history_peak_avg_sios)
+                            sysblk.ic_history_peak_avg_sios = sysblk.ic_history_current_avg_sios;
+
+                    // logmsg(">>>> History IC: Mips Peak: %6.2f Avg: %6.2f; Interval IC: %9lu, time: %8lu, Mips: %6.2f; Avg IC: %11lu, time: %8lu, mips: %6.2f \n",
+                    //     sysblk.ic_history_peak_mips, sysblk.ic_history_peak_avg_mips,
+                    //     ic_inst_interval_cnt, ic_interval_time, sysblk.ic_history_current_mips,
+                    //     ic_inst_avg_cnt, ic_avg_time, sysblk.ic_history_current_avg_mips);
+
+                    // logmsg(">>>> History IC: SIOS Peak: %6.2f Avg: %6.2f; Interval SIOS: %7lu, time: %8lu, SIOS: %6.2f; Avg SIOS %10lu, time: %8lu, SIOS: %6.2f \n",
+                    //     sysblk.ic_history_peak_sios, sysblk.ic_history_peak_avg_sios,
+                    //     ic_sios_interval_cnt, ic_interval_time, sysblk.ic_history_current_sios,
+                    //     ic_sios_avg_cnt, ic_avg_time, sysblk.ic_history_current_avg_sios);
+
+                }
+            }
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+        USLEEP( IC_HISTORY_THREAD_INT );
+
+    } // end while !shutdown
+
+    // cleanup afer ourselves
+    if( sysblk.pic_sio_history )
+    {
+        free( sysblk.pic_sio_history );
+        sysblk.pic_sio_history = NULL;
+    }
+
+    LOG_THREAD_END( IC_HISTORY_THREAD_NAME );
+
+    // clear tid as we're done
+    sysblk.ic_history_tid = 0;
+    return NULL;
+}

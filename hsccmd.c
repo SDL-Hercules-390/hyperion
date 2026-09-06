@@ -10642,6 +10642,192 @@ int hmcwdt_cmd( int argc, char* argv[], char* cmdline )
     }
 }
 
+/*----------------------------------------------------------------------*/
+/* mips -- Mips / SIOs rates: current, avarage, peak                     */
+/*----------------------------------------------------------------------*/
+/* Format: mips [ [reset] | [average [nn]  ]                            */
+/*                                                                      */
+/* <null>    will display the current MIPS / SIOs rates, current        */
+/*           average MIPS / SIOs rate over the last nn seconds, the     */
+/*           peak MIPS / SIOs rate and the peak average rates.          */
+/*                                                                      */
+/* reset     will reset the peak and peak average MIPS and SIOs rates.  */
+/*                                                                      */
+/* average   will display the "average over" time period in seconds.    */
+/*                                                                      */
+/* average nn will change the "average over" time period to nn seconds. */
+/*            The default is "IC_HISTORY_AVG_OVER" (15) seconds.        */
+/*            The maximum is "IC_HISTORY_SIZE" (900) seconds.           */
+/*            The peak averge MIPS / SIOs rates will be reset.          */
+/*                                                                      */
+/*----------------------------------------------------------------------*/
+int mips_cmd(int argc, char *argv[],char *cmdline)
+{
+    char buf[512];
+
+    UPPER_ARGV_0( argv );
+
+    UNREFERENCED(cmdline);
+
+    // Too many arguments?
+    if (argc > 3)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    // any arguments?
+    if (argc == 1)
+    {
+        /* display observations */
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            if ( sysblk.ic_history_avg_time != 0 )
+            {
+                // averages have been calculated
+                MSGBUF( buf, "Observed MIPS and SIOs rates:"
+                            "\n    Current MIPS rate:     %8.2f\t\t     SIOs rate:    %8.2f"
+                            "\n    Peak    MIPS rate:     %8.2f\t\tPeak SIOs rate:    %8.2f\n"
+                            "\n    Current MIPS Average:  %8.2f\t\t     SIOs average: %8.2f\t(over last %2lu seconds)"
+                            "\n    Peak    MIPS Average:  %8.2f\t\tPeak SIOs average: %8.2f",
+                            sysblk.ic_history_current_mips,
+                            sysblk.ic_history_current_sios,
+                            sysblk.ic_history_peak_mips,
+                            sysblk.ic_history_peak_sios,
+
+                            sysblk.ic_history_current_avg_mips,
+                            sysblk.ic_history_current_avg_sios,
+                            sysblk.ic_history_avg_time / 1000000,
+                            sysblk.ic_history_peak_avg_mips,
+                            sysblk.ic_history_peak_avg_sios
+                    );
+            }
+            else
+            {
+                // no averages have been calculated
+                MSGBUF( buf, "Observed MIPS and SIOs rates:"
+                            "\n    Current MIPS rate:     %8.2f\t\t     SIOs rate:    %8.2f"
+                            "\n    Peak    MIPS rate:     %8.2f\t\tPeak SIOs rate:    %8.2f\n",
+                            sysblk.ic_history_current_mips,
+                            sysblk.ic_history_current_sios,
+                            sysblk.ic_history_peak_mips,
+                            sysblk.ic_history_peak_sios
+                    );
+            }
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* parse command based on the 1st option */
+    /* ------------------------------------- */
+    /* RESET                                 */
+    /* ------------------------------------- */
+    if  ( CMD( argv[1], reset, 3 ))
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            sysblk.ic_history_peak_mips = 0.0;
+            sysblk.ic_history_peak_sios = 0.0;
+            sysblk.ic_history_peak_avg_mips = 0.0;
+            sysblk.ic_history_peak_avg_sios = 0.0;
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", "Peak and Peak Average rates have been reset.");
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* AVERAGE                               */
+    /* ------------------------------------- */
+    if ( CMD( argv[1], average, 3 ))
+    {
+        int avg_over = 0;
+
+        /* option: nn */
+        if ( argc == 3 )
+        {
+            avg_over = atoi( argv[2] );
+            if ( avg_over <= 1 || avg_over > IC_HISTORY_SIZE )
+            {
+                MSGBUF( buf, ". Average '%d' is not between 2 and %d seconds.", avg_over, IC_HISTORY_SIZE );
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], buf );
+                return -1;
+            }
+            OBTAIN_IC_HISTORY_LOCK( );
+            {
+                // set average over period
+                sysblk.ic_history_avg_over = avg_over +1;  //+1 for current second
+                sysblk.ic_history_peak_avg_mips = 0.0;
+                sysblk.ic_history_peak_avg_sios = 0.0;
+            }
+            RELEASE_IC_HISTORY_LOCK( );
+
+            MSGBUF( buf, "Average over %d seconds. Peak Average rates have been reset.", avg_over );
+            WRMSG(HHC02295, "I", buf);
+            return 0;
+        }
+
+        MSGBUF( buf, "Average over %d seconds.",  sysblk.ic_history_avg_over-1 );
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* $debug                                */
+    /* ------------------------------------- */
+    if  ( CMD( argv[1], $debug, 4 ))
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            MSGBUF( buf, "debug: MIPS fields:"
+                        "\n    ic_history_empty:        %d"
+                        "\n    ic_history_avg_over:     %d"
+                        "\n    IC_history_next:         %d"
+                        "\n    ic_history_avg_time:     %ld"
+                        "\n    instcount:               %ld"
+                        "\n    sioscount:               %ld",
+                        sysblk.ic_history_empty,
+                        sysblk.ic_history_avg_over,
+                        sysblk.ic_history_next,
+                        sysblk.ic_history_avg_time,
+
+                        sysblk.instcount,
+                        sysblk.sioscount
+                );
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    // "Invalid argument %s%s"
+    WRMSG( HHC02205, "E", argv[1], "" );
+    return -1;
+}
+
+
 /* HSCCMD.C End-of-text */
 
 #endif // !defined(_GEN_ARCH)
