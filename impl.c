@@ -97,6 +97,28 @@ static int process_args( int argc, char* argv[] );
 #define PROCESS_ARGS_EXIT   2
 /* End of forward declarations.                                      */
 
+#if ! defined(_MSVC_)
+/*-------------------------------------------------------------------*/
+/* Point an existing open FD to the null device                      */
+/*-------------------------------------------------------------------*/
+int
+fd_to_null(int desired_fd, int mode)
+{
+  int null_fd = open("/dev/null", mode);
+
+  if (null_fd == desired_fd || null_fd < 0)
+    return null_fd;
+  else
+    {
+      int fd2 = dup2(null_fd, desired_fd);
+      int saved_errno = errno;
+      close(null_fd);
+      errno = saved_errno;
+      return fd2;
+    }
+}                                     
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Register a LOG callback                                           */
 /*-------------------------------------------------------------------*/
@@ -1066,6 +1088,50 @@ int     rc;
         argc--;
     }
 
+#if ! defined(_MSVC_)      // LINUX or MacOs
+    /*
+     * process the NoUI options very early so we don't
+     * spew output on the console during startup and shutdown.
+     * NOTE: "nohup" started processes already have ttys detached AND
+     *       stdin is redirected to /dev/null AS WRITEABLE ONLY !
+     */
+    {
+        int i;
+        char *aptr;
+        
+        for (i = 1; i < argc; i++) {
+            aptr = argv[i];
+            if ( ! strcmp(aptr, "--NoUI")   || ! strcmp(aptr, "-n") ||
+                 ! strcmp(aptr, "--daemon") || ! strcmp(aptr, "-d")) {
+                WRMSG( HHC01414, "I", "NoUI mode: Detaching tty" );
+                sysblk.NoUI_mode = 1;
+
+                /* no UI mode so detach ALL ttys */
+                if (isatty(STDIN_FILENO))
+                {
+                    if (fd_to_null(STDIN_FILENO, O_RDONLY) < 0)
+                        WRMSG( HHC01414, "W", "NoUI mode: Failed to disconnect stdin tty" );
+                    clearerr(stdin);
+                }
+                if (isatty(STDOUT_FILENO))
+                {
+                    if (fd_to_null(STDOUT_FILENO, O_WRONLY) < 0)
+                        WRMSG( HHC01414, "W", "NoUI mode: Failed to disconnect stdout tty" );
+                    clearerr(stdout);
+                }
+                if (isatty(STDERR_FILENO))
+                {
+                    if (fd_to_null(STDERR_FILENO, O_WRONLY) < 0)
+                        WRMSG( HHC01414, "W", "NoUI mode: Failed to disconnect stderr tty" );
+                    clearerr(stderr);
+                }
+                break;
+            }
+        }  
+    } 
+#endif
+
+
     /* Initialize Hercules Threading package */
     hthreads_internal_init();
 
@@ -1814,7 +1880,21 @@ int     rc;
         {
             /* No-User-Interface mode without any external GUI... */
 
+#if ! defined(_MSVC_)
+            /* These tests prevent Hercules trying to read from        */
+            /* either the controlling terminal or a "nohup" redirected */
+            /* /dev/null (nohup makes stdin write only ! )             */
+            if (isatty(STDIN_FILENO))
+                WRMSG( HHC01414, "I", "NoUI mode: Skipping tty input" );
+            else if ( ! isatty(STDIN_FILENO) && 
+                     (fcntl(STDIN_FILENO, F_GETFL) & O_ACCMODE) != O_RDONLY)
+                WRMSG( HHC01414, "I", "NoUI mode: No readable stdin" );
+            else
+                /* stdin is actually a file - maybe < /dev/null        */
+                process_script_file( "-", true );
+#else
             process_script_file( "-", true );
+#endif
 
             /* "NOUI" mode means there is essentially no normal way
                 to control Hercules (because there is no stdin), so
