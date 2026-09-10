@@ -325,6 +325,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 #endif
 #endif
 
+#if !defined( HAVE_NET_IF_UTUN_H )
+
         VERIFY( TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNIfName, pDevCTCBLK->szDriveIPAddr ) == 0 );
 
         VERIFY( TUNTAP_SetDestAddr( pDevCTCBLK->szTUNIfName, pDevCTCBLK->szGuestIPAddr ) == 0 );
@@ -336,7 +338,13 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         VERIFY( TUNTAP_SetMTU     ( pDevCTCBLK->szTUNIfName, pDevCTCBLK->szMTU         ) == 0 );
 
         VERIFY( TUNTAP_SetFlags   ( pDevCTCBLK->szTUNIfName, nIFFlags                  ) == 0 );
+#else // !defined( HAVE_NET_IF_UTUN_H )
 
+        UNREFERENCED( nIFFlags );
+
+        VERIFY( TUNTAP_SetPt2PtAddr( pDevCTCBLK->szTUNIfName, pDevCTCBLK->szDriveIPAddr
+                                                            , pDevCTCBLK->szGuestIPAddr ) == 0 );
+#endif // defined( HAVE_NET_IF_UTUN_H )
     }
 
     // Copy the fd to make panel.c happy

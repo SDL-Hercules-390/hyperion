@@ -258,6 +258,7 @@ IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 void* timer_thread( void* argp );
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 void* rubato_thread( void* argp );
+void* ic_history_thread( void* arg );
 #endif
 
 /* Functions in module clock.c */
@@ -540,16 +541,11 @@ void z900_invalidate_tlbe( REGS* regs, BYTE* main );
 
 RADR apply_host_prefixing( REGS* regs, RADR raddr );
 
-#undef ATTRIBUTE_NORETURN
-#if defined(__GNUC__) && __GNUC__ >= 4
-    #define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
-#else
-    #define ATTRIBUTE_NORETURN
-#endif
-
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt)( REGS* regs, int code ) ATTRIBUTE_NORETURN;
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt)( REGS* regs, int code ) ATTRIBUTE_NORETURN;
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) z900_program_interrupt)( REGS* regs, int code ) ATTRIBUTE_NORETURN;
+#undef CPU_INTERRUPT_IMPORT
+#define CPU_INTERRUPT_IMPORT ATTR_NORETURN CPU_DLL_IMPORT
+CPU_INTERRUPT_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt)( REGS* regs, int code );
+CPU_INTERRUPT_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt)( REGS* regs, int code );
+CPU_INTERRUPT_IMPORT void (ATTR_REGPARM(2) z900_program_interrupt)( REGS* regs, int code );
 
 void s370_display_inst( REGS* iregs, BYTE* inst );
 void s390_display_inst( REGS* iregs, BYTE* inst );

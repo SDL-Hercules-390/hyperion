@@ -623,7 +623,7 @@ DLL_EXPORT void logger_init( void )
 
     setvbuf( logger_syslog[ LOG_WRITE ], NULL, _IONBF, 0 );
 
-    rc = create_thread( &sysblk.loggertid, JOINABLE,
+    rc = create_thread( &sysblk.loggertid, DETACHED,
                         logger_thread, NULL, LOGGER_THREAD_NAME );
     if (rc)
     {

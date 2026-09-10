@@ -56,6 +56,22 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*              Define NORETURN attributes by compiler               */
+/*-------------------------------------------------------------------*/
+
+#if !defined(ATTR_NORETURN)
+  #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+    #define ATTR_NORETURN _Noreturn
+  #elif defined(__GNUC__) && __GNUC__ >= 4
+    #define ATTR_NORETURN __attribute__ ((__noreturn__))
+  #elif defined(_MSC_VER) && _MSC_VER >= 1200
+    #define ATTR_NORETURN __declspec(noreturn)
+  #else
+    #define ATTR_NORETURN /* noreturn */
+  #endif
+#endif
+
+/*-------------------------------------------------------------------*/
 /*         Round a value 'x' up to the next 'b' boundary             */
 /*-------------------------------------------------------------------*/
 #define ROUND_UP(x,b)       ((x)?((((x)+((b)-1))/(b))*(b)):(b))

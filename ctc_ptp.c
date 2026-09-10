@@ -3844,7 +3844,7 @@ int  raise_unsol_int( DEVBLK* pDEVBLK, BYTE bStatus, int iDelay )
     MSGBUF( thread_name, "%s %4.4X UnsolIntThread",
                          pPTPBLK->pDEVBLKRead->typname,
                          pPTPBLK->pDEVBLKRead->devnum);
-    rc = create_thread( &tid, JOINABLE, ptp_unsol_int_thread, pPTPINT, thread_name );
+    rc = create_thread( &tid, DETACHED, ptp_unsol_int_thread, pPTPINT, thread_name );
     if (rc)
     {
         // Report the bad news.

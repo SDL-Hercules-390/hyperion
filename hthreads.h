@@ -307,6 +307,8 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define WATCHDOG_THREAD_NAME    "watchdog_thread"
 #define HERCLIN_KB_THREAD       "keyboard thread"
 #define CCKD_DH_THREAD_NAME     "cckd_dh"
+#define HMCWDT_THREAD_NAME      "hmcwdt_thread"
+#define IC_HISTORY_THREAD_NAME  "ic_history_thrd"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

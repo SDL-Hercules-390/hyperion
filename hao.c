@@ -90,7 +90,7 @@ static int hao_initialize()
     memset( ao_msgbuf, 0, sizeof( ao_msgbuf ));
 
     /* Start message monitoring thread */
-    rc = create_thread( &haotid, JOINABLE, hao_thread, NULL, HAO_THREAD_NAME );
+    rc = create_thread( &haotid, DETACHED, hao_thread, NULL, HAO_THREAD_NAME );
     if (rc)
     {
         rc = FALSE;
@@ -657,6 +657,9 @@ static void* hao_thread(void* dummy)
             memmove( ao_msgbuf, msgbuf, bufamt -= (msgbuf - ao_msgbuf) );
         }
     }
+
+    /* Since the thread is 'detached' clear the static field on exit */
+    memset(&haotid, 0, sizeof(TID));
 
     // "Thread id "TIDPAT", prio %d, name '%s' ended"
     LOG_THREAD_END( HAO_THREAD_NAME  );

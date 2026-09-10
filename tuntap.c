@@ -253,7 +253,65 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 {
     int fd;                        // File descriptor
 
-#if defined (__FreeBSD__)
+#if defined( HAVE_NET_IF_UTUN_H )
+
+    UNREFERENCED ( fd ) ;
+    UNREFERENCED ( pszTUNDevice ) ;
+
+    struct hifr hifr;
+    struct msghdr msg;
+    struct iovec iov[1];
+    char cmsgbuf[ CMSG_SPACE(sizeof(int)) ];
+    struct cmsghdr* cmsg;
+    int utun_unit = -1;
+    int utun_fd   = -1;
+
+    *pinternal = 1;
+
+    memset(&hifr, 0, sizeof(hifr));
+    hifr.hifr_flags = iFlags & 0xffff;
+
+    /* Trigger utun creation in hercifc */
+    IFC_IOCtl(-1, TUNSETIFF, (char*)&hifr);
+
+    /* Prepare recvmsg() */
+    memset(&msg, 0, sizeof(msg));
+    memset(cmsgbuf, 0, sizeof(cmsgbuf));
+
+    iov[0].iov_base = &utun_unit;
+    iov[0].iov_len  = sizeof(utun_unit);
+
+    msg.msg_iov        = iov;
+    msg.msg_iovlen     = 1;
+    msg.msg_control    = cmsgbuf;
+    msg.msg_controllen = sizeof(cmsgbuf);
+
+    /* Receive utun fd + unit number */
+    if (recvmsg(ifc_fd[0], &msg, 0) < 0)
+    {
+        WRMSG(HHC00136, "E", "recvmsg()", strerror(errno));
+        return -1;
+    }
+
+    /* Extract fd */
+    cmsg = CMSG_FIRSTHDR(&msg);
+    if (!cmsg ||
+        cmsg->cmsg_level != SOL_SOCKET ||
+        cmsg->cmsg_type  != SCM_RIGHTS)
+    {
+        WRMSG(HHC00136, "E", "SCM_RIGHTS", "missing or invalid");
+        return -1;
+    }
+
+    utun_fd = *(int*)CMSG_DATA(cmsg);
+    *pfd = utun_fd;
+
+    /* Build interface name */
+    MSGBUF(pszNetDevName, "utun%d", utun_unit);
+
+    return 0;
+
+#elif defined (__FreeBSD__)
     // Were we passed a device name?
     if(*pszNetDevName) {
         // Yes, we got a name.
@@ -737,6 +795,75 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
 #endif // defined (__FreeBSD__)
 }   // End of function  TUNTAP_SetDestAddr()
 
+#if defined( HAVE_NET_IF_UTUN_H )
+
+//
+// TUNTAP_SetPt2PtAddr
+//
+
+int             TUNTAP_SetPt2PtAddr( char*  pszNetDevName,
+                                     char*  pszIPAddr,
+                                     char*  pszDestAddr )
+{
+
+    int cfd;
+    struct sockaddr_in addr, dstaddr, mask;
+    struct hifr hifr;
+
+    memset( &addr, 0, sizeof( addr ) );
+    addr.sin_len = sizeof( addr );
+    addr.sin_family = AF_INET;
+    if ( inet_pton( AF_INET, pszIPAddr, &addr.sin_addr ) != 1 ) {
+        // "Point-to-Point net device %s: Invalid guest IPv4 address %s"
+        WRMSG( HHC05108, "E", pszNetDevName, pszIPAddr );
+    }
+
+    memset( &dstaddr, 0, sizeof(dstaddr) );
+    dstaddr.sin_len = sizeof( dstaddr );
+    dstaddr.sin_family = AF_INET;
+    if ( inet_pton( AF_INET, pszDestAddr, &dstaddr.sin_addr ) != 1 ) {
+        // "Point-to-Point net device %s: Invalid destinationt IPv4 address %s"
+        WRMSG( HHC05109, "E", pszNetDevName, pszDestAddr );    }
+
+    memset( &mask, 0, sizeof( mask ));
+    mask.sin_len = sizeof( mask );
+    /* Don't set address family for mask; see Darwin ifconfig(8) source */
+    /* Mask for IPv4 Point-to-Point can always be 255.255.255.255       */
+    mask.sin_family = 0;                 /* Darwin requires AF=0 */
+    mask.sin_addr.s_addr = htonl(0xFFFFFFFF);
+
+    memset( &hifr, 0, sizeof( hifr ));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
+    memcpy( &hifr.hifr_addr, &addr, sizeof( struct sockaddr_in ));
+    memcpy( &hifr.hifr_broadaddr, &dstaddr, sizeof( struct sockaddr_in ));
+    memcpy( &hifr.hifr_netmask, &mask, sizeof( struct sockaddr_in ));
+
+    cfd = socket( PF_INET, SOCK_DGRAM, 0 );
+    if ( cfd < 0 ) {
+        WRMSG( HHC00136, "E", "socket()", strerror( errno ) );        
+        return -1;
+    }
+
+    hifr.hifr_afamily = HIFR_AF_INET4_ALIAS_DARWIN;
+//  return TUNTAP_IOCtl( cfd, SIOCAIFADDR, (char*)&hifr.ifaliasreq );
+    return TUNTAP_IOCtl( cfd, SIOCAIFADDR, (char*)&hifr );
+    
+    /*
+    if ( ioctl( cfd, SIOCAIFADDR, &ifra ) < 0 ) {
+        fprintf( stderr, "HHCXU126E: IPv4 ioctl() failed: %s\n",
+                strerror( errno ));
+        return -1;
+    }
+
+    if ( close( cfd ) != 0 ) {
+        fprintf(stderr, "HHCXU127E: IPv4 close() failed: %s\n",
+                strerror(errno));
+        return -1;
+    }
+    */
+}
+
+#endif // defined( HAVE_NET_IF_UTUN_H )
 
 //
 // TUNTAP_SetNetMask
@@ -974,6 +1101,7 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
     memset( &hifr, 0, sizeof( struct hifr ) );
     STRLCPY( hifr.hifr_name, pszNetDevName );
 
+#if !defined( HAVE_NET_IF_UTUN_H )
 #if defined( OPTION_W32_CTCI )
     rc = TUNTAP_IOCtl( 0, SIOCGIFMTU, (char*)&hifr );
 #else // (non-Win32 platforms)
@@ -989,6 +1117,9 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
         WRMSG( HHC00136, "E", "TUNTAP_GetMTU", strerror( errno ));
         return -1;
     }
+#else
+    UNREFERENCED( rc );
+#endif // !defined( HAVE_NET_IF_UTUN_H )    
 
     MSGBUF( szMTU, "%u", hifr.hifr_mtu );
     if (!(*ppszMTU = strdup( szMTU )))
@@ -1414,6 +1545,11 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 #endif
     case              SIOCSIFADDR:
         request_name="SIOCSIFADDR"; break;
+
+#if defined( HAVE_NET_IF_UTUN_H )
+    case              SIOCAIFADDR:
+        request_name="SIOCAIFADDR"; break;
+#endif // defined( HAVE_NET_IF_UTUN_H )
 
     case              SIOCSIFDSTADDR:
         request_name="SIOCSIFDSTADDR"; break;
@@ -1842,3 +1978,52 @@ void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSe
 }
 
 #endif /*  !defined(__SOLARIS__)  jbs*/
+
+#if defined( HAVE_NET_IF_UTUN_H )
+
+ssize_t UTUN__Read(int fildes, void *buf, size_t nbyte)
+{
+    struct iovec iov[2];
+    uint32_t header;
+    ssize_t rc;
+
+    iov[0].iov_base = &header;
+    iov[0].iov_len  = sizeof(header);
+
+    iov[1].iov_base = buf;
+    iov[1].iov_len  = nbyte;
+
+    for (;;) {
+        rc = readv(fildes, iov, 2);
+
+        if (rc <= 0)
+            return rc;  /* error or EOF */
+
+        if (rc >= (ssize_t)sizeof(header) &&
+            header == htonl(AF_INET))    /* Ignore everything but
+                                            IPv4 datagrams; need to
+                                            fix this for IPv6 */
+        {
+            return rc - sizeof(header);
+        }
+
+        /* If header is not AF_INET, loop and read again */
+    }
+}
+
+ssize_t UTUN__Write(int fildes, void *buf, size_t nbyte)
+{
+    struct iovec iov[2];
+    uint32_t header = htonl(AF_INET); /* Assume it's an IPv4 datagram;
+                                         need to fix this for IPv6 */
+
+    iov[0].iov_base = &header;
+    iov[0].iov_len = sizeof(header);
+
+    iov[1].iov_base = buf;
+    iov[1].iov_len = nbyte;
+
+    return writev(fildes, iov, 2) - iov[0].iov_len;
+}
+
+#endif // defined( HAVE_NET_IF_UTUN_H )

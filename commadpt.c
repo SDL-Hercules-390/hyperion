@@ -1323,9 +1323,7 @@ static void *commadpt_thread(void *vca)
         if(!socket_is_socket(ca->lfd))
         {
             WRMSG(HHC01002, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
-            ca->have_cthread=0;
-            release_lock(&ca->lock);
-            return NULL;
+            goto commadpt_thread_exit;
         }
         /* Turn blocking I/O off */
         /* set socket to NON-blocking mode */
@@ -1985,7 +1983,17 @@ static void *commadpt_thread(void *vca)
             }
         }
     }
+
+    /* If we were listening and a socket was created */
+    if (ca->dolisten && socket_is_socket(ca->lfd))
+        close_socket(ca->lfd);
+
+commadpt_thread_exit:
+    ca->lfd=-1;
     ca->curpending=COMMADPT_PEND_CLOSED;
+    ca->have_cthread=0; /* DETACHED thread no longer exists! */
+    memset(&ca->cthread, 0, sizeof(TID));
+
     /* Check if we already signaled the init process  */
     if(!init_signaled)
     {
@@ -2032,6 +2040,9 @@ static void commadpt_halt_or_clear( DEVBLK* dev )
     if (dev->busy)
     {
         obtain_lock( &dev->commadpt->lock );
+
+        /* Signal halt to worker thread if it is still up */
+        if (dev->commadpt->have_cthread)
         {
             commadpt_wakeup( dev->commadpt, 1 );
 
@@ -2658,6 +2669,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     if(rc)
     {
         WRMSG(HHC00102, "E", strerror(rc));
+        memset(&dev->commadpt->cthread, 0, sizeof(TID));
         release_lock(&dev->commadpt->lock);
         return -1;
     }
@@ -2729,8 +2741,7 @@ static int commadpt_close_device( DEVBLK* dev )
         commadpt_wakeup( dev->commadpt, 0 );
         commadpt_wait( dev );
 
-        dev->commadpt->cthread      = (TID) -1;
-        dev->commadpt->have_cthread = 0;
+        ASSERT( !dev->commadpt->have_cthread );
     }
 
 

@@ -1968,9 +1968,9 @@ int initialize_utility( int argc, char* argv[],
     /* Display version, copyright, and build date */
     init_sysblk_version_str_arrays( namedesc );
     if (defpgm && strcasecmp(defpgm, "hercifc") == 0)
-        display_version( stderr, 0, NULL );
+        display_version( stderr, -1, NULL );
     else
-        display_version( stdout, 0, NULL );
+        display_version( stdout, -1, NULL );
 
     return argc;
 }

@@ -89,6 +89,7 @@ to our **bug report tracking system** by adding/creating a new
 [TCPNJE Support](readme/README.TCPNJE.md)  
 [VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
 [WebSocket Console Transport (WSCNSLPORT)](readme/README.WebSocket.md)  
+[Hardware Management Console Watchdog Timer](readme/README.HMCWDT.md)   
 
 ### HERCULES INTERNAL READMEs
 

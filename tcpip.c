@@ -348,6 +348,31 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         if (check_not_sock (m, t)) return;
 
+        /* A guest server that restarts cannot ask for its listening address
+           to be re-usable itself: this interface has no SETSOCKOPT function
+           code, and adding one would only help guests built against it.
+           Without SO_REUSEADDR the host refuses the bind for as long as any
+           connection that was accepted on that port is still in TIME_WAIT,
+           which is what leaves a listening port unusable for a minute or
+           two after the guest program that owned it ended -- even after an
+           orderly shutdown that closed every socket.  So set it here, at
+           the one point every guest bind() passes through.
+
+           This does not let a guest bind over a port another socket is
+           actively LISTENing on, so a server can still tell that a previous
+           instance of itself is up and running.
+
+           Stream sockets only: on a datagram socket SO_REUSEADDR means
+           "share this port", which is not what anything here wants.  A
+           failure of either call is not fatal -- the bind below is what the
+           guest actually asked for. */
+        isock = sizeof (l);
+        if (getsockopt (Ccom_han [m], SOL_SOCKET, SO_TYPE, (char *)&l, &isock) == 0
+            && l == SOCK_STREAM) {
+            k = 1;
+            setsockopt (Ccom_han [m], SOL_SOCKET, SO_REUSEADDR, (const char *)&k, sizeof (k));
+        }
+
 #if defined(__APPLE__)
         bzero ((LPSOCKADDR)&Clocal_adx, sizeof (Clocal_adx)); /* cleanup address */
 #endif
@@ -511,6 +536,44 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         if (check_not_sock (aux1, t)) return;
 
+#if defined( OPTION_USE_X75_NONE_BLOCKING_SEND )
+        /* X'75' runs on the emulated CPU thread, so this send() must
+           never block: a client that stops reading fills the host send
+           buffer, a blocking send() would then freeze the CPU, and the
+           Hercules watchdog reacts to a stalled CPU by crashing the whole
+           emulator.  Send without blocking and mirror the RECV/ACCEPT
+           contract -- a blocking guest socket is told to retry (-2), a
+           non-blocking one gets -1 with hEWOULDBLOCK. */
+#if defined( MSG_DONTWAIT )
+        l = send (Ccom_han [aux1], t->buffer_in, t->len_in, MSG_DONTWAIT);
+#else
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
+        FD_ZERO (&sockets);
+        FD_SET (Ccom_han [aux1], &sockets);
+        if (select (Ccom_han [aux1] + 1, NULL, &sockets, NULL, &timeout) == 0) {
+            if (Ccom_blk [aux1]) {
+                t->ret_cd = -2;
+            } else {
+                Cerr [aux1] = hEWOULDBLOCK;
+                t->ret_cd = -1;
+            }
+            return;
+        }
+        l = send (Ccom_han [aux1], t->buffer_in, t->len_in, 0);
+#endif
+        if (l == SOCKET_ERROR) {
+
+            Cerr [aux1] = Get_errno ();
+
+            if (Cerr [aux1] == hEWOULDBLOCK && Ccom_blk [aux1]) {
+                t->ret_cd = -2;   /* blocking socket: guest retries (mirrors RECV) */
+            } else {
+                t->ret_cd = -1;
+            }
+            return;
+        }
+#else /* !OPTION_USE_X75_NONE_BLOCKING_SEND: original blocking send() */
         if ((l = send (Ccom_han [aux1], t->buffer_in, t->len_in, 0)) == SOCKET_ERROR) {
 
             Cerr [aux1] = Get_errno ();
@@ -518,6 +581,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
             t->ret_cd = -1;
             return;
         }
+#endif
 
         t->ret_cd = l;
         return;
@@ -573,6 +637,29 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
             Ccom_opn [aux1] = 0;
             Ccom_han [aux1] = -1;
             Ccom_blk [aux1] = 1;
+
+            /* The select state goes with the socket.  It is keyed by socket
+               number -- the guest hands in the highest socket of its set as
+               the handle -- so it belongs to a number rather than to the
+               task that is selecting, and the number is free for immediate
+               re-use the moment this returns.  Left behind, it outlives both
+               the socket and the address space that created it, and is
+               inherited by whichever unrelated task is handed that number
+               next.  A run that never reaches Finish -- its task cancelled,
+               or its socket closed under it -- leaks the state outright. */
+            if (Cselect [aux1] != NULL) {
+
+                free (Cselect [aux1]->ri);
+                free (Cselect [aux1]->wi);
+                free (Cselect [aux1]->ei);
+
+                free (Cselect [aux1]->ro);
+                free (Cselect [aux1]->wo);
+                free (Cselect [aux1]->eo);
+
+                free (Cselect [aux1]);
+                Cselect [aux1] = NULL;
+            }
         }
 
         t->ret_cd = 0;
@@ -667,6 +754,27 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
         m = func >> 16;
 
         if (check_not_sock (m, t)) return;
+
+        /* One guest select() is a run of subcodes, and every subcode but
+           Start works on the state Start created.  Now that CLOSE clears
+           that state, a run whose socket is closed under it finds nothing
+           left -- and so does a run on a socket number that has since been
+           handed to somebody else.  Fail the call rather than dereference
+           NULL.  Finish is left out: it copes with NULL by design, and the
+           guest issues it unconditionally at the end of every run.
+
+           This is not a new answer for the guest.  check_not_sock above
+           already returns -1 for every subcode once the socket is gone, so
+           existing guest code handles -1 from mid-select today; the only
+           change is that it now also arrives when the number was re-used,
+           where the run would otherwise continue on somebody else's state.
+           Only ret_cd is set, no Cerr [m], for the same reason
+           check_not_sock leaves it alone: the slot may not be ours. */
+        if (((aux1 & 0xFF) >= 1) && ((aux1 & 0xFF) <= 7) && (Cselect [m] == NULL)) {
+
+            t->ret_cd = -1;
+            return;
+        }
 
         switch (aux1 & 0xFF) {
         case 0:  /* Start */
@@ -955,6 +1063,35 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
     t->ret_cd = 0;
     return;
+}
+
+/**********************************************************************************/
+/*
+  Where in the host buffer a copy has to resume.
+
+  X'75' is restartable by design: a page translation exception on the guest
+  buffer is nullifying, so the instruction runs again from the top with R0
+  saying the native call was already made and R1 saying how much is left. The
+  guest side of the copy resumes correctly because the base register was
+  advanced before the exception. The host side has no such register -- R2 is a
+  slot index into map32 [] and never moves -- so the resume point is derived
+  here instead, from what is still outstanding in R1 against the length this
+  conversation was given.
+*/
+
+u_int  lar_offset (u_int  * regs) {
+    talk_ptr t;
+    u_int    len;
+    u_int    left;
+
+    t = (talk_ptr)map32[get_reg (regs, 14)];
+
+    len  = (get_reg (regs, 3) == 0) ? t->len_in : t->len_out;
+    left = get_reg (regs, 1);
+
+    if (left >= len) return (0); /* First entry: nothing copied yet */
+
+    return (len - left);
 }
 
 /**********************************************************************************/

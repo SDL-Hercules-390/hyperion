@@ -506,7 +506,7 @@ SCCB_HWL_BK     *hwl_bk  = (SCCB_HWL_BK*)(evd_hdr + 1);
     WRMSG( HHC00661, "I",
         SCCB_HWL_TYPE_INFO == hwl_bk->type ? "INFO" :
         SCCB_HWL_TYPE_LOAD == hwl_bk->type ? "LOAD" : "unknown",
-        (BYTE*)sccb - (BYTE*)sysblk.mainstor );
+        (uint64_t)((BYTE*)sccb - (BYTE*)sysblk.mainstor) );
 
     if( ARCH_DEP(hwl_request)(SCLP_WRITE_EVENT_DATA, evd_hdr) )
     {

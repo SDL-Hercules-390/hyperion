@@ -1100,6 +1100,7 @@ static void *telnet_thread(void *vca)
     int        sockopt;         /* Used for setsocketoption          */
     int rc;                     /* return code from various rtns     */
     struct sockaddr_in sin;     /* bind socket address structure     */
+    char threadname[40];        /* string for WRMSG                  */
     BYTE bfr[256];
 
     ca=(COMMADPT*)vca;
@@ -1107,13 +1108,14 @@ static void *telnet_thread(void *vca)
     ca->sfd = 0;
     devnum=ca->devnum;
 
+    MSGBUF(threadname, "3705 device(%1d:%04X) thread2", ca->dev->ssid, devnum);
+    LOG_THREAD_BEGIN( threadname );
+
     ca->lfd=socket(AF_INET,SOCK_STREAM,0);
     if(!socket_is_socket(ca->lfd))
     {
         WRMSG(HHC01002, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,strerror(HSO_errno));
-        ca->have_cthread=0;
-        release_lock(&ca->lock);
-        return NULL;
+        goto telnet_thread_exit;
     }
 
     /* Reuse the address regardless of any */
@@ -1129,21 +1131,21 @@ static void *telnet_thread(void *vca)
     if (rc < 0)
     {
         WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"bind()",strerror(HSO_errno));
-        return NULL;
+        goto telnet_thread_close;
     }
     /* Start the listen */
     rc = listen(ca->lfd,10);
     if (rc < 0)
     {
         WRMSG(HHC01000, "E",SSID_TO_LCSS(ca->dev->ssid),devnum,"listen()",strerror(HSO_errno));
-        return NULL;
+        goto telnet_thread_close;
     }
     WRMSG(HHC01004, "I", SSID_TO_LCSS(ca->dev->ssid), devnum, ca->lport);
     for (;;)
     {
         ca->sfd = 0;
         ca->sfd=accept(ca->lfd,NULL,0);
-        if (ca->sfd < 1)
+        if (ca->sfd < 0)
             continue;
         if  (connect_client(&ca->sfd))
         {
@@ -1189,10 +1191,17 @@ static void *telnet_thread(void *vca)
             commadpt_read_tty(ca,bfr,rc);
         }
         close_socket(ca->sfd);
-        ca->sfd = 0;
+        ca->sfd = -1;
     }
 
-    UNREACHABLE_CODE( return NULL );
+telnet_thread_close:
+    close_socket(ca->lfd);
+telnet_thread_exit:
+    ca->lfd = -1;
+    memset(&ca->tthread, 0, sizeof(TID));
+
+    LOG_THREAD_END( threadname );
+    return NULL;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1211,36 +1220,43 @@ static void *commadpt_thread(void *vca)
     /* fetch the commadpt structure */
     ca=(COMMADPT *)vca;
 
-    /* Obtain the CA lock */
-    obtain_lock(&ca->lock);
-
     /* get a work copy of devnum (for messages) */
     devnum=ca->devnum;
 
     MSGBUF(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
     LOG_THREAD_BEGIN( threadname );
 
-    while (!sysblk.shutdown) {
-        release_lock(&ca->lock);
-        if(ca->ackspeed == 0) delay = 50000 + (ca->unack_attn_count * 100000);         /* Max's reliable algorithm      */
-        else delay = (ca->unack_attn_count * ca->unack_attn_count + 1) * ca->ackspeed; /* much faster but TCAM hates it */
-        USLEEP(min((int)(ONE_MILLION-1),delay));                                       /* go to sleep, max. 1 second    */
+    while (TRUE) {
+        int unack_attn_count;
         obtain_lock(&ca->lock);
+        if (ca->haltpending) /* Check for exit */
+            break;
+
         make_sna_requests2(ca);
         make_sna_requests3(ca);
+        unack_attn_count = ca->unack_attn_count;
         if (ca->sendq
 // attempt to fix hot i/o bug
-            && ca->unack_attn_count < 10
+            && unack_attn_count < 10
         )
         {
-            ca->unack_attn_count++;
+            ca->unack_attn_count = ++unack_attn_count;
             rc = device_attention(ca->dev, CSW_ATTN);
             if(ca->dev->ccwtrace)
                 WRMSG(HHC01057, "D",
                     SSID_TO_LCSS(ca->dev->ssid), ca->dev->devnum, rc);
         }
+        release_lock(&ca->lock);
+
+        if(ca->ackspeed == 0) delay = 50000 + (unack_attn_count * 100000);     /* Max's reliable algorithm      */
+        else delay = (unack_attn_count * unack_attn_count + 1) * ca->ackspeed; /* much faster but TCAM hates it */
+        USLEEP(min((int)(ONE_MILLION-1),delay));                               /* go to sleep, max. 1 second    */
     }
-    // end while(!sysblk.shutdown)
+    // end while(TRUE)
+    ca->haltpending=0;
+    ca->have_cthread=0;                 /* DETACHED thread no longer exists! */
+    memset(&ca->cthread, 0, sizeof(TID));
+    signal_condition(&ca->ipc_halt);    /* Tell the halt initiator too */
 
     LOG_THREAD_END( threadname );
     release_lock(&ca->lock);
@@ -1450,6 +1466,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     if(rc)
     {
         WRMSG(HHC00102, "E" ,strerror(rc));
+        memset(&dev->commadpt->tthread, 0, sizeof(TID));
         release_lock(&dev->commadpt->lock);
         return -1;
     }
@@ -1465,6 +1482,9 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     if(rc)
     {
         WRMSG(HHC00102, "E", strerror(rc));
+
+        /* #TODO: Shutdown telnet_thread? */
+        memset(&dev->commadpt->cthread, 0, sizeof(TID));
         release_lock(&dev->commadpt->lock);
         return -1;
     }
@@ -1504,17 +1524,40 @@ static int commadpt_close_device( DEVBLK* dev )
         WRMSG( HHC01060, "D", LCSS_DEVNUM );
     }
 
-    obtain_lock( &dev->commadpt->lock );
-    {
-        /* Terminate current I/O thread if necessary */
-        if (dev->busy)
-            commadpt_halt_or_clear( dev );
+    /* Terminate current I/O thread if necessary */
+    if (dev->busy)
+        commadpt_halt_or_clear( dev );
 
-        free_bufpool( dev->commadpt );
+    /* Obtain the CA lock */
+    obtain_lock( &dev->commadpt->lock );
+
+    /* Terminate worker thread if it is still up */
+    if (dev->commadpt->have_cthread)
+    {
+        /*
+         * commadpt_thread presently has a lock-order inversion:
+         * obtain_lock(&ca->lock) is called before device_attention() which
+         * attempts to OBTAIN_DEVLOCK. This is the reverse of the ordering
+         * assumed here (i.e., when the device close handler is invoked).
+         *
+         * Temporarily release the DEVLOCK to allow commadpt_thread to perform
+         * one final iteration and exit.
+         */
+        RELEASE_DEVLOCK( dev );
+        {
+            dev->commadpt->haltpending = 1;
+            wait_condition( &dev->commadpt->ipc_halt, &dev->commadpt->lock );
+        }
+        OBTAIN_DEVLOCK( dev );
+
+        ASSERT( !dev->commadpt->have_cthread );
     }
+
+    /* Release the CA lock */
     release_lock( &dev->commadpt->lock );
 
     /* Free all work storage */
+    free_bufpool( dev->commadpt );
     commadpt_clean_device( dev );
 
     /* Indicate to hercules the device is no longer opened */

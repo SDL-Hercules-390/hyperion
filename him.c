@@ -54,6 +54,11 @@
 /*-------------------------------------------------------------------*/
 #define QLEN     5
 
+/* Invalid get_socket handle and waiting for message */
+#define SOCKET_INVALID   (-1)
+
+/* Invalid get_socket handle and fatally erred */
+#define SOCKET_FATAL     (-2)
 
 /*-------------------------------------------------------------------*/
 /* This header is at the front of every subchannel read and write    */
@@ -234,7 +239,7 @@ static int him_init_handler( DEVBLK *dev, int argc, char *argv[] )
     {
         cb_ptr = (struct io_cb *)dev->dev_data;
         if ( cb_ptr->state == INITIALIZED &&
-             cb_ptr->server && cb_ptr->sock <= 0 )
+             cb_ptr->server && cb_ptr->sock < 0 )
         {
             if ( cb_ptr->protocol == IPPROTO_TCP )
                 remove_TCP_server_listener( cb_ptr );
@@ -736,7 +741,7 @@ static void him_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
         /* don't start the socket thread if there is no socket.
            This happens when starting a server connection. */
         if ( cb_ptr->state != SHUTDOWN && !cb_ptr->watch_sock &&
-             cb_ptr->sock > 0 )
+             cb_ptr->sock >= 0 )
             start_sock_thread( dev );
 
         /* debug_pf(" chained = %02X, prevcode = %02X, ccwseq = %i\n",
@@ -949,7 +954,7 @@ static void config_subchan( DEVBLK *dev, struct io_cb *cb_ptr, BYTE *config_data
 
     if ( !parse_config_data( cb_ptr, (char *) &config_data[4], cd_len) )
     {
-        if ( cb_ptr->sock > 0 )
+        if ( cb_ptr->sock >= 0 )
             (void) close_socket( cb_ptr->sock );
         goto failed;
     }
@@ -1037,11 +1042,11 @@ static void reset_io_cb( struct io_cb *cb_ptr )
     }
 
     bind_addr = cb_ptr->bind_addr;
-    if ( cb_ptr->sock > 0 )
+    if ( cb_ptr->sock >= 0 )
         (void) close_socket( cb_ptr->sock );
 
     memset( (char *) cb_ptr, '\0', sizeof( struct io_cb ) );
-    cb_ptr->sock = 0;
+    cb_ptr->sock = SOCKET_INVALID;
     cb_ptr->bind_addr = bind_addr;
     cb_ptr->state = SHUTDOWN;
 
@@ -1551,8 +1556,14 @@ static void* TCP_sserver_listen_thread( void* arg )
 
     u_short ports[TCP_PORT_COUNT] = {23, 25, 79, 109, 110, 143, 220, 1010,
                     1011, 1309, 2110, 3217, 4242, 2025, 2026, 2110, 9998};
-    int sockets[TCP_PORT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int max_socket = 0;
+    int sockets[TCP_PORT_COUNT] = {
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID
+    };
+    int max_socket = SOCKET_INVALID;
     int i, j;
 
     fd_set socket_set;      /* set of sockets to listen on */
@@ -1563,7 +1574,7 @@ static void* TCP_sserver_listen_thread( void* arg )
     struct io_cb *cb_ptr  = sslta->cb_ptr;
     free( sslta );
 
-    max_socket = 0;
+    max_socket = SOCKET_INVALID;
     FD_ZERO( &socket_set );
     for ( i = 0; i < TCP_PORT_COUNT; i++ )
     {
@@ -1573,7 +1584,7 @@ static void* TCP_sserver_listen_thread( void* arg )
         if  ( s < 0 )
         {
             /* Couldn't get a socket, skip it, a message will have sent */
-            sockets[i] = 0;
+            sockets[i] = SOCKET_INVALID;
         }
         else
         {
@@ -1603,9 +1614,9 @@ static void* TCP_sserver_listen_thread( void* arg )
                 /* We're done, clean up and go home */
                 for ( i = 0; i < TCP_PORT_COUNT; i++ )
                 {
-                    if ( sockets[i] != 0 )
+                    if ( sockets[i] >= 0 )
                         (void) close_socket( sockets[i] );
-                    sockets[i] = 0;
+                    sockets[i] = SOCKET_INVALID;
                 }
                 TCPServerThreadRunning = 0;
                 release_lock( &TCPServerLock );
@@ -1632,7 +1643,7 @@ static void* TCP_sserver_listen_thread( void* arg )
         /* See which ports have pending connections */
         for ( i = 0; i < TCP_PORT_COUNT; i++ )
         {
-            if ( FD_ISSET( sockets[i], &listen_set ) )
+            if ( sockets[i] >= 0 && FD_ISSET( sockets[i], &listen_set ) )
             {
                 /* Pending connection, find a HIM device for it */
                 DEVBLK *dev;
@@ -1660,7 +1671,7 @@ static void* TCP_sserver_listen_thread( void* arg )
                             && cb_ptr->passive
                             && cb_ptr->state == INITIALIZED
                             && cb_ptr->protocol == IPPROTO_TCP
-                            && cb_ptr->sock <= 0
+                            && cb_ptr->sock < 0
                         )
                             break;      // break from device loop; keep locked
 
@@ -1769,8 +1780,14 @@ static void* UDP_sserver_listen_thread( void* arg )
 
     u_short ports[UDP_PORT_COUNT] = {7, 9, 11, 13, 15, 17, 19, 37, 42, 53, 59,
                                     69, 79, 123, 129};
-    int sockets[UDP_PORT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int max_socket = 0;
+    int sockets[UDP_PORT_COUNT] = {
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID,
+        SOCKET_INVALID, SOCKET_INVALID, SOCKET_INVALID
+    };
+
+    int max_socket = SOCKET_INVALID;
     int i;
     int retry_count;
 
@@ -1788,7 +1805,7 @@ static void* UDP_sserver_listen_thread( void* arg )
     cb_ptr  = sslta->cb_ptr;
     free( sslta );
 
-    max_socket = 0;
+    max_socket = SOCKET_INVALID;
     FD_ZERO( &socket_set );
     retry_count = 0;
 
@@ -1802,9 +1819,9 @@ static void* UDP_sserver_listen_thread( void* arg )
             /* We're done, clean up and go home */
             for ( i=0; i<UDP_PORT_COUNT; i++ )
             {
-                if ( sockets[i] != 0 )
+                if ( sockets[i] >= 0 )
                     (void) close_socket( sockets[i] );
-                sockets[i] = 0;
+                sockets[i] = SOCKET_INVALID;
             }
             UDPServerThreadRunning = 0;
             release_lock( &UDPServerLock );
@@ -1815,7 +1832,7 @@ static void* UDP_sserver_listen_thread( void* arg )
         /* get a socket for any missing port */
         for ( i = 0; i < UDP_PORT_COUNT; i++ )
         {
-            if ( sockets[i] == 0 || (sockets[i] < 0 && retry_count <= 0) )
+            if ( sockets[i] == SOCKET_INVALID || (sockets[i] < SOCKET_INVALID && retry_count <= 0) )
             {
                 int s;
                 s = get_socket( dev, IPPROTO_UDP, cb_ptr->bind_addr, htons( ports[i] ),
@@ -1825,10 +1842,10 @@ static void* UDP_sserver_listen_thread( void* arg )
                     /* Couldn't get a socket, skip it, a message will have sent */
                     if ( s == -1 )
                         /* A fatal error, don't try again soon */
-                        sockets[i] = -1;
+                        sockets[i] = SOCKET_FATAL;
                     else
                         /* Already have a socket for this port. */
-                        sockets[i] = 0;
+                        sockets[i] = SOCKET_INVALID;
                 }
                 else
                 {
@@ -1865,7 +1882,7 @@ static void* UDP_sserver_listen_thread( void* arg )
         /* See which ports have pending input */
         for ( i = 0; i < UDP_PORT_COUNT; i++ )
         {
-            if ( sockets[i] > 0 && FD_ISSET( sockets[i], &listen_set ) )
+            if ( sockets[i] >= 0 && FD_ISSET( sockets[i], &listen_set ) )
             {
                 /* incoming data, find a HIM device for it */
                 DEVBLK *dev;
@@ -1890,7 +1907,7 @@ static void* UDP_sserver_listen_thread( void* arg )
                              cb_ptr->server &&
                              cb_ptr->state == INITIALIZED &&
                              cb_ptr->protocol == IPPROTO_UDP &&
-                             cb_ptr->sock <= 0 )
+                             cb_ptr->sock < 0 )
                             break;      // from device loop
                         release_lock( &dev->lock );
                     }
@@ -1905,7 +1922,7 @@ static void* UDP_sserver_listen_thread( void* arg )
                 }
 
                 csock = sockets[i];
-                sockets[i] = 0;
+                sockets[i] = SOCKET_INVALID;
                 /* have a connection socket, do something with it */
                 set_state( cb_ptr, CONNECTED );
                 cb_ptr->sock = csock;
@@ -2011,6 +2028,7 @@ static void debug_pf( const char* __fmt, ... )
       write( 5, write_buf, writebuf_len );
     #else
       TRACE( "%s", write_buf );
+      UNREFERENCED( writebuf_len );
     #endif
 #else
     UNREFERENCED( __fmt );

@@ -1174,7 +1174,7 @@ TID             tid;                    /* Writer thread id          */
             /* Release lock across thread create to prevent interlock  */
             release_lock(&cckdblk.wrlock);
             {
-                rc = create_thread( &tid, JOINABLE, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
+                rc = create_thread( &tid, DETACHED, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
             }
             obtain_lock(&cckdblk.wrlock);
 

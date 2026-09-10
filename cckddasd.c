@@ -1492,7 +1492,7 @@ int             rc;
             /* Release lock across thread create to prevent interlock  */
             release_lock(&cckdblk.ralock);
             {
-                rc = create_thread( &tid, JOINABLE, cckd_ra, NULL, CCKD_RA_THREAD_NAME );
+                rc = create_thread( &tid, DETACHED, cckd_ra, NULL, CCKD_RA_THREAD_NAME );
             }
             obtain_lock(&cckdblk.ralock);
 
@@ -1626,7 +1626,7 @@ int             ras;
                 /* Release lock across thread create to prevent interlock  */
                 release_lock(&cckdblk.ralock);
                 {
-                    rc = create_thread( &tid, JOINABLE, cckd_ra, NULL, CCKD_RA_THREAD_NAME );
+                    rc = create_thread( &tid, DETACHED, cckd_ra, NULL, CCKD_RA_THREAD_NAME );
                 }
                 obtain_lock(&cckdblk.ralock);
 
@@ -1699,7 +1699,7 @@ void cckd_dhstart( bool by_cmdline )
 
             ++cckdblk.dhs;
 
-            rc = create_thread( &tid, JOINABLE, cckd_dh, NULL, CCKD_DH_THREAD_NAME );
+            rc = create_thread( &tid, DETACHED, cckd_dh, NULL, CCKD_DH_THREAD_NAME );
 
             if (rc)
             {
@@ -1942,7 +1942,7 @@ TID             tid;                    /* Writer thread id          */
             /* Release lock across thread create to prevent interlock  */
             release_lock(&cckdblk.wrlock);
             {
-                rc = create_thread( &tid, JOINABLE, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
+                rc = create_thread( &tid, DETACHED, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
             }
             obtain_lock(&cckdblk.wrlock);
 
@@ -2145,7 +2145,7 @@ int             wrs;
                 /* Release lock across thread create to prevent interlock  */
                 release_lock( &cckdblk.wrlock );
                 {
-                    rc = create_thread( &tid, JOINABLE, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
+                    rc = create_thread( &tid, DETACHED, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
                 }
                 obtain_lock( &cckdblk.wrlock );
 
@@ -5389,7 +5389,7 @@ void cckd_gcstart( bool by_cmdline )
 
                 ++cckdblk.gcs;
 
-                rc = create_thread( &tid, JOINABLE, cckd_gcol, NULL, CCKD_GC_THREAD_NAME );
+                rc = create_thread( &tid, DETACHED, cckd_gcol, NULL, CCKD_GC_THREAD_NAME );
 
                 if (rc)
                 {

@@ -18,6 +18,62 @@ int w32ctca_dummy = 0;
   #include <sys/cygwin.h>   // (for cygwin_conv_to_full_win32_path)
 #endif
 
+/*
+ * Other source files primarily use errno (e.g., qeth.c and tuntap.c). For now,
+ * emulate (or wrap) the internal Microsoft C Runtime function that maps Win32
+ * system error codes to POSIX errno values.
+ */
+#if defined( _WIN32 ) && defined( _MSC_VER )
+    #define TT32_DOS_MAP_ERR 1
+    static void tt32_dosmaperr(DWORD win32_error) {
+    #if 0
+        /* #TODO: Link (if available?) */
+        _dosmaperr( win32_error );
+    #else
+        /* Minimally emulates the UCRT _dosmaperr function */ 
+        int posix_error;
+        switch ( win32_error ) {
+            case ERROR_SUCCESS:             posix_error = 0;      break;
+            case ERROR_INVALID_FUNCTION:    posix_error = EINVAL; break;
+            case ERROR_FILE_NOT_FOUND:      posix_error = ENOENT; break;
+            case ERROR_PATH_NOT_FOUND:      posix_error = ENOENT; break;
+            case ERROR_TOO_MANY_OPEN_FILES: posix_error = EMFILE; break;
+            case ERROR_ACCESS_DENIED:       posix_error = EACCES; break;
+            case ERROR_INVALID_HANDLE:      posix_error = EBADF;  break;
+            case ERROR_NOT_ENOUGH_MEMORY:   posix_error = ENOMEM; break;
+            case ERROR_INVALID_DATA:        posix_error = EINVAL; break;
+            case ERROR_OUTOFMEMORY:         posix_error = ENOMEM; break;
+            case ERROR_INVALID_DRIVE:       posix_error = ENOENT; break;
+            case ERROR_NOT_SAME_DEVICE:     posix_error = EXDEV;  break;
+            case ERROR_NO_MORE_FILES:       posix_error = ENOENT; break;
+            case ERROR_WRITE_PROTECT:       posix_error = EACCES; break;
+            case ERROR_BAD_UNIT:            posix_error = ENODEV; break;
+            case ERROR_NOT_READY:           posix_error = EBUSY;  break;
+            case ERROR_SHARING_VIOLATION:   posix_error = EACCES; break;
+            case ERROR_LOCK_VIOLATION:      posix_error = EACCES; break;
+            case ERROR_WRONG_DISK:          posix_error = EACCES; break;
+            case ERROR_ALREADY_EXISTS:      posix_error = EEXIST; break;
+            case ERROR_FILE_EXISTS:         posix_error = EEXIST; break;
+            case ERROR_CANNOT_MAKE:         posix_error = EACCES; break;
+            case ERROR_INVALID_PARAMETER:   posix_error = EINVAL; break;
+            case ERROR_BROKEN_PIPE:         posix_error = EPIPE;  break;
+            case ERROR_DISK_FULL:           posix_error = ENOSPC; break;
+            case ERROR_DIR_NOT_EMPTY:       posix_error = ENOTEMPTY; break;
+            case ERROR_FILENAME_EXCED_RANGE:posix_error = ENAMETOOLONG; break;
+            case ERROR_BUSY:                posix_error = EBUSY;  break;
+            default: {
+                /* Fallback for unhandled Win32 errors */
+                posix_error = EINVAL;
+                break;
+            }
+        }
+        errno = posix_error;
+    #endif
+        }
+#else
+    #define TT32_DOS_MAP_ERR 0
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // We prefer the '_ex' variety as they resolve the "no error" errno issue...
 // But if they're not available we'll settle for the older version...
@@ -74,6 +130,9 @@ TT32_PROCADDRS ( end_write_multi       );
 
 BOOL GetTT32ProcAddrs()
 {
+#if TT32_DOS_MAP_ERR
+    DWORD dwLastError;
+#endif
     // (required entry-points...)
 
     GET_REQUIRED_TT32_PROCADDR ( open                  );
@@ -99,10 +158,16 @@ BOOL GetTT32ProcAddrs()
 
 error:
 
+#if TT32_DOS_MAP_ERR
+    dwLastError = GetLastError();
+#endif
     FreeLibrary( g_tt32_hmoddll );
     g_tt32_hmoddll = NULL;
     WRMSG ( HHC04102, "E" );
     LeaveCriticalSection(&g_tt32_lock);
+#if TT32_DOS_MAP_ERR
+    tt32_dosmaperr(dwLastError); /* Map GetProcAddress errors */
+#endif
     return FALSE;
 }
 
@@ -235,6 +300,9 @@ BOOL tt32_loaddll()
             LeaveCriticalSection(&g_tt32_lock);
             sprintf(str, "LoadLibraryEx(%s)", g_tt32_dllname);
             WRMSG ( HHC00161, "E", str, (int)dwLastError, strerror(dwLastError) );
+#if TT32_DOS_MAP_ERR
+            tt32_dosmaperr(dwLastError); /* Map LoadLibrary errors */
+#endif
             return FALSE;
         }
     }

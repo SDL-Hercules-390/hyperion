@@ -636,6 +636,9 @@
     <ClCompile Include="history.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hmcwdt.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hostinfo.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -1032,6 +1035,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.HERCLOGO.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="readme\README.HMCWDT.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.HQA.md">
@@ -4301,6 +4307,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="history.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hmcwdt.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hmacros.h">

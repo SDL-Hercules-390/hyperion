@@ -115,6 +115,7 @@ hengine_OBJ = \
     $(O)hconsole.obj \
     $(O)hdiagf18.obj \
     $(O)history.obj  \
+    $(O)hmcwdt.obj   \
     $(O)hsccmd.obj   \
     $(O)hscemode.obj \
     $(O)hscpufun.obj \

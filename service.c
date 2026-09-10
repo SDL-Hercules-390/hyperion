@@ -69,6 +69,19 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
     static       int   prmlen; // (length of above "parms" string)
     static       BYTE  subsub[3] = {0};
 
+    // additional filter identifiers
+    static       BYTE  BACKSLASH   = 0;         // filter terminator (REVERSE SOLIDUS) character
+    static       BYTE* c_bracket;               // pointer to first ']' character in message
+    static const char* OSC3008     = "]3008;";
+    static       int   OSC3008_len;
+    static const char* P_status    = "[!p]";
+    static       int   P_status_len;
+    static const char* PQ_status   = "P+q";
+    static       int   PQ_status_len;
+    static const char* ignore_private  = "<";
+    static       int   ignore_private_len;
+    static       bool  o3008ContNext  = false;  // OSC 3008 string continues on next message
+
     BYTE  *p, *p2;   // (work)
     int i, seqlen;   // (work)
 
@@ -99,6 +112,14 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
         ESC       = guest_to_host( 0x4A /* CODEPAGE 500  '['  */ );
         subsub[0] = guest_to_host( 0x3F /* CODEPAGE 500 "SUB" */ );
         subsub[1] = subsub[0];
+
+        // initialize for additional filters
+        BACKSLASH     = guest_to_host( 0xE0 /* CODEPAGE 500  '\'  */ );
+        OSC3008_len   = (int) strlen( OSC3008 );
+        P_status_len  = (int) strlen( P_status );
+        PQ_status_len = (int) strlen( PQ_status );
+        ignore_private_len = (int) strlen( ignore_private );
+        o3008ContNext = false;
     }
 
     /* Convert from guest to host */
@@ -126,9 +147,91 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
 
     for (p = a_msg; msglen;)
     {
+        /**************************************************************/
+        /* Addition console filters based on zLinux Ubuntu 26.04 and  */
+        /* Fedora 44.                                                 */
+        /* filter:                                                    */
+        /*    - UAPI OSC 3008 strings:  ]3008;start=c4ac7d7...\       */
+        /*                              ]3008;end=c4ac7d7...  \       */
+        /*    - unknown:                [!p]...\                      */
+        /*    - unknown:                P+q...\                       */
+        /**************************************************************/
+        /* reference: https://uapi-group.org/specifications/specs/osc_context/
+             Note: zLinux OSC seem to start a message without the encoded
+                start / end escape sequences. The end is indicated with
+                a backslash (REVERSE SOLIDUS) character.
+        */
+
+        // usually find at beginning of message
+        if ( memcmp( p, OSC3008, OSC3008_len )     == 0   ||
+             memcmp( p, P_status, P_status_len )   == 0   ||
+             memcmp( p, PQ_status, PQ_status_len ) == 0   ||
+             o3008ContNext
+           )
+        {
+            BYTE* bslash_end;
+
+            if (o3008ContNext) o3008ContNext = false;
+
+            // Find end of string; BACKSLASH
+            bslash_end = memchr( p, BACKSLASH, msglen );
+
+            // remove
+            if ( bslash_end )
+            {
+                msglen -= (bslash_end + 1) - p;
+                if ( msglen <= 0 )
+                    return;
+                memmove( p, bslash_end +1, msglen + 1 );
+                p = a_msg;
+                continue;
+            }
+
+        }
+
+        // There are a few odd cases where UAPI OSC 3008 strings
+        // are not at the beginning of the messages or may be split
+        // across messages.
+
+        c_bracket = strchr( (char*)p, OSC3008[0] );
+        if ( c_bracket && memcmp( c_bracket, OSC3008, OSC3008_len ) == 0 )
+        {
+            // Find end of string; BACKSLASH
+            BYTE* bslash_end = memchr( c_bracket, BACKSLASH, msglen - (c_bracket - p) );
+
+            // remove
+            if ( bslash_end )
+            {
+                int o3008_len = (int)(bslash_end - c_bracket) + 1;
+                // logmsg(">>>>msg    msglen=%d, msg=%s \n", msglen, p);
+                // logmsg(">>>>before o3008_len=%d, found=%s \n", o3008_len, c_bracket);
+
+                memmove( c_bracket, bslash_end +1, msglen + 1 - (bslash_end - p) );
+                msglen -= o3008_len;
+
+                // logmsg(">>>>after msglen=%d, msg=%s \n", msglen, p);
+                if ( msglen <= 0 )
+                    return;
+                p = a_msg;
+                continue;
+            }
+            else
+            {
+                // no \ terminator to OSC 3008 string on current message
+                *c_bracket = '\0';      // remove the OSC 3008 string
+                o3008ContNext = true;   // OSC 3008 continues on next message
+            }
+        }
+
+        // end additional filters
+
         /* Find the start of the next control sequence */
-        if (!(p = memchr( p, ESC, msglen )))
+        if (!(p2 = memchr( p, ESC, msglen )))
             break; // (No control sequences remain! We're done!)
+
+        /* Adjust msglen for skipped bytes */
+        msglen -= (int)(p2 - p);
+        p = p2;
 
         /* If the next character is NOT a "parameter byte", then it's
            obviously not a CSI. It might be some other Linux escape
@@ -167,7 +270,7 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
             */
             if (*(p+1) == 'K')
             {
-                msglen -= (p + 2) - a_msg;
+                msglen -= 2;
                 memmove( a_msg, p + 2, msglen + 1 );
                 p = a_msg;
                 continue;
@@ -179,6 +282,15 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
             */
             ++p; --msglen;  // (skip past this non-ESC)
             continue;       // (look for the next ESC)
+        }
+
+        /* additional filter */
+        /* Is this an ignore_private parameter? */
+        if (memchr( ignore_private, *(p+1), ignore_private_len ))
+        {
+            p += 2;         //skip past the ESC and the private parameter
+            msglen -= 2;
+            continue;
         }
 
         /* Remove the ESCape right away */

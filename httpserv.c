@@ -270,7 +270,7 @@ static time_t get_http_time(const char *date_str)
     char wkday[4], month_str[4], tz[4];
     int day, year, hour, min, sec;
     struct tm http_tm;
-    char *m;
+    const char *m;
     
     if (sscanf(date_str, "%3s, %d %3s %d %d:%d:%d %3s",
                wkday, &day, month_str, &year,

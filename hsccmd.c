@@ -67,6 +67,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "qeth.h"
 #include "cckddasd.h"
 #include "inline.h"
+#include "hmcwdt.h"
 
 //-------------------------------------------------------------------
 //                      ARCH_DEP() code
@@ -1093,9 +1094,9 @@ int rc = 0;
     }
     else
     {
-        display_version      ( stdout, 0, NULL );
-        display_build_options( stdout, 0 );
-        display_extpkg_vers  ( stdout, 0 );
+        display_version      ( stdout, -1, NULL );
+        display_build_options( stdout, -1 );
+        display_extpkg_vers  ( stdout, -1 );
     }
 
     return rc;
@@ -10073,7 +10074,10 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
             struct rusage  rusage;
             char*          pmsg     = "";
 
-            if (getrusage( (int) sysblk.cputid[i], &rusage ) == 0)
+            // The code below can never work as a "man getrusage" will show.
+            // On Windows "getrusage" does not even exist.
+            // This needs reworking if these statistics are desired.
+            if ( /* getrusage( (int) sysblk.cputid[i], &rusage ) == */ 0)
             {
                 char    kdays[18], udays[18];
 
@@ -10305,6 +10309,524 @@ int cmdlvl_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
+
+/*-------------------------------------------------------------------*/
+/* hmcwdt -- watchdog timer (diagnose 288) commands:                 */
+/*           hmcwdt cmdsep x | off                                   */
+/*           hmcwdt cmds "..."                                       */
+/*           hmcwdt off | disable                                    */
+/*           hmcwdt on  | enable                                     */
+/*           hmcwdt [status]                                         */
+/*           hmcwdt debug [ on | off]          (for testing only)    */
+/*           hmcwdt $expire                    (for testing only)    */
+/*           hmcwdt $start                     (for testing only)    */
+/*           hmcwdt $stop                      (for testing only)    */
+/*-------------------------------------------------------------------*/
+int hmcwdt_cmd( int argc, char* argv[], char* cmdline )
+{
+    char *cmds          = NULL;
+    char *cmdsep        = NULL;
+
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
+
+    // logmsg( "hmcwdt_cmd: argc=%d\n", argc );
+    // for (int i=0; i < argc; i++)
+    //     logmsg( "hmcwdt_cmd: argv[%d]=%s\n", i, argv[i] );
+
+    // Too many arguments?
+    if (argc > 3)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    // any arguments?
+    if (argc == 1)
+    {
+        return hmcwdt_show_status();
+    }
+
+    /* ------------------------------------- */
+    /* parse command based on the 1st option */
+    /* ------------------------------------- */
+    /* ENABLE                                */
+    /* ------------------------------------- */
+    if  ( 0
+          || strcasecmp( argv[1], "ON"   ) == 0
+          || strcasecmp( argv[1], "ENABLE" ) == 0
+        )
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        if ( hmcwdt_set_enabled( ) )
+        {
+            // "Watchdog timer: no commands have been defined; can not be enabled"
+            WRMSG( HHC01959, "I", "no commands have been defined; can not be enabled" );
+            return -1;
+        }
+        else
+        {
+            WRMSG( HHC02204 , "I", "HWCWDT", "enabled" );
+            return 0;
+        }
+    }
+
+    /* ------------------------------------- */
+    /* DISABLE                               */
+    /* ------------------------------------- */
+    else if (   0
+                || strcasecmp( argv[1], "OFF"   ) == 0
+                || strcasecmp( argv[1], "DISABLE" ) == 0
+            )
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        if ( hmcwdt_set_disabled( ) )
+        {
+            // "Watchdog timer: enabled-active, can not be disabled"
+            WRMSG( HHC01959, "E", "timer is enabled-active, can not be disabled" );
+            return -1;
+        }
+        else
+        {
+            WRMSG( HHC02204 , "I", "HMCWDT", "disabled" );
+            return 0;
+        }
+    }
+
+    /* ------------------------------------- */
+    /* STATUS                                */
+    /* ------------------------------------- */
+    else if ( strcasecmp( argv[1], "STATUS" ) == 0 )
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        return hmcwdt_show_status();
+    }
+
+    /* ------------------------------------- */
+    /* CMDSEP                                */
+    /*                                       */
+    /* note: check for 'cmdsep' before 'cmds'*/
+    /* ------------------------------------- */
+    else if ( strcasecmp( argv[1], "CMDSEP" ) == 0)
+    {
+        if (   argc == 2  ||                                         // no character
+             ( argc == 3 && strcasecmp( argv[2], "OFF" ) == 0 )      // explicit: no character
+           )
+        {
+            cmdsep = "\0";
+        }
+
+        else if (argc == 3 && strlen(  argv[2] ) > 1)
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+        else
+        {
+            cmdsep = argv[2];
+        }
+
+        hmcwdt_set_cmdsep( cmdsep[0] );
+        WRMSG( HHC02204 , "I", "HMCWDT CMDSEP", cmdsep );
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* CMDS                                  */
+    /* ------------------------------------- */
+    else if (strcasecmp( argv[1], "CMDS" ) == 0)
+    {
+        if (argc == 3)
+        {
+            /* programmer's note: the parser strips of the trailing double quote! */
+            /* in the cmds "..." command    */
+            cmds = argv[2];
+            if (cmds[0] == '\"') cmds++;      /* ignore first quote if there is one */
+        }
+        else
+        {
+            cmds = NULL;  /* set cmds to null if not specified */
+        }
+
+        switch ( hmcwdt_set_cmds( cmds ) )
+        {
+        case  0:            // ok
+            WRMSG( HHC02204 , "I", "HMCWDT CMDS", cmds );
+            return 0;
+
+        case -1:            // ""HMC Watchdog Timer: Error in function %s: %s"
+            WRMSG( HHC01956, "E", "HMCWDT CMDS", "timer is enabled; commands cannot be empty" );
+            return -1;
+
+        case -2:            // "HMC Watchdog Timer: Error in function %s: %s"
+            WRMSG( HHC01956, "E", "HMCWDT CMDS", "timer is enabled; commands cannot be empty" );
+            return -1;
+
+        case -3:            // "HMC Watchdog Timer: Error in function %s: %s"
+            WRMSG( HHC01956, "E", "HMCWDT CMDS", "length of commands is greater than 240 characters" );
+            return -1;
+
+        default:            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+    }
+
+    /* ------------------------------------- */
+    /* DEBUG                                 */
+    /* ------------------------------------- */
+    else if ( strcasecmp( argv[1], "DEBUG" ) == 0)
+    {
+        if ( argc == 3 && strcasecmp( argv[2], "OFF" ) == 0 )       // debug off
+
+        {
+           sysblk.hmcwdt_debug = 0;
+        }
+
+        else if ( argc == 3 && strcasecmp( argv[2], "ON" ) == 0 )   // debug on
+
+        {
+           sysblk.hmcwdt_debug = 1;
+        }
+
+        else if (argc == 3 && strlen(  argv[2] ) > 1)
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        WRMSG( HHC02204 , "I", "HMCWDT DEBUG", sysblk.hmcwdt_debug ? "ON" : "OFF" );
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* $EXPIRE                               */
+    /* ------------------------------------- */
+    else if ( strcasecmp( argv[1], "$EXPIRE" ) == 0)
+    {
+        int rc = 0;
+        int tmo = HMCWDT_DEFAULT_TIMEOUT;
+
+        /* option: timeout */
+        if ( argc == 3 )
+        {
+            tmo = atoi( argv[2] );
+            if ( tmo < HMCWDT_MIN_INTERVAL )
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "" );
+                return -1;
+            }
+        }
+
+        /* Check: is disabled? */
+        /* Check: is enabled-inactive (not yet running)? */
+        if  ( HMCWDT_IS_DISABLED ||
+              HMCWDT_IS_ENABLED_INACTIVE
+            )
+        {
+            WRMSG( HHC01957, "W", "expire", HMCWDT_STATE_STR );
+            return -1;
+        }
+
+        rc = hmcwdt_test_expire( tmo );
+        if ( rc != 0 )
+        {
+            WRMSG( HHC01955, "E", "HMCWDT_test_expire failed, rc", rc );
+            return -1;
+        }
+
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* $START                                */
+    /* ------------------------------------- */
+    else if ( strcasecmp( argv[1], "$START" ) == 0)
+    {
+        int tmo = HMCWDT_DEFAULT_TIMEOUT;
+
+        /* option: timeout */
+        if ( argc == 3 )
+        {
+            tmo = atoi( argv[2] );
+            if ( tmo < HMCWDT_MIN_INTERVAL )
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "" );
+                return -1;
+            }
+        }
+
+        /* Check: is disabled? */
+        /* Check: is enabled-active (already running)? */
+        if  ( HMCWDT_IS_DISABLED ||
+              HMCWDT_IS_ENABLED_ACTIVE
+            )
+        {
+            WRMSG( HHC01957, "W", "start", HMCWDT_STATE_STR );
+            return -1;
+        }
+
+        /* initialize timer */
+        if ( hmcwdt_diag288_open( tmo ) != 0)
+            {
+
+            // "Watchdog timer: enabled-active, can not be disabled"
+            WRMSG( HHC01959, "E", "HMCWDT: failed to initialize" );
+            return -1;
+        }
+
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* $STOP                                 */
+    /* ------`------------------------------- */
+    else if ( strcasecmp( argv[1], "$STOP" ) == 0)
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        /* Check: is disabled? */
+        /* Check: is enabled-inactive (not yet running)? */
+        if  ( HMCWDT_IS_DISABLED ||
+              HMCWDT_IS_ENABLED_INACTIVE
+            )
+        {
+            WRMSG( HHC01957, "W", "stop", HMCWDT_STATE_STR );
+            return -1;
+        }
+
+        /* stop timer */
+        if ( hmcwdt_diag288_close( HMCWDT_DEFAULT_TIMEOUT ) != 0)
+        {
+            WRMSG( HHC01959, "E", "watchdog timer failed to stop" );
+            return -1;
+        }
+
+        return 0;
+    }
+
+    else
+    {
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], "" );
+        return -1;
+    }
+}
+
+/*----------------------------------------------------------------------*/
+/* mips -- Mips / SIOs rates: current, avarage, peak                     */
+/*----------------------------------------------------------------------*/
+/* Format: mips [ [reset] | [average [nn]  ]                            */
+/*                                                                      */
+/* <null>    will display the current MIPS / SIOs rates, current        */
+/*           average MIPS / SIOs rate over the last nn seconds, the     */
+/*           peak MIPS / SIOs rate and the peak average rates.          */
+/*                                                                      */
+/* reset     will reset the peak and peak average MIPS and SIOs rates.  */
+/*                                                                      */
+/* average   will display the "average over" time period in seconds.    */
+/*                                                                      */
+/* average nn will change the "average over" time period to nn seconds. */
+/*            The default is "IC_HISTORY_AVG_OVER" (15) seconds.        */
+/*            The maximum is "IC_HISTORY_SIZE" (900) seconds.           */
+/*            The peak averge MIPS / SIOs rates will be reset.          */
+/*                                                                      */
+/*----------------------------------------------------------------------*/
+int mips_cmd(int argc, char *argv[],char *cmdline)
+{
+    char buf[512];
+
+    UPPER_ARGV_0( argv );
+
+    UNREFERENCED(cmdline);
+
+    // Too many arguments?
+    if (argc > 3)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    // any arguments?
+    if (argc == 1)
+    {
+        /* display observations */
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            if ( sysblk.ic_history_avg_time != 0 )
+            {
+                // averages have been calculated
+                MSGBUF( buf, "Observed MIPS and SIOs rates:"
+                            "\n    Current MIPS rate:     %8.2f\t\t     SIOs rate:    %8.2f"
+                            "\n    Peak    MIPS rate:     %8.2f\t\tPeak SIOs rate:    %8.2f\n"
+                            "\n    Current MIPS Average:  %8.2f\t\t     SIOs average: %8.2f\t(over last %2lu seconds)"
+                            "\n    Peak    MIPS Average:  %8.2f\t\tPeak SIOs average: %8.2f",
+                            sysblk.ic_history_current_mips,
+                            sysblk.ic_history_current_sios,
+                            sysblk.ic_history_peak_mips,
+                            sysblk.ic_history_peak_sios,
+
+                            sysblk.ic_history_current_avg_mips,
+                            sysblk.ic_history_current_avg_sios,
+                            sysblk.ic_history_avg_time / 1000000,
+                            sysblk.ic_history_peak_avg_mips,
+                            sysblk.ic_history_peak_avg_sios
+                    );
+            }
+            else
+            {
+                // no averages have been calculated
+                MSGBUF( buf, "Observed MIPS and SIOs rates:"
+                            "\n    Current MIPS rate:     %8.2f\t\t     SIOs rate:    %8.2f"
+                            "\n    Peak    MIPS rate:     %8.2f\t\tPeak SIOs rate:    %8.2f\n",
+                            sysblk.ic_history_current_mips,
+                            sysblk.ic_history_current_sios,
+                            sysblk.ic_history_peak_mips,
+                            sysblk.ic_history_peak_sios
+                    );
+            }
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* parse command based on the 1st option */
+    /* ------------------------------------- */
+    /* RESET                                 */
+    /* ------------------------------------- */
+    if  ( CMD( argv[1], reset, 3 ))
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            sysblk.ic_history_peak_mips = 0.0;
+            sysblk.ic_history_peak_sios = 0.0;
+            sysblk.ic_history_peak_avg_mips = 0.0;
+            sysblk.ic_history_peak_avg_sios = 0.0;
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", "Peak and Peak Average rates have been reset.");
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* AVERAGE                               */
+    /* ------------------------------------- */
+    if ( CMD( argv[1], average, 3 ))
+    {
+        int avg_over = 0;
+
+        /* option: nn */
+        if ( argc == 3 )
+        {
+            avg_over = atoi( argv[2] );
+            if ( avg_over <= 1 || avg_over > IC_HISTORY_SIZE )
+            {
+                MSGBUF( buf, ". Average '%d' is not between 2 and %d seconds.", avg_over, IC_HISTORY_SIZE );
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], buf );
+                return -1;
+            }
+            OBTAIN_IC_HISTORY_LOCK( );
+            {
+                // set average over period
+                sysblk.ic_history_avg_over = avg_over +1;  //+1 for current second
+                sysblk.ic_history_peak_avg_mips = 0.0;
+                sysblk.ic_history_peak_avg_sios = 0.0;
+            }
+            RELEASE_IC_HISTORY_LOCK( );
+
+            MSGBUF( buf, "Average over %d seconds. Peak Average rates have been reset.", avg_over );
+            WRMSG(HHC02295, "I", buf);
+            return 0;
+        }
+
+        MSGBUF( buf, "Average over %d seconds.",  sysblk.ic_history_avg_over-1 );
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* $debug                                */
+    /* ------------------------------------- */
+    if  ( CMD( argv[1], $debug, 4 ))
+    {
+        /* no option */
+        if ( argc != 2 )
+        {
+            WRMSG( HHC02205, "E", argv[2], "" );
+            return -1;
+        }
+
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            MSGBUF( buf, "debug: MIPS fields:"
+                        "\n    ic_history_empty:        %d"
+                        "\n    ic_history_avg_over:     %d"
+                        "\n    IC_history_next:         %d"
+                        "\n    ic_history_avg_time:     %ld"
+                        "\n    instcount:               %ld"
+                        "\n    sioscount:               %ld",
+                        sysblk.ic_history_empty,
+                        sysblk.ic_history_avg_over,
+                        sysblk.ic_history_next,
+                        sysblk.ic_history_avg_time,
+
+                        sysblk.instcount,
+                        sysblk.sioscount
+                );
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    // "Invalid argument %s%s"
+    WRMSG( HHC02205, "E", argv[1], "" );
+    return -1;
+}
+
 
 /* HSCCMD.C End-of-text */
 

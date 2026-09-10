@@ -687,7 +687,7 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
             FWRMSG( stderr, HHC02958, "E", "lseek()", strerror( errno ));
             return -1;
         }
-        ASSERT( tmppos == oL1tab[i] );
+        ASSERT( tmppos == (off_t) oL1tab[i] );
         if ((rc = write( ofd, &oL2tab[i*256], size )) < (int) size )
         {
             // "Error in function %s: %s"

@@ -685,6 +685,47 @@
                                 \
   "This command is no longer supported and will be removed in the future.\n"
 
+#define hmcwdt_cmd_desc            "Set/Display HMC Watchdog Timer parameters"
+#define hmcwdt_cmd_help       \
+                           \
+  "Format: hmcwdt [cmds \"...\"] | [cmdsep x] | [disable | off] | [enable | on] | [status]\n"    \
+  "\n" \
+  "  cmds \"...\":     Specify the Hercules configuration commands to be executed     \n"     \
+  "                  if the watchdog timer expires.\n"                                        \
+  "\n" \
+  "                  If spaces are included in the commands, double quotes are required.\n"   \
+  "                  The maximum size of the command line is 240 characters.\n"               \
+  "\n" \
+  "                  Multiple commands can be specified if a command line separator is\n"     \
+  "                  defined using the 'hmcwdt cmdsep' command.\n"                               \
+  "\n" \
+  "                  The default is null; no commands are defined. Therefore, two hmcwdt\n"      \
+  "                  configuration statements are required to enable the watchdog timer:\n"   \
+  "\n" \
+  "                  hmcwdt cmd \"...\" \n"                                                      \
+  "                  hmcwdt enable\n"                                                            \
+ "\n" \
+  "                  One additional command, 'pause xx', can be included for delay between\n" \
+  "                  commands. The pause value is seconds to delay. \n"                       \
+  "\n" \
+  "  cmdsep x:       Specify the separator between commands defined by 'hmcwdt cmds'.\n"         \
+  "  cmdsep off:     Reset the separator to none.\n"                                          \
+  "\n" \
+  "  disable | off:  The watchdog timer will be disabled if the current timer state is\n"     \
+  "                  'enabled - inactive'.\n"                                                 \
+  "\n" \
+  "  enable | on:    The watchdog timer will be enabled if the current timer state is\n"      \
+  "                  'disabled' AND watchdog commands have been defined.\n"                   \
+  "\n" \
+  "  status:         Display the current Watchdog Timer status. This is the default action.\n"\
+  "\n" \
+  "  $expire:        If the watchdog timer state is 'enabled-active', temporarily set \n"     \
+  "                  the timer to expired! Use to test 'cmds \"...\"' commands. \n"           \
+  "                  BE careful, use comments to start!\n"                                    \
+  "\n" \
+  "See README.HMCWDT.md for more information on the Hardware Management Console \n"           \
+  "Watchdog Timer.\n"
+
 #define hst_cmd_desc            "History of commands"
 #define hst_cmd_help            \
                                 \
@@ -910,6 +951,33 @@
   "A 'VM' message similar to: \"13:02:41 * MSG FROM HERCULES: hello\" is\n"     \
   "displayed on the console panel as a result of the panel command\n"           \
   "'message * hello'.  (See also the \"msgnoh\" command)\n"
+
+#define mips_cmd_desc           "Display current, average, peak MIPS / SIOs"
+#define mips_cmd_help           \
+                                \
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "     mips [ [reset] | [average [nn]  ]\n"                                    \
+  "\n"                                                                          \
+  "where:\n"                                                                    \
+  "\n"                                                                          \
+  "<null>     will display the current MIPS / SIOs rates, current average\n"    \
+  "           MIPS / SIOs rate over the last nn seconds, the peak MIPS / SIOs\n"\
+  "           rate and the peak average rates.\n"                               \
+  "\n"                                                                          \
+  "reset      will reset the peak and peak average MIPS and SIOs rates.\n"      \
+  "\n"                                                                          \
+  "average    will display the \"average over\" time period in seconds.\n"      \
+  "\n"                                                                          \
+  "average nn will change the \"average over\" time period to nn seconds.\n"    \
+  "           The default is 15 seconds. The maximum is 900 seconds.\n"         \
+  "           The peak averge MIPS / SIOs rates will be reset.\n"               \
+  "\n"                                                                          \
+  "Note: MIPS rate is calculated on total instruction count observed over\n"    \
+  "      an 1 second 'host' interval. A 900 second history is maintained\n"     \
+  "      to calculate average MIPS rates. This MIPS rate is different from\n"   \
+  "      the MIPS reported by \"maxrates\" command which uses the emulated\n"   \
+  "      ETOD clock to calculate the MIPS rate.\n"
 
 #define model_cmd_desc          "Set/Query STSI model code"
 #define model_cmd_help          \
@@ -2140,6 +2208,7 @@ COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       
 COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      cpuverid_cmd_help   )
 COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
+COMMAND( "hmcwdt",                  hmcwdt_cmd,             SYSCFGNDIAG8,       hmcwdt_cmd_desc,        hmcwdt_cmd_help     )
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )
 COMMAND( "lparnum",                 lparnum_cmd,            SYSCFGNDIAG8,       lparnum_cmd_desc,       lparnum_cmd_help    )
 COMMAND( "mainsize",                mainsize_cmd,           SYSCFGNDIAG8,       mainsize_cmd_desc,      mainsize_cmd_help   )
@@ -2269,6 +2338,7 @@ COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        
 #endif
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      pgmprdos_cmd_help   )
 COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             maxrates_cmd_desc,      maxrates_cmd_help   )
+COMMAND( "mips",                    mips_cmd,               SYSCMD,             mips_cmd_desc,          mips_cmd_help       )
 #if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )

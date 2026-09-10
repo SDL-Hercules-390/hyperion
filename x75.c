@@ -99,7 +99,12 @@ DEF_INST( tcpip )
         regs->GR_L(0) = 1;    /* Do not call native routine again */
     }
 
-    if (regs->GR_L(1) != 0) s = (unsigned char *)(map32[regs->GR_L(2)]);
+    /* R2 is a slot index and never moves, so the host side of the copy has  */
+    /* no register of its own to resume from after a nullifying exception.   */
+    /* lar_offset () derives that resume point from R1.                      */
+
+    if (regs->GR_L(1) != 0)
+        s = (unsigned char *)(map32[regs->GR_L(2)]) + lar_offset (&(regs->gr [0]));
 
     while (regs->GR_L(1) != 0) { /* Finished > */
 

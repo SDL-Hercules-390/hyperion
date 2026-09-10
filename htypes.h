@@ -198,6 +198,8 @@ typedef struct DEVHND    DEVHND;    // xxxxxxxxx
 
 typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 
+typedef struct IC_SIO_HISTORY IC_SIO_HISTORY;  // inst and sio history
+
 /*-------------------------------------------------------------------*/
 /*      Secondary Device and I/O Control Related Structures          */
 /*-------------------------------------------------------------------*/

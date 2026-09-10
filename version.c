@@ -808,7 +808,7 @@ DLL_EXPORT int  get_buildinfo_strings(const char*** pppszBldInfoStr)
 static void display_str( FILE* f, int httpfd, const char* str )
 {
     if (f != stdout)
-        if (httpfd)
+        if (httpfd >= 0)
             hprintf( httpfd, "%s\n", str );
         else
             fprintf( f, "%s\n", str );

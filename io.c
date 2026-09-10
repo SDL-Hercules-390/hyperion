@@ -422,6 +422,7 @@ DEVBLK* dev;                            /* -> device block           */
         PTIO( ERR, "*RSCH" );
 
     regs->siocount++;
+    UPDATE_SYSBLK_SIOSCOUNT( 1 );
 }
 
 
@@ -621,6 +622,7 @@ ORB     orb;                            /* Operation request block   */
     regs->psw.cc = ARCH_DEP( startio )( regs, dev, &orb );
 
     regs->siocount++;
+    UPDATE_SYSBLK_SIOSCOUNT( 1 );
 
     /* Set the last path used mask */
     if (regs->psw.cc == 0)
@@ -1148,6 +1150,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=suspend   */
         PTIO(ERR,"*SIO");
 
     regs->siocount++;
+    UPDATE_SYSBLK_SIOSCOUNT( 1 );
 }
 
 

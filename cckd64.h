@@ -153,11 +153,13 @@ struct CCKD64_EXT {                     /* Ext for compressed ckd    */
                          updated:1,     /* 1=Update occurred         */
                          merging:1,     /* 1=File merge in progress  */
                          stopping:1,    /* 1=Device is closing       */
-                         notnull:1,     /* 1=Device has track images */
                          L2ok:1,        /* 1=All l2s below bounds    */
                          sfmerge:1,     /* 1=sf-xxxx merge           */
-                         sfforce:1,     /* 1=sf-xxxx force           */
-                         needsdh:1;     /* 1=written since last harden */
+                         sfforce:1;     /* 1=sf-xxxx force           */
+                                        /* Readahead Serialized      */
+        BYTE             notnull;       /* 1=Device has track images */
+                                        /* Writer Thread Serialized  */
+        BYTE             needsdh;       /* 1=written since last harden */
 
         int              sflevel;       /* sfk xxxx level            */
 

@@ -3426,6 +3426,7 @@ int prev_rlen3270;
        and create starting listening socket */
     curr_cnslport = strdup( sysblk.cnslport );
     lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
+    if (lsock < 0) lsock = 0;
 
     if (sysblk.sysgport)
     {
@@ -3433,6 +3434,7 @@ int prev_rlen3270;
            and create starting listening socket */
         curr_sysgport = strdup( sysblk.sysgport );
         lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+        if (lsock2 < 0) lsock2 = 0;
     }
 
     if (sysblk.wscnslport)
@@ -3454,10 +3456,11 @@ int prev_rlen3270;
             /* Close the current listening socket, save
                the new CNSLPORT value and obtain a fresh
                listening socket. */
-            close_socket( lsock );
+            if (lsock) close_socket( lsock );
             free( curr_cnslport );
             curr_cnslport = strdup( sysblk.cnslport );
             lsock = get_listening_socket( "CNSLPORT", "", sysblk.cnslport );
+            if (lsock < 0) lsock = 0;
         }
 
         /* Did they set a new SYSGPORT value? */
@@ -3473,6 +3476,7 @@ int prev_rlen3270;
             free( curr_sysgport );
             curr_sysgport  = strdup( sysblk.sysgport );
             lsock2 = get_listening_socket( "SYSGPORT", "SYSG ", sysblk.sysgport );
+            if (lsock2 < 0) lsock2 = 0;
         }
 
         /* Did they enable, change or disable WSCNSLPORT? */
@@ -3505,9 +3509,13 @@ int prev_rlen3270;
         {
             /* Initialize the pselect parameters */
             FD_ZERO( &readset );
+            maxfd = -1;
 
-            FD_SET( lsock, &readset );  // (normal local 3270 devices)
-            maxfd = lsock;              // (normal local 3270 devices)
+            if (lsock)
+            {
+                FD_SET( lsock, &readset );  // (normal local 3270 devices)
+                maxfd = lsock;              // (normal local 3270 devices)
+            }
 
             /* If SYSGPORT defined and SYSG not connected yet... */
             if (lsock2 && sysblk.sysgdev && !sysblk.sysgdev->connected)
@@ -3686,7 +3694,7 @@ int prev_rlen3270;
         if (0
             || (lsock_ws && FD_ISSET( lsock_ws, &readset ))
             || (lsock2   && FD_ISSET( lsock2,   &readset ))
-            || FD_ISSET( lsock,  &readset )
+            || (lsock    && FD_ISSET( lsock,    &readset ))
         )
         {
             /* Accept a connection and create conversation socket */
@@ -4030,7 +4038,7 @@ int prev_rlen3270;
     } /* end close all connected consoles */
 
     /* Close the listening sockets */
-    close_socket( lsock  );
+    if (lsock)    close_socket( lsock  );
     if (lsock2)   close_socket( lsock2   );
     if (lsock_ws) close_socket( lsock_ws );
 

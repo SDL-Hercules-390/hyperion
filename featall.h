@@ -50,6 +50,9 @@
                                         // ALWAYS at start SIE mode
 #define OPTION_NOASYNC_SF_CMDS          // Bypass bug in cache logic
                                         // (see GitHub Issue #618!)
+#define OPTION_USE_X75_NONE_BLOCKING_SEND   // Never block the CPU
+                                        // thread in X'75' SEND
+                                        // (see GitHub Issue #863!)
 
 /*-------------------------------------------------------------------*/
 /*              Normal default OPTIONs and FEATUREs                  */

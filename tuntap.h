@@ -99,6 +99,13 @@ extern int      TUNTAP_SetIPAddr        ( char*   pszNetDevName,
                                           char*   pszIPAddr );
 extern int      TUNTAP_SetDestAddr      ( char*   pszNetDevName,
                                           char*   pszDestAddr );
+
+#if defined( HAVE_NET_IF_UTUN_H )                                          
+extern int      TUNTAP_SetPt2PtAddr     ( char*   pszNetDevName,
+                                          char*   pszIPAddr,
+                                          char*   pszDestAddr );
+#endif // defined( HAVE_NET_IF_UTUN_H )
+
 #ifdef OPTION_TUNTAP_SETNETMASK
 extern int      TUNTAP_SetNetMask       ( char*   pszNetDevName,
                                           char*   pszNetMask );
@@ -171,6 +178,16 @@ extern int  FormatMAC( char** ppszMACAddr, BYTE* mac );
 extern void packet_trace( BYTE *addr, int len, BYTE dir );
 extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev, char* what, U32 opt );
 
+#if defined( HAVE_NET_IF_UTUN_H )
+
+extern ssize_t UTUN__Read(int fildes, void *buf, size_t nbyte);
+extern ssize_t UTUN__Write(int fildes, void *buf, size_t nbyte);
+
+  #define TUNTAP_Read           UTUN__Read
+  #define TUNTAP_Write          UTUN__Write
+
+#endif // defined( HAVE_NET_IF_UTUN_H )
+
 // ====================================================================
 //                      Helper Macros
 // ====================================================================
@@ -192,8 +209,10 @@ extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev
   #define TUNTAP_IOCtl          tt32_ioctl
 #else // !defined( OPTION_W32_CTCI )
   #define TUNTAP_Open           open
+#if !defined( HAVE_NET_IF_UTUN_H )  
   #define TUNTAP_Read           read
   #define TUNTAP_Write          write
+#endif // !defined( HAVE_NET_IF_UTUN_H )  
   #define TUNTAP_BegMWrite(f,n)
   #define TUNTAP_EndMWrite(f)
   #define TUNTAP_IOCtl          ioctl

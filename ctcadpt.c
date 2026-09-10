@@ -1178,7 +1178,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg->dev = dev;
         MSGBUF(str, "CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
-        rc = create_thread( &tid, JOINABLE, CTCT_ListenThread, arg, str );
+        rc = create_thread( &tid, DETACHED, CTCT_ListenThread, arg, str );
         if(rc)
            WRMSG(HHC00102, "E", strerror(rc));
     }

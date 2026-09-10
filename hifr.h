@@ -93,7 +93,8 @@
 
   To distinguish when the in6_ifreq structure is the parameter to the
   ioctl request the field hifr_afamily must contain the value AF_INET6,
-  otherwise it should contain the value AF_INET or zero.
+  otherwise it should contain the value AF_INET or 4 or 5 as per the
+  HIFR_AF_INET* defines below.
 
   ioctl requests with an ifreq structure as the parameter are made
   using an inet socket, whereas ioctl requests with an in6_ifreq
@@ -106,21 +107,57 @@ struct hifr
 #if defined(ENABLE_IPV6)
     struct in6_ifreq  in6_ifreq;
 #endif /*defined(ENABLE_IPV6)*/
+
+#if defined( HAVE_NET_IF_UTUN_H )
+    /* Darwin IPv4 aliasing (utun) */
+    struct ifaliasreq ifaliasreq;
+#endif // defined( HAVE_NET_IF_UTUN_H )
+
+#if defined(__FreeBSD__)
+    /* FreeBSD IPv4 aliasing */
+    struct in_aliasreq in_aliasreq;
+#endif
+
+    /* Selector for which structure is active */
     int               hifr_afamily;
 };
 typedef struct hifr hifr;
 
-#if defined( __APPLE__ )          \
- || defined( __sun__ )            \
- || defined( FREEBSD_OR_NETBSD )
+/*-------------------------------------------------------------------*/
+/*  Selector values for hifr_afamily                                 */
+/*-------------------------------------------------------------------*/
 
-  #define  hifr_name       ifreq.ifr_name
+#define HIFR_AF_INET4_IFREQ        AF_INET      /* Linux/BSD IPv4 */
+#define HIFR_AF_INET6_IFR6         AF_INET6     /* IPv6 */
+#define HIFR_AF_INET4_ALIAS_DARWIN 4            /* macOS ifaliasreq */
+#define HIFR_AF_INET4_ALIAS_FREEBSD 5           /* FreeBSD in_aliasreq */
+
+/*-------------------------------------------------------------------*/
+/*  Convenience macros (unchanged except where noted)                */
+/*-------------------------------------------------------------------*/
+
+#if defined( HAVE_NET_IF_UTUN_H )
+    /* Darwin IPv4 aliasing uses struct ifaliasreq */
+    #define hifr_name        ifaliasreq.ifra_name
+    #define hifr_addr        ifaliasreq.ifra_addr
+    #define hifr_netmask     ifaliasreq.ifra_mask
+    #define hifr_broadaddr   ifaliasreq.ifra_broadaddr
+
+#elif defined(__sun__) || defined(FREEBSD_OR_NETBSD)
+    /* Solaris, FreeBSD, NetBSD use struct ifreq for IPv4 */
+    #define hifr_name        ifreq.ifr_name
+    #define hifr_addr        ifreq.ifr_ifru.ifru_addr
+    #define hifr_netmask     ifreq.ifr_ifru.ifru_netmask
+    #define hifr_broadaddr   ifreq.ifr_ifru.ifru_broadaddr
+
 #else
-  #define  hifr_name       ifreq.ifr_ifrn.ifrn_name
+    /* Linux and other generic BSDs */
+    #define hifr_name        ifreq.ifr_ifrn.ifrn_name
+    #define hifr_addr        ifreq.ifr_ifru.ifru_addr
+    #define hifr_netmask     ifreq.ifr_ifru.ifru_netmask
+    #define hifr_broadaddr   ifreq.ifr_ifru.ifru_broadaddr
 #endif
-  #define  hifr_addr       ifreq.ifr_ifru.ifru_addr
-  #define  hifr_netmask    ifreq.ifr_ifru.ifru_netmask
-  #define  hifr_broadaddr  ifreq.ifr_ifru.ifru_broadaddr
+
   #define  hifr_hwaddr     ifreq.ifr_ifru.ifru_hwaddr
 #if defined( __FreeBSD__ )
   /* short   ifru_flags[2];                                          */

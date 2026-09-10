@@ -390,6 +390,7 @@
     <ClCompile Include="hexdumpe.c" />
     <ClCompile Include="him.c" />
     <ClCompile Include="history.c" />
+    <ClCompile Include="hmcwdt.c" />
     <ClCompile Include="hostinfo.c" />
     <ClCompile Include="hRexx.c" />
     <ClCompile Include="hRexx_o.c" />
@@ -707,6 +708,7 @@
     <None Include="readme\README.HAO.md" />
     <None Include="readme\README.HDL.md" />
     <None Include="readme\README.HERCLOGO.md" />
+    <None Include="readme\README.HMCWDT.md" />
     <None Include="readme\README.HQA.md" />
     <None Include="readme\README.HRAF.md" />
     <None Include="readme\README.ISSUES.md" />
@@ -1629,6 +1631,7 @@
     <ClInclude Include="hifr.h" />
     <ClInclude Include="hinlines.h" />
     <ClInclude Include="history.h" />
+    <ClInclude Include="hmcwdt.h" />
     <ClInclude Include="hmacros.h" />
     <ClInclude Include="hmalloc.h" />
     <ClInclude Include="hostinfo.h" />

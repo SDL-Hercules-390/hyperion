@@ -286,7 +286,8 @@
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
 #define SCANDIR_CONST_STRUCT_DIRENT     /* define if scandir uses
                                            const for struct dirent   */
-
+#define HAVE_NET_IF_UTUN_H              /* Darwin only supports utun */
+                                        /* network interfaces        */
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded FreeBSD/NetBSD-specific features and options...        */

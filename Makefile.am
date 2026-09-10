@@ -486,6 +486,7 @@ libherc_la_SOURCES = \
   hconsole.c         \
   hdiagf18.c         \
   history.c          \
+  hmcwdt.c           \
   hRexx.c            \
   hRexx_o.c          \
   hRexx_r.c          \
@@ -907,6 +908,7 @@ EXTRA_DIST =                  \
   readme/README.TRACEFILE.md      \
   readme/README.VMFPLC2.md        \
   readme/README.WebSocket.md      \
+  readme/README.HMCWDT.md         \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
@@ -1077,6 +1079,7 @@ noinst_HEADERS =          \
   history.h               \
   hmacros.h               \
   hmalloc.h               \
+  hmcwdt.h                \
   hostinfo.h              \
   hostopts.h              \
   hqadefs.h               \

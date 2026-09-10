@@ -267,6 +267,7 @@ struct REGS {                           /* Processor registers       */
                 host:1,                 /* REGS are hostregs         */
                 guest:1,                /* REGS are guestregs        */
                 diagnose:1;             /* Diagnose instr executing  */
+        unsigned int:0;                 /* Move to next storage unit */
         unsigned int                    /* Flags (intlock serialized)*/
                 dummy:1,                /* 1=Dummy regs structure    */
                 configured:1,           /* 1=CPU is online           */
@@ -654,6 +655,16 @@ enum OPERATION_MODE
 #if !defined( BUILD_APPLE_M1 )
     typedef unsigned qos_class_t;
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Instruction and SIOs count history (mips cmd)                     */
+/*-------------------------------------------------------------------*/
+struct IC_SIO_HISTORY
+{
+    U64     time;              /* Time in microseconds       */
+    U64     instcount;         /* Instruction count          */
+    U64     sioscount;         /* SIOs count                 */
+};
 
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
@@ -1218,8 +1229,56 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         TFSIT*      s370_sit;           /* store_int_timer           */
         TFGCT*      gct;                /* get_cpu_timer             */
 
+        /*-----------------------------------------------------------*/
+        /* Hardware Management Console Watchdog Timer (Diagnose 288) */
+        /*-----------------------------------------------------------*/
+        LOCK    hmcwdt_lock;            /* LOCK for below fields     */
+
+        unsigned char                   /* Flags                     */
+                hmcwdt_enabled:1,       /* 1=Watchdog timer enabled  */
+                hmcwdt_active:1,        /* 1=timer is active         */
+                hmcwdt_canceled:1,      /* 1=shutdown timer          */
+                hmcwdt_doing_cmds:1,    /* 1=actioning cmds          */
+                hmcwdt_debug:1;         /* 1=debug mode              */
+
+        char    hmcwdt_cmdsep;          /* Separator char for cmds   */
+        char*   hmcwdt_cmds;            /* cmds to execute on        */
+                                        /*    watchdog timer trigger */
+        U64     hmcwdt_expire_time;     /* Watchdog timer expire usec*/
+        TID     hmcwdt_tid;             /* Thread-id: watchdog timer */
+
+        /*-----------------------------------------------------------*/
+        /* instcount history                                         */
+        /*-----------------------------------------------------------*/
+#define OBTAIN_IC_HISTORY_LOCK( )   obtain_lock(  &sysblk.ic_history_lock)
+#define RELEASE_IC_HISTORY_LOCK( )  release_lock( &sysblk.ic_history_lock)
+#define IC_HISTORY_SIZE  900           /* Number of history entries  */
+#define IC_HISTORY_AVG_OVER  15         /* Average over seconds      */
+
+        LOCK    ic_history_lock;        /* LOCK for below fields     */
+        TID     ic_history_tid;         /* Thread-id: history timer  */
+
+        IC_SIO_HISTORY*  pic_sio_history; /* pointer to history table*/
+
+        U32     ic_history_empty;              /* history is empty   */
+        U32     ic_history_avg_over;       /* avg is over seconds    */
+        U32     ic_history_next;        /* IDX: next history entry   */
+        U64     ic_history_avg_time;      /* current average time    */
+
+                                           /* calculated rates       */
+        double  ic_history_peak_mips;      /* peak interval MIPS     */
+        double  ic_history_current_mips;   /* current interval MIPS  */
+        double  ic_history_peak_avg_mips;  /* peak average MIPS      */
+        double  ic_history_current_avg_mips; /* current average MIPS */
+
+        double  ic_history_peak_sios;      /* peak interval SIOs     */
+        double  ic_history_current_sios;   /* current interval SIOs  */
+        double  ic_history_peak_avg_sios;  /* peak average SIOs      */
+        double  ic_history_current_avg_sios; /* current average SIOs */
+
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */
+        U64     sioscount;              /* SIOs counter              */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
 
@@ -1558,6 +1617,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #define HANDSHAKE_OPEN       0xF7       /* CCW opcode: open file     */
 #define HANDSHAKE_CLOSE      0xFF       /*  "     "    close file    */
 
+        unsigned int:0;                 /* Move to next storage unit */
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
                 busy:1,                 /* 1=Device is busy          */
@@ -1957,15 +2017,18 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdlcount;              /* Locate record count       */
         BYTE    ckdextcd;               /* extended code             */
         void   *cckd_ext;               /* -> CCKD_EXT, else NULL    */
-        /* 
-         * #TODO: MSVC handles bit-field packing by aligning members to the
-         * boundary of their underlying type, inserting padding to ensure fields
-         * do not split across boundaries defined by the type size. Change to
-         * u_int when bumping HDL_VERS_DEVBLK.
-         */
         BYTE    cckd64:1;               /* 1=CCKD64/CFBA64           */
         BYTE    devcache:1;             /* 0 = device cache off
                                            1 = device cache on       */
+        /*
+         * MSVC allocates bit-fields within storage units based on their
+         * underlying type, inserting padding when necessary to prevent a
+         * bit-field from crossing a boundary defined by that type.
+         *
+         * To match this behavior across compilers, use a zero-width field
+         * of the NEXT type to explicitly force the allocation boundary.
+         */
+        u_int   :0;                     /* Move to next storage unit */
         u_int   ckd3990:1;              /* 1=Control unit is 3990    */
         u_int   ckd3880:1;              /* 1=Control unit is 3880    */
         u_int   ckdxtdef:1;             /* 1=Define Extent processed */
@@ -1993,7 +2056,8 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   ckdUCnxt:1;             /* 1=CMDREJ next chained CCW     :AE: */
         u_int   ckdPostRSSD:1;          /* 1=Prev CCW was RSSD           :AE: */
         u_int   ckdPostSSM:1;           /* 1=Prev CCW was SSM            :AE: */
-        /* See #TODO above */
+        /* See comment above */
+        BYTE    :0;                     /* Force alignment to next byte */
         BYTE    ckdnvs:1;               /* 1=NVS defined             */
         BYTE    ckdraid:1;              /* 1=RAID device             */
         U16     ckdssdlen;              /* #of bytes of data prepared

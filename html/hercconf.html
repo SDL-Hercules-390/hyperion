@@ -123,6 +123,9 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#IGNORE">IGNORE</a>     INCLUDE_ERRORS
     <a href="#INCLUDE">INCLUDE</a>    optdevs.cfg
 
+    <a href="#HMCWDT">HMCWDT</a>  cmdsep ;
+    <a href="#HMCWDT">HMCWDT</a>  cmds   "* some command; *another command"
+    <a href="#HMCWDT">HMCWDT</a>  enable
 
     #------------------------------------------------------------------
     #                     <a href="#device_stmts">DEVICE STATEMENTS</a>
@@ -979,6 +982,102 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="hercrnot.html#4.1">4.1</a>. You should remove all such statements
     from your configuration file.
     <p>
+
+<a name="HMCWDT"></a>
+<dt><code>HMCWDT &nbsp;[cmds "..."] &#124; [cmdsep x] &#124; [disable &#124; off] &#124; [enable &#124; on]  &#124; [status] &#124; [debug [on | off]]
+&#124; [$expire [nn]] &#124; [$start [nn]] &#124; [$stop]
+</code>
+<dd>
+    <p>Specify the configuration for the Hardware Management Console Watchdog Timer. See README.HMCWDT.md for more information.
+    </p>
+    <dl> <!-- begin WDT options -->
+    <dt style="float:left;clear: left; margin-right: 10px">
+        <code>cmds "..."&nbsp;&nbsp;&nbsp;</code></dt>
+        <dd>Specify the Hercules configuration commands to be executed
+                     when the watchdog timer expires.
+                     If spaces are included in the commands, double quotes are required.
+                     The maximum size of the command line is 240 characters.
+            </p>
+            <p>
+                     Multiple commands can be specified if a command line separator is
+                     defined using the 'hmcwdt cmdsep' command.
+            </p>
+            <p>
+                     The default is null; no commands are defined. Therefore, two hmc`wdt
+                     configuration statements are required to enable the watchdog timer:
+            </p>
+            <p>
+                     hmcwdt cmd "..."<br>
+                     hmcwdt enable
+            </p>
+            <p>
+                     One additional command, 'pause xx', can be included for delay between
+                     commands. The pause value is seconds to delay. 'pause' can not
+                     be the last command.
+            </p>
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+       <code>cmdsep x  &nbsp; &nbsp;&nbsp;</code></dt>
+        <dd style="margin-left: 25px;">
+            Specify the separator between commands defined by 'hmcwdt cmds'.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>cmdsep off &nbsp;&nbsp;</code></dt>
+        <dd  style="margin-left: 18px;">
+             Reset the separator to none.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>disable | off</code></dt>
+        <dd> The watchdog timer will be disabled if the current timer state is
+                     'enabled - inactive'.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>enable | on &nbsp;</code></dt>
+        <dd> The watchdog timer will be enabled if the current timer state is
+                     'disabled' AND watchdog commands have been defined.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>status &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;</code></dt>
+        <dd> Display the current Watchdog Timer status. This is the default action.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 5px">
+        <code>debug on | off</code></dt>
+        <dd> Turn debugging on or off for the watchdog timer.
+             When debugging is on, the watchdog timer will display additional
+             information about its state and actions taken when the timer expires.
+             Debugging is off by default.
+            <p></p>
+        </dd>
+
+     <p> The following commands are used to test the watchdog timer 'cmds "..."' commands:</p>
+
+     <dt style="float:left;clear: left; margin-right: 0px">
+        <code>$expire [nn] &nbsp;</code></dt>
+        <dd> If the watchdog timer state is 'enabled-active', temporarily set the timer
+             to expired and reset the timer
+             with a 'nn' second timeout. 'nn' must be greater than 14. The default timeout is 30 seconds if 'nn' is not specified.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>$start [nn] &nbsp;</code></dt>
+        <dd> If the watchdog timer state is 'enabled-inactive', start the watchdog timer
+             with a 'nn' second timeout. 'nn' must be greater than 14. The default timeout is 30 seconds if 'nn' is not specified.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>$stop &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code></dt>
+        <dd> If the watchdog timer state is 'enabled-active', stop the watchdog timer.
+            <p></p>
+        </dd>
+    </dl> <!-- end WDT options -->
+            <p></p>
+</dd>
 
 <a name="HTTPPORT"></a>
 <dt><code>HTTP &nbsp; PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
@@ -5028,7 +5127,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
         For modern "z" operating systems (such as z/OS and z/VM, etc) using 3390 dasds,
         <code>'cu=2107'</code> should usually be specified <i>(which is the <b>new default</b>
         for 3390 dasds).</i><br>
-        
+
         <p>
 
         The <i>old (prior)</i> default of <code>'cu=3990-6'</code> should still work for those
@@ -5376,13 +5475,13 @@ ROUTE  00  172.21.3.32  255.255.255.224
 <dt><em>Host Interface Machine (HIM) device</em>
 <dd><p>
 
-    These device types emulate the Host Interface Machine (HIM) devices that 
+    These device types emulate the Host Interface Machine (HIM) devices that
     are used to connect a host running The Michigan Terminal System (MTS)
     to the Internet.  The device type (TLNT, TCPH, or UDPH) should match
     the device type configured into MTS.
     <p>
 
-    The only parameter is the IP address the emulated interface 
+    The only parameter is the IP address the emulated interface
     should bind to.
     <p>
 

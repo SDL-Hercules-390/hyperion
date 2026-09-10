@@ -5033,7 +5033,7 @@ DEF_INST(dyn_perform_random_number_operation)
   int modifier_bit;
   int msa;
 #ifdef OPTION_PRNO_DEBUG
-  uint n;
+  U64 n;
 #endif
   U64 randbytes;
   U64 randnum;
@@ -5219,9 +5219,9 @@ DEF_INST(dyn_perform_random_number_operation)
             else randbytes = 0;
           }
           while (randbytes);
-          DRNG.drng.rc = ARCH_DEP(vfetch4) ( regs->GR( 1 ) + 4, regs->GR( 1 ), regs ) + 1;
+          DRNG.drng.rc = ARCH_DEP(vfetch4) ( regs->GR( 1 ) + 4, 1, regs ) + 1;
           DRNG.drng.rc = CSWAP32( DRNG.drng.rc );
-          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, regs->GR( 1 ), regs ) + GR_A( r1 + 1, regs );
+          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, 1, regs ) + GR_A( r1 + 1, regs );
           DRNG.drng.sb = CSWAP64( DRNG.drng.sb );
           VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
           ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);

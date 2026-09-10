@@ -43,7 +43,9 @@
 
 #if !defined(CACHE_ALIGN)
 
-    #if defined(_MSC_VER) || defined(_MSVC_)
+    #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+        #define __ALIGN(_n)     _Alignas(_n)
+    #elif defined(_MSC_VER) || defined(_MSVC_)
         #define __ALIGN(_n)     __declspec(align(_n))
     #else
         #define __ALIGN(_n)     __attribute__ ((aligned(_n)))

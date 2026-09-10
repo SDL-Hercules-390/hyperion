@@ -268,6 +268,8 @@ static void linux_init_hostinfo( HOST_INFO* pHostInfo )
 
 } // end linux_init_hostinfo
 
+#if (defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )) && !defined( __OpenBSD__ )
+#else
 //-----------------------------------------------------------------
 //                Parse a line of LSCPU output
 //-----------------------------------------------------------------
@@ -277,6 +279,7 @@ static int parse_lscpu_value(  char* line, int txtlen, char* text )
     return (str_caseless_eq_n( line, text, txtlen )) ?
         atoi( RTRIM( LTRIM( line + txtlen ))) : 0;
 }
+#endif
 
 //-----------------------------------------------------------------
 //                Retrieve Host CPU Information...
