@@ -1611,7 +1611,12 @@ struct DEVBLK {                         /* Device configuration block*/
                                              chained write CCWs      */
                 himdev:1,               /* 1=is a HIM device         */
                 debug:1,                /* 1=generic debug flag      */
-                reinit:1;               /* 1=devinit, not attach     */
+                reinit:1,               /* 1=devinit, not attach     */
+                handshake:1;            /* 1='handshake' option      */
+										/* (print/punch only)        */
+#define HANDSHAKE_OPEN       0xF7       /* CCW opcode: open file     */
+#define HANDSHAKE_CLOSE      0xFF       /*  "     "    close file    */
+
         unsigned int:0;                 /* Move to next storage unit */
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
@@ -1640,6 +1645,7 @@ struct DEVBLK {                         /* Device configuration block*/
         U64     excps;                  /* Number of channel pgms Ex */
 
         /*  Device dependent data (generic)                          */
+		/*  (points to a UROUTBLK structure for print/punch)         */
         void    *dev_data;
 
         /*  External GUI fields                                      */
@@ -2116,5 +2122,24 @@ struct GUISTAT
     char    szStatStrBuff1[GUI_STATSTR_BUFSIZ];
     char    szStatStrBuff2[GUI_STATSTR_BUFSIZ];
 };
+
+
+/*-------------------------------------------------------------------*/
+/* Structure to hold output file mgmt info for UR out devices        */
+/* (pointed to by DEVBLK.dev_data)                                   */
+/*-------------------------------------------------------------------*/
+struct UROUTBLK
+{
+                                        /* file arg from devinit     */
+    char  cmd_filename [ MAX_PATH + 1 ];/* .. full path/name         */
+    char  cmd_pathpart [ MAX_PATH + 1 ];/* .. path part with /       */
+    char  cmd_namepart [ MAX_PATH + 1 ];/* .. name part              */
+    char  cmd_extpart  [ MAX_PATH + 1 ];/* .. exten part with .      */
+    char  cur_namepart [ MAX_PATH + 1 ];/* current handshake name    */
+    char  cur_filename [ MAX_PATH + 1 ];/* current output file       */
+    const char *uro_devclass;           /* device class for msgs     */
+};
+typedef struct UROUTBLK UROUTBLK;
+#define UROUT(dev) ((UROUTBLK*)((dev)->dev_data))
 
 #endif // _HSTRUCTS_H

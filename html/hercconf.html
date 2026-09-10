@@ -2944,7 +2944,7 @@ a real System/390.  The configuration file is an ASCII text file.
         Specifies that the output file, if it already exists, will
         not be cleared to zero bytes when it is opened. Instead,
         output will be appended to the end of the existing data.
-        If the <code>noclear</code> argument is not specified, then
+        If the <code>append</code> argument is not specified, then
         any previous contents of the file is destroyed when the file
         is opened (i.e. the file is set to empty (truncated to zero
         bytes) as soon as it is opened).
@@ -2995,6 +2995,49 @@ a real System/390.  The configuration file is an ASCII text file.
         <code>crlf</code> and <code>append</code> options.
         <p>
 
+    <dt><code>handshake</code>
+    <dd><p>
+        Enables a feature that allows the guest operating system to
+        control the opening and closing of card punch files as well
+        as specifying the names of those files.
+        <p>
+        The <code>handshake</code> option cannot be specified with either
+        the <code>append</code> or the <code>sockdev</code> option.
+        <p>
+        The <code>handshake</code> feature is implemented by adding
+        two new CCWs to the Hercules emulated card punch device support:
+        <ul>
+        <li><b>Unit Record File Open (CCW code X'F7')</b>:<br>
+            Defines the beginning of a new punch file. The CCW data 
+            address and length can specify the desired name of the 
+            new punch file to be opened. The file name from this CCW
+            is combined with the path and extension from the <code>attach</code>
+            or <code>devinit</code> command to form the full path name
+            of the new file. If this file (e.g. <code>punch.dat</code>)
+            is renamed with a "_1" suffix (e.g. <code>punch_1.dat</code>). 
+            If that file also exists then it is renamed with a "_2" suffix
+            (e.g. <code>punch_2.dat</code>). If the "_2" suffixed file
+            exists, it is renamed with a "_3" suffix, and so forth up to
+            the maximum suffix of "_99" (after which the existing file is erased). 
+            Then the new, empty file is opened.</li> 
+        <li><b>Unit Record File Close (CCW code X'FF')</b>:<br>
+            Defines the end of a current punch file. The current punch
+            output file will be closed and the default name of the
+            next punch output file will be reset to the name given
+            in the device's last <code>attach</code> or <code>devinit</code>
+            command.
+            There is no data transferred with this CCW and it is
+            recommended that the "SILI" flag be used.</li> 
+        </ul>
+        <p>
+        <b><i>Note that using this
+        feature requires modification to the guest operating system
+        since this is not part of any "real" card punch's function.</i></b>
+        <br>The <i>SDL-Hercules</i> project on <code>github</code> has
+        an example of how this integration could be implemented for the
+        "VM/370 Community Edition" guest operating system.  
+        <p>
+        
     </dl>
     <p>
 
@@ -3186,6 +3229,49 @@ a real System/390.  The configuration file is an ASCII text file.
         file. This allows automatic remote spooling of line printer
         data. The sockdev option is mutually exclusive with the
         <code>crlf</code> and <code>append</code> options.
+        <p>
+
+    <dt><code>handshake</code>
+    <dd><p>
+        Enables a feature that allows the guest operating system to
+        control the opening and closing of printer listing files as well
+        as specifying the names of those files.
+        <p>
+        The <code>handshake</code> option cannot be specified with either
+        the <code>append</code> or the <code>sockdev</code> option.
+        <p>
+        The <code>handshake</code> feature is implemented by adding
+        two new CCWs to the Hercules emulated printer device support:
+        <ul>
+        <li><b>Unit Record File Open (CCW code X'F7')</b>:<br>
+            Defines the beginning of a new listing file. The CCW data 
+            address and length can specify the desired name of the 
+            new listing file. The file name from this CCW
+            is combined with the path and extension from the <code>attach</code>
+            or <code>devinit</code> command to form the full path name
+            of the new file. If this file (e.g. <code>printer.lst</code>)
+            is renamed with a "_1" suffix (e.g. <code>printer_1.lst</code>). 
+            If that file also exists then it is renamed with a "_2" suffix
+            (e.g. <code>printer_2.lst</code>). If the "_2" suffixed file
+            exists, it is renamed with a "_3" suffix, and so forth up to
+            the maximum suffix of "_99" (after which the existing file is erased). 
+            Then the new, empty file is opened.</li> 
+        <li><b>Unit Record File Close (CCW code X'FF')</b>:<br>
+            Defines the end of a current listing file. The current
+            output file will be closed and the default name of the
+            next listing file will be reset to the name given
+            in the device's last <code>attach</code> or <code>devinit</code>
+            command.
+            There is no data transferred with this CCW and it is
+            recommended that the "SILI" flag be used.</li> 
+        </ul>
+        <p>
+        <b><i>Note that using this
+        feature requires modification to the guest operating system
+        since this is not part of any "real" printer's function.</i></b>
+        <br>The <i>SDL-Hercules</i> project on <code>github</code> has
+        an example of how this integration could be implemented for the
+        "VM/370 Community Edition" guest operating system.  
         <p>
     </dl>
 
