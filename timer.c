@@ -457,55 +457,29 @@ void* rubato_thread( void* argp )
 /*  history of instruction and SIO counts for mips cmd       */
 /*-----------------------------------------------------------*/
 
-// Convert seconds to microseconds
-#define SEC_TO_US(sec) ((sec)*1000000)
-// Convert nanoseconds to microseconds
-#define NS_TO_US(ns)    ((ns)/1000)
 /*-----------------------------------------------------------*/
 /*  Get U64 Microsecond Time                                 */
 /*-----------------------------------------------------------*/
-U64 get_us_time( )
+static inline U64 get_us_time( )
 {
-    U64 us          = 0;
-    int rc;
+           U64 us        =  0;
+    static U32 msg_limit = 10;
 
+    if( get_host_microsecond_time( &us ) != 0 && msg_limit > 0 )
     {
-    // ensure CLOCK_MONOTONIC_RAW clock is available
-    #if defined( __linux__ ) && defined( __clock_t_defined )
-        struct timespec ts;
-
-        rc = clock_gettime( CLOCK_MONOTONIC_RAW, &ts );
-        if( rc == 0 )
-            us = SEC_TO_US( (uint64_t)ts.tv_sec ) + NS_TO_US( (uint64_t)ts.tv_nsec + 500 );
-        else
-        {
-            // "HMC Watchdog Timer: %s: %s"
-            WRMSG( HHC01958, "E", "clock_gettime failed", strerror(errno) );
-        }
-
-    #else
-        // microsecond resolution getimeofday
-        struct timeval  tv;
-        rc = gettimeofday( &tv, NULL );
-        if( rc == 0 )
-            us = SEC_TO_US( (uint64_t)tv.tv_sec ) + tv.tv_usec;
-        else
-        {
-            // "HMC Watchdog Timer: %s: %s"
-            WRMSG( HHC01958, "E", "gettimeofday failed", strerror(errno) );
-        }
-
-    #endif
+        // "HHC00001 "%s%s""
+        WRMSG( HHC00001, "E", "get_us_time: get_host_microsecond_time failed: ", strerror(errno) );
+        msg_limit--;
     }
 
     return us;
 }
 
 /*-----------------------------------------------------------*/
-/*  History Instruction Counter Thread                       */
+/*  Instruction Counter History Thread                       */
 /*-----------------------------------------------------------*/
 /* Note: This thread records a history of instruction counts */
-/*       to over "IC_HISTORY" seconds.                       */
+/*       for "IC_HISTORY_SIZE" seconds.                      */
 /*-----------------------------------------------------------*/
 #define IC_HISTORY_THREAD_INT    50     // 50 microseconds
 #define IC_HISTORY_PERIOD        1     //  1 second
@@ -615,7 +589,7 @@ void* ic_history_thread( void* arg )
                     // interval counts and time
                     ic_inst_interval_cnt  = PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount;
                     ic_sios_interval_cnt  = PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount;
-                    ic_interval_time       = PRIOR_IC_HISTORY( sysblk.ic_history_next ).time - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).time;
+                    ic_interval_time      = PRIOR_IC_HISTORY( sysblk.ic_history_next ).time      - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).time;
 
                     //check peak MIPS value
                     sysblk.ic_history_current_mips = (double) ic_inst_interval_cnt / (double) ic_interval_time;
@@ -641,7 +615,7 @@ void* ic_history_thread( void* arg )
                     //average counts and time
                     ic_inst_avg_cnt  =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).instcount;
                     ic_sios_avg_cnt  =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).sioscount;
-                    ic_avg_time      =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).time - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).time;
+                    ic_avg_time      =  PRIOR_IC_HISTORY( sysblk.ic_history_next ).time      - AVG_OVER_IC_HISTORY( sysblk.ic_history_next ).time;
 
                     //save avg time for mips cmd
                     sysblk.ic_history_avg_time = ic_avg_time;

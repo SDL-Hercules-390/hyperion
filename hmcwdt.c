@@ -348,34 +348,14 @@ int hmcwdt_do_cmds( char* cmdline, char cmdsep )
 /*-----------------------------------------------------------*/
 U64 hmcwdt_get_expire_time( U32 timeout )
 {
-    U64 us          = 0;
-    int rc;
+           U64 us        =  0;
+    static U32 msg_limit = 10;
 
+    if( get_host_microsecond_time( &us ) != 0 && msg_limit > 0 )
     {
-    #if defined( __linux__ )
-        struct timespec ts;
-        rc = clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-        if( rc == 0 )
-            us = SEC_TO_US((uint64_t)ts.tv_sec) + NS_TO_US((uint64_t)ts.tv_nsec + 500);
-        else
-        {
-            // "HMC Watchdog Timer: %s: %s"
-            WRMSG( HHC01958, "E", "clock_gettime failed", strerror(errno));
-        }
-
-    #else
-        // microsecond resolution getimeofday
-        struct timeval  tv;
-        rc = gettimeofday( &tv, NULL );
-        if( rc == 0 )
-            us = SEC_TO_US((uint64_t)tv.tv_sec) + tv.tv_usec;
-        else
-        {
-            // "HMC Watchdog Timer: %s: %s"
-            WRMSG( HHC01958, "E", "gettimeofday failed", strerror(errno));
-        }
-
-    #endif
+        // "HMC Watchdog Timer: %s: %s"
+        WRMSG( HHC01958, "E", "hmcwdt_get_expire_time: get_host_microsecond_time failed", strerror(errno) );
+        msg_limit--;
     }
 
     return us + SEC_TO_US(timeout);

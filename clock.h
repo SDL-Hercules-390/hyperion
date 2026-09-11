@@ -595,6 +595,42 @@ TOD host_tod()
   return ( result );
 }
 
+// Convert seconds to microseconds
+#define SEC_TO_US(sec) ((sec)*1000000)
+// Convert nanoseconds to microseconds
+#define NS_TO_US(ns)    ((ns)/1000)
+/*-------------------------------------------------------------------*/
+/*               U64 get_host_microsecond_time                       */
+/*-------------------------------------------------------------------*/
+/* Get the host clock time in microseconds as a U64.                 */
+/*-------------------------------------------------------------------*/
+static inline int  get_host_microsecond_time( U64* us )
+{
+    int rc;
+
+    {
+    // Linux: ensure CLOCK_MONOTONIC_RAW clock is available to avoid NTP adjustments or the
+    //        incremental adjustments performed by adjtime.
+    #if defined( __linux__ ) && defined( __clock_t_defined ) && defined( CLOCK_MONOTONIC_RAW )
+        struct timespec ts;
+
+        rc = clock_gettime( CLOCK_MONOTONIC_RAW, &ts );
+        if( rc == 0 )
+            *us = SEC_TO_US( (uint64_t)ts.tv_sec ) + NS_TO_US( (uint64_t)ts.tv_nsec + 500 );
+
+    #else
+        // microsecond resolution getimeofday
+        struct timeval  tv;
+        rc = gettimeofday( &tv, NULL );
+        if( rc == 0 )
+            *us = SEC_TO_US( (uint64_t)tv.tv_sec ) + tv.tv_usec;
+
+    #endif
+    }
+
+    return rc;
+}
+
 #endif // _CLOCK_H
 
 /*-------------------------------------------------------------------*/
