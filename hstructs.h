@@ -1252,15 +1252,28 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
         /*-----------------------------------------------------------*/
 #define OBTAIN_IC_HISTORY_LOCK( )   obtain_lock(  &sysblk.ic_history_lock)
 #define RELEASE_IC_HISTORY_LOCK( )  release_lock( &sysblk.ic_history_lock)
-#define IC_HISTORY_SIZE  900           /* Number of history entries  */
-#define IC_HISTORY_AVG_OVER  15         /* Average over seconds      */
+#define IC_HISTORY_SIZE             900 /* Number of history entries */
+#define IC_HISTORY_AVG_OVER          15 /* Average over seconds      */
+#define IC_HISTORY_PERIOD       1000000 /*  1 second                 */
+#define IC_HISTORY_THREAD_INT       500 /* 500 microseconds- default */
+#define IC_HISTORY_THREAD_INT_MIN    25 /*  25 microseconds- minimum */
+#define IC_HISTORY_THREAD_INT_MAX 250000/* 0.25 seconds    - maximum */
+#define IC_HISTORY( indx )              sysblk.pic_sio_history[ (indx) ]
+#define PRIOR_IC_HISTORY( indx )        sysblk.pic_sio_history[ (indx) == 0 ? IC_HISTORY_SIZE -1 : (indx) - 1 ]
+#define PRIOR_PRIOR_IC_HISTORY( indx )  sysblk.pic_sio_history[ (indx) == 0 ? IC_HISTORY_SIZE -2 : ( (indx) == 1 ? IC_HISTORY_SIZE -1 : (indx) - 2 ) ]
+
+#define AVG_OVER_IC_HISTORY( indx )     sysblk.pic_sio_history[ (indx) < sysblk.ic_history_avg_over  ? \
+                                                                  IC_HISTORY_SIZE + ( (indx) - sysblk.ic_history_avg_over ) : \
+                                                                  ( (indx) - sysblk.ic_history_avg_over ) ]
 
         LOCK    ic_history_lock;        /* LOCK for below fields     */
         TID     ic_history_tid;         /* Thread-id: history timer  */
 
         IC_SIO_HISTORY*  pic_sio_history; /* pointer to history table*/
 
-        U32     ic_history_empty;              /* history is empty   */
+        bool    ic_history_enabled;            /* history is enabled */
+        U32     ic_history_interval;           /* timer interval     */
+        bool    ic_history_empty;              /* history is empty   */
         U32     ic_history_avg_over;       /* avg is over seconds    */
         U32     ic_history_next;        /* IDX: next history entry   */
         U64     ic_history_avg_time;      /* current average time    */

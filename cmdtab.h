@@ -957,13 +957,18 @@
                                 \
   "Format:\n"                                                                   \
   "\n"                                                                          \
-  "     mips [ [reset] | [average [nn]  ]\n"                                    \
+  "     mips [ [enable | on]   | [disable | off] | [reset] |\n"                 \
+  "            [average [nn] ] | [ interval [nn] ]\n "                          \
   "\n"                                                                          \
   "where:\n"                                                                    \
   "\n"                                                                          \
   "<null>     will display the current MIPS / SIOs rates, current average\n"    \
   "           MIPS / SIOs rate over the last nn seconds, the peak MIPS / SIOs\n"\
   "           rate and the peak average rates.\n"                               \
+  "\n"                                                                          \
+  "enable | on    will start instruction and SIO count history collection.\n"   \
+  "\n"                                                                          \
+  "disable | off  will stop instruction and SIO count history collection.\n"    \
   "\n"                                                                          \
   "reset      will reset the peak and peak average MIPS and SIOs rates.\n"      \
   "\n"                                                                          \
@@ -973,11 +978,19 @@
   "           The default is 15 seconds. The maximum is 900 seconds.\n"         \
   "           The peak averge MIPS / SIOs rates will be reset.\n"               \
   "\n"                                                                          \
-  "Note: MIPS rate is calculated on total instruction count observed over\n"    \
-  "      an 1 second 'host' interval. A 900 second history is maintained\n"     \
-  "      to calculate average MIPS rates. This MIPS rate is different from\n"   \
-  "      the MIPS reported by \"maxrates\" command which uses the emulated\n"   \
-  "      ETOD clock to calculate the MIPS rate.\n"
+  "interval   will display the \"interval\" time period in microseconds used\n" \
+  "           to check whether instruction and SIO counts should be\n"          \
+  "           collected. The default is 500 microseconds.\n"                    \
+  "\n"                                                                          \
+  "interval nn   will change the \"interval\" time period to nn microseconds.\n"\
+  "           The minimum is 25 microsectonds and the maximum is 250000\n"      \
+  "           microseconds (0.25 seconds).\n"                                   \
+  "\n"                                                                          \
+  "Note: MIPS rate is calculated on total instruction / SIO counts observed\n"  \
+  "      over a 'host' second. A 900 second history is maintained to \n"        \
+  "      calculate average MIPS rates. This MIPS rate is different from the\n"  \
+  "      MIPS reported by \"maxrates\" command which uses the emulated ETOD\n"  \
+  "      clock to calculate the MIPS rate.\n"
 
 #define model_cmd_desc          "Set/Query STSI model code"
 #define model_cmd_help          \

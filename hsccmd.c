@@ -10680,6 +10680,12 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
     // any arguments?
     if (argc == 1)
     {
+        if (!sysblk.ic_history_enabled)
+        {
+            WRMSG(HHC02295, "I", "\'mips\' command: disabled");
+            return 0;
+        }
+
         /* display observations */
         OBTAIN_IC_HISTORY_LOCK( );
         {
@@ -10724,6 +10730,124 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
 
     /* ------------------------------------- */
     /* parse command based on the 1st option */
+    /* ------------------------------------- */
+    /* ENABLE | ON                           */
+    /* ------------------------------------- */
+    if  (   0                           ||
+            CMD( argv[1], enable, 3 )   ||
+            CMD( argv[1], on, 2 )
+        )
+    {
+        /* already enabled */
+        if (sysblk.ic_history_enabled)
+        {
+            WRMSG(HHC02295, "I", "\'mips\' command: enabled");
+            return 0;
+        }
+
+        /* If no CPUs are available... */
+        if (!sysblk.hicpu)
+        {
+            WRMSG(HHC02295, "I", "\'mips\' command: disabled. No CPUs are available");
+            return 0;
+        }
+
+        /* start the Instruction Counter Historty thread */
+        OBTAIN_IC_HISTORY_LOCK( );
+            {
+            int rc;
+
+            /* Clear ic_history fields */
+            sysblk.ic_history_empty = true;
+            sysblk.ic_history_next = 0;
+            sysblk.ic_history_avg_time = 0;
+
+            // Clear mips rates
+            sysblk.ic_history_peak_mips = 0.0;
+            sysblk.ic_history_current_mips = 0.0;
+            sysblk.ic_history_peak_avg_mips = 0.0;
+            sysblk.ic_history_current_avg_mips = 0.0;
+
+            // Clear sios rates
+            sysblk.ic_history_peak_sios = 0.0;
+            sysblk.ic_history_current_sios = 0.0;
+            sysblk.ic_history_peak_avg_sios = 0.0;
+            sysblk.ic_history_current_avg_sios = 0.0;
+
+            /* history instruction count thread */
+            rc = create_thread( &sysblk.ic_history_tid, DETACHED,
+                ic_history_thread, NULL, IC_HISTORY_THREAD_NAME );
+            if (rc)
+            {
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror( rc ));
+            }
+            else
+            {
+                WRMSG(HHC02295, "I", "\'mips\' command: enabled");
+            }
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* DISABLE | OFF                         */
+    /* ------------------------------------- */
+    if  (   0                           ||
+            CMD( argv[1], disable, 3 )   ||
+            CMD( argv[1], off, 2 )
+        )
+    {
+        sysblk.ic_history_enabled = false;
+        WRMSG(HHC02295, "I", "\'mips\' command: disabled");
+        return 0;
+    }
+
+    /* ------------------------------------- */
+    /* interval nn                           */
+    /* ------------------------------------- */
+    if  ( CMD( argv[1], interval, 3 ) )
+    {
+        U32 new_interval = 0;
+
+        /* no option */
+        if ( argc == 2 )
+        {
+            MSGBUF( buf, "mips interval: %d microseconds",
+                  (sysblk.ic_history_interval == 0) ? IC_HISTORY_THREAD_INT : sysblk.ic_history_interval);
+            WRMSG(HHC02295, "I", buf);
+            return 0;
+        }
+
+        /* option: nn */
+        if ( argc == 3 )
+        {
+            new_interval = atoi( argv[2] );
+            if ( new_interval < IC_HISTORY_THREAD_INT_MIN || new_interval > IC_HISTORY_THREAD_INT_MAX )
+            {
+                MSGBUF( buf, ". Interval '%d' is not between %d and %d microseconds.",
+                                 new_interval, IC_HISTORY_THREAD_INT_MIN, IC_HISTORY_THREAD_INT_MAX );
+
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], buf );
+                return -1;
+            }
+
+            OBTAIN_IC_HISTORY_LOCK( );
+            {
+                sysblk.ic_history_interval = new_interval;
+            }
+            RELEASE_IC_HISTORY_LOCK( );
+
+        }
+
+        MSGBUF( buf, "mips interval: %d microseconds", sysblk.ic_history_interval );
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
     /* ------------------------------------- */
     /* RESET                                 */
     /* ------------------------------------- */
@@ -10800,18 +10924,40 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
 
         OBTAIN_IC_HISTORY_LOCK( );
         {
+            U64 last_period      = 0;
+            U64 last_period_ic   = 0;
+            U64 last_period_sios = 0;
+            U64 last_period_time = 0;
+            if (sysblk.pic_sio_history != NULL)
+            {
+                last_period      = PRIOR_IC_HISTORY( sysblk.ic_history_next ).time      - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).time;
+                last_period_ic   = PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).instcount;
+                last_period_sios = PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount - PRIOR_PRIOR_IC_HISTORY( sysblk.ic_history_next ).sioscount;
+                last_period_time = PRIOR_IC_HISTORY( sysblk.ic_history_next ).time;
+            }
             MSGBUF( buf, "debug: MIPS fields:"
-                        "\n    ic_history_empty:        %d"
-                        "\n    ic_history_avg_over:     %d"
-                        "\n    IC_history_next:         %d"
-                        "\n    ic_history_avg_time:     %ld"
-                        "\n    instcount:               %ld"
-                        "\n    sioscount:               %ld",
+                        "\n    ic_history_enabled:          %d"
+                        "\n    ic_history_empty:            %d"
+                        "\n    ic_history_interval:         %d"
+                        "\n    ic_history_avg_over:         %d"
+                        "\n    IC_history_next:             %d"
+                        "\n    ic_history_avg_time:         %ld"
+                        "\n    ic_history_last_period:      %ld"
+                        "\n    ic_history_last_period_ic:   %ld"
+                        "\n    ic_history_last_period_sios: %ld"
+                        "\n    ic_history_last_period_time: %ld"
+                        "\n    instcount:                   %ld"
+                        "\n    sioscount:                   %ld",
+                        sysblk.ic_history_enabled,
                         sysblk.ic_history_empty,
+                        sysblk.ic_history_interval,
                         sysblk.ic_history_avg_over,
                         sysblk.ic_history_next,
                         sysblk.ic_history_avg_time,
-
+                        last_period,
+                        last_period_ic,
+                        last_period_sios,
+                        last_period_time,
                         sysblk.instcount,
                         sysblk.sioscount
                 );

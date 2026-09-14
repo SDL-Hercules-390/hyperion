@@ -328,7 +328,6 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
         /* Clear ic_history fields */
         sysblk.ic_history_empty = true;
         sysblk.ic_history_next = 0;
-        //skip sysblk.ic_history_avg_over as 'mips average nn' may have changed it
         sysblk.ic_history_avg_time = 0;
 
         // Clear mips rates
