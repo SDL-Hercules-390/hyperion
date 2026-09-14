@@ -1100,6 +1100,9 @@
     <None Include="readme\README.VMFPLC2.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.VMHANDSHAKE.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.WebSocket.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>

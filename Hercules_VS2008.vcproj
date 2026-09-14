@@ -2274,6 +2274,10 @@
 						RelativePath=".\readme\README.VMFPLC2.md"
 						>
 					</File>
+                    <File
+                        RelativePath=".\readme\README.VMHANDSHAKE.md"
+                        >
+                    </File>
 					<File
 						RelativePath=".\readme\README.WebSocket.md"
 						>
