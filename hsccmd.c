@@ -10880,6 +10880,15 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
     {
         int avg_over = 0;
 
+        /* no option */
+        if ( argc == 2 )
+        {
+            MSGBUF( buf,  "Average over %d seconds.",
+                  ( sysblk.ic_history_avg_over == 0 ) ? IC_HISTORY_AVG_OVER : sysblk.ic_history_avg_over -1 );
+            WRMSG(HHC02295, "I", buf);
+            return 0;
+        }
+
         /* option: nn */
         if ( argc == 3 )
         {
@@ -10905,7 +10914,7 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
             return 0;
         }
 
-        MSGBUF( buf, "Average over %d seconds.",  sysblk.ic_history_avg_over-1 );
+        MSGBUF( buf, "Average over %d seconds.", sysblk.ic_history_avg_over -1 );
         WRMSG(HHC02295, "I", buf);
         return 0;
     }
