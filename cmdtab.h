@@ -942,7 +942,11 @@
   "The interval 'midnight' sets the interval to 1440 and aligns the\n"          \
   "start of the current interval to midnight.\n"                                \
   "Entering \"maxrates\" by itself displays the current highest\n"              \
-  "rates observed during the defined intervals.\n"
+  "rates observed during the defined intervals.\n"                              \
+  "\n"                                                                          \
+  "Note: \"mips\" command rates are calculated on total instruction/SIO\n"      \
+  "      counts observed for a 'host' second compared to \"maxrates\"\n"        \
+  "      which uses an ETOD second to calculate the MIPS rate.\n"               \
 
 #define message_cmd_desc        "Display message on console a la VM"
 #define message_cmd_help        \
