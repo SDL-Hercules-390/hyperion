@@ -961,8 +961,9 @@
                                 \
   "Format:\n"                                                                   \
   "\n"                                                                          \
-  "     mips [ [enable | on]   | [disable | off] | [reset] |\n"                 \
-  "            [average [nn] ] | [ interval [nn] ]\n "                          \
+  "     mips [enable | on]   | [disable | off]  | [reset] |\n"                  \
+  "          [average [nn] ] | [interval [nn] ] |\n"                            \
+  "          [panel [ [enable | on] | [disable | off] ]\n"                      \
   "\n"                                                                          \
   "where:\n"                                                                    \
   "\n"                                                                          \
@@ -973,6 +974,7 @@
   "enable | on    will start instruction and SIO count history collection.\n"   \
   "\n"                                                                          \
   "disable | off  will stop instruction and SIO count history collection.\n"    \
+  "               The default is off.\n"                                        \
   "\n"                                                                          \
   "reset      will reset the peak and peak average MIPS and SIOs rates.\n"      \
   "\n"                                                                          \
@@ -987,8 +989,18 @@
   "           collected. The default is 500 microseconds.\n"                    \
   "\n"                                                                          \
   "interval nn   will change the \"interval\" time period to nn microseconds.\n"\
-  "           The minimum is 25 microsectonds and the maximum is 250000\n"      \
+  "           The minimum is 25 microseconds and the maximum is 250000\n"       \
   "           microseconds (0.25 seconds).\n"                                   \
+  "\n"                                                                          \
+  "panel      will display the \"panel\" status: enabled or disabled.\n"        \
+  "\n"                                                                          \
+  "panel enable\n"                                                              \
+  "panel on   will change the panel to display the current MIPS and SIO\n"      \
+  "           rates calculated using instruction and SIO count history.\n"      \
+  "\n"                                                                          \
+  "panel disable\n"                                                             \
+  "panel off  will change the panel to display the standard MIPS and SIO\n"     \
+  "           rates calculated by the timer thread. The default is disabled.\n" \
   "\n"                                                                          \
   "Note: MIPS rate is calculated on total instruction / SIO counts observed\n"  \
   "      over a 'host' second. A 900 second history is maintained to \n"        \

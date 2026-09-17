@@ -1271,6 +1271,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 
         IC_SIO_HISTORY*  pic_sio_history; /* pointer to history table*/
 
+        bool    ic_history_panel_enabled; /*panel display is enabled */
         bool    ic_history_enabled;            /* history is enabled */
         U32     ic_history_interval;           /* timer interval     */
         bool    ic_history_empty;              /* history is empty   */

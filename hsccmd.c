@@ -10642,28 +10642,56 @@ int hmcwdt_cmd( int argc, char* argv[], char* cmdline )
     }
 }
 
-/*----------------------------------------------------------------------*/
-/* mips -- Mips / SIOs rates: current, avarage, peak                     */
-/*----------------------------------------------------------------------*/
-/* Format: mips [ [reset] | [average [nn]  ]                            */
-/*                                                                      */
-/* <null>    will display the current MIPS / SIOs rates, current        */
-/*           average MIPS / SIOs rate over the last nn seconds, the     */
-/*           peak MIPS / SIOs rate and the peak average rates.          */
-/*                                                                      */
-/* reset     will reset the peak and peak average MIPS and SIOs rates.  */
-/*                                                                      */
-/* average   will display the "average over" time period in seconds.    */
-/*                                                                      */
-/* average nn will change the "average over" time period to nn seconds. */
-/*            The default is "IC_HISTORY_AVG_OVER" (15) seconds.        */
-/*            The maximum is "IC_HISTORY_SIZE" (900) seconds.           */
-/*            The peak averge MIPS / SIOs rates will be reset.          */
-/*                                                                      */
-/*----------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------*/
+/* mips -- Mips / SIOs rates: current, avarage, peak                            */
+/*------------------------------------------------------------------------------*/
+/* Format:                                                                      */
+/*     mips [enable | on]   | [disable | off]  | [reset] |                      */
+/*          [average [nn] ] | [interval [nn] ] |                                */
+/*          [panel [ [enable | on] | [disable | off] ]                          */
+/*                                                                              */
+/* <null>    will display the current MIPS / SIOs rates, current                */
+/*           average MIPS / SIOs rate over the last nn seconds, the             */
+/*           peak MIPS / SIOs rate and the peak average rates.                  */
+/*                                                                              */
+/* reset     will reset the peak and peak average MIPS and SIOs rates.          */
+/*                                                                              */
+/* average   will display the "average over" time period in seconds.            */
+/*                                                                              */
+/* average nn will change the "average over" time period to nn seconds.         */
+/*            The default is "IC_HISTORY_AVG_OVER" (15) seconds.                */
+/*            The maximum is "IC_HISTORY_SIZE" (900) seconds.                   */
+/*            The peak averge MIPS / SIOs rates will be reset.                  */
+/*                                                                              */
+/* interval   will display the "interval" time period in microseconds used      */
+/*            to check whether instruction and SIO counts should be             */
+/*            collected. The default is 500 microseconds.                       */
+/*                                                                              */
+/* interval nn   will change the "interval time period to nn microseconds       */
+/*            The minimum is 25 microseconds and the maximum is 250000          */
+/*            microseconds (0.25 seconds).                                      */
+/*                                                                              */
+/* panel      will display the "panel" status: enabled or disabled.             */
+/*                                                                              */
+/* panel enable                                                                 */
+/* panel on   will change the panel to display the current MIPS and SIO         */
+/*            rates calculated using instruction and SIO count history.         */
+/*                                                                              */
+/* panel disable                                                                */
+/* panel off  will change the panel to display the standard MIPS and SIO        */
+/*            rates calculated by the timer thread. The default is disabled.    */
+/*                                                                              */
+/*------------------------------------------------------------------------------*/
+/*                                                                              */
+/* Note: MIPS rate is calculated on total instruction / SIO counts observed     */
+/*       over a 'host' second. A 900 second history is maintained to            */
+/*       calculate average MIPS rates. This MIPS rate is different from the     */
+/*       MIPS reported by "maxrates" command which uses the emulated ETOD       */
+/*                                                                              */
+/*------------------------------------------------------------------------------*/
 int mips_cmd(int argc, char *argv[],char *cmdline)
 {
-    char buf[512];
+    char buf[1024];
 
     UPPER_ARGV_0( argv );
 
@@ -10682,8 +10710,10 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
     {
         if (!sysblk.ic_history_enabled)
         {
-            WRMSG(HHC02295, "I", "\'mips\' command: disabled");
-            return 0;
+            MSGBUF( buf, "mips: disabled\tpanel: %s",
+                        (sysblk.ic_history_panel_enabled) ? "enabled" : "disabled");
+            WRMSG(HHC02295, "I", buf);
+            return -1;
         }
 
         /* display observations */
@@ -10741,15 +10771,15 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
         /* already enabled */
         if (sysblk.ic_history_enabled)
         {
-            WRMSG(HHC02295, "I", "\'mips\' command: enabled");
+            WRMSG(HHC02295, "I", "mips: enabled");
             return 0;
         }
 
         /* If no CPUs are available... */
         if (!sysblk.hicpu)
         {
-            WRMSG(HHC02295, "I", "\'mips\' command: disabled. No CPUs are available");
-            return 0;
+            WRMSG(HHC02295, "I", "mips: disabled. No CPUs are available");
+            return -1;
         }
 
         /* start the Instruction Counter Historty thread */
@@ -10781,14 +10811,17 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
             {
                 // "Error in function create_thread(): %s"
                 WRMSG( HHC00102, "E", strerror( rc ));
+                RELEASE_IC_HISTORY_LOCK( );
+                return 0;
             }
             else
             {
-                WRMSG(HHC02295, "I", "\'mips\' command: enabled");
+                WRMSG(HHC02295, "I", "mips: enabled");
             }
         }
         RELEASE_IC_HISTORY_LOCK( );
 
+        USLEEP( 100000 );   // give the thread a chance to start
         return 0;
     }
 
@@ -10800,8 +10833,14 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
             CMD( argv[1], off, 2 )
         )
     {
-        sysblk.ic_history_enabled = false;
-        WRMSG(HHC02295, "I", "\'mips\' command: disabled");
+        OBTAIN_IC_HISTORY_LOCK( );
+        {
+            sysblk.ic_history_enabled = false;
+            sysblk.ic_history_panel_enabled = false;
+        }
+        RELEASE_IC_HISTORY_LOCK( );
+
+        WRMSG(HHC02295, "I", "mips: disabled");
         return 0;
     }
 
@@ -10825,9 +10864,16 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
         if ( argc == 3 )
         {
             new_interval = atoi( argv[2] );
+            if ( new_interval == 0 )
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "");
+                return -1;
+            }
+
             if ( new_interval < IC_HISTORY_THREAD_INT_MIN || new_interval > IC_HISTORY_THREAD_INT_MAX )
             {
-                MSGBUF( buf, ". Interval '%d' is not between %d and %d microseconds.",
+                MSGBUF( buf, ". Interval: '%d' is not between %d and %d microseconds.",
                                  new_interval, IC_HISTORY_THREAD_INT_MIN, IC_HISTORY_THREAD_INT_MAX );
 
                 // "Invalid argument %s%s"
@@ -10844,6 +10890,70 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
         }
 
         MSGBUF( buf, "mips interval: %d microseconds", sysblk.ic_history_interval );
+        WRMSG(HHC02295, "I", buf);
+        return 0;
+    }
+
+    /* ----------------------------------------- */
+    /* panel [ [enable | on] | [disable | off] ] */
+    /* ----------------------------------------- */
+    if  ( CMD( argv[1], panel, 3 ) )
+    {
+        /* mips not enabled */
+        if (!sysblk.ic_history_enabled)
+        {
+            MSGBUF( buf, "mips: disabled\tpanel: %s",
+                        (sysblk.ic_history_panel_enabled) ? "enabled" : "disabled");
+            WRMSG(HHC02295, "I", buf);
+            return -1;
+        }
+
+        /* no option */
+        if ( argc == 2 )
+        {
+            MSGBUF( buf, "mips panel: %s",
+                  (sysblk.ic_history_panel_enabled) ? "enabled" : "disabled");
+            WRMSG(HHC02295, "I", buf);
+            return 0;
+        }
+
+        /* option: [enable | on] | [disable | off] */
+        if ( argc == 3 )
+        {
+            if ( 0                          ||
+                 CMD( argv[2], on, 2 )      ||
+                 CMD( argv[2], enable, 3 )
+               )
+            {
+                OBTAIN_IC_HISTORY_LOCK( );
+                {
+                    sysblk.ic_history_panel_enabled = true;
+                }
+                RELEASE_IC_HISTORY_LOCK( );
+            }
+
+            else if ( 0                             ||
+                      CMD( argv[2], off, 3 )        ||
+                      CMD( argv[2], disable, 3 )
+                    )
+            {
+                OBTAIN_IC_HISTORY_LOCK( );
+                {
+                    sysblk.ic_history_panel_enabled = false;
+                }
+                RELEASE_IC_HISTORY_LOCK( );
+            }
+
+            else
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "" );
+                return -1;
+            }
+        }
+
+        MSGBUF( buf, "mips panel: %s",
+                (sysblk.ic_history_panel_enabled) ? "enabled" : "disabled");
         WRMSG(HHC02295, "I", buf);
         return 0;
     }
@@ -10893,6 +11003,13 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
         if ( argc == 3 )
         {
             avg_over = atoi( argv[2] );
+            if ( avg_over == 0 )
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "");
+                return -1;
+            }
+
             if ( avg_over <= 1 || avg_over > IC_HISTORY_SIZE )
             {
                 MSGBUF( buf, ". Average '%d' is not between 2 and %d seconds.", avg_over, IC_HISTORY_SIZE );
@@ -10946,6 +11063,7 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
             }
             MSGBUF( buf, "debug: MIPS fields:"
                         "\n    ic_history_enabled:          %d"
+                        "\n    ic_history_panel_enabled:    %d"
                         "\n    ic_history_empty:            %d"
                         "\n    ic_history_interval:         %d"
                         "\n    ic_history_avg_over:         %d"
@@ -10958,6 +11076,7 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
                         "\n    instcount:                   %ld"
                         "\n    sioscount:                   %ld",
                         sysblk.ic_history_enabled,
+                        sysblk.ic_history_panel_enabled,
                         sysblk.ic_history_empty,
                         sysblk.ic_history_interval,
                         sysblk.ic_history_avg_over,

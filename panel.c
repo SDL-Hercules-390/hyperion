@@ -2963,8 +2963,8 @@ FinishShutdown:
             || prev_cpupct    != regs->cpupct
             || prev_cpustate  != regs->cpustate
             || prev_instcount != sysblk.instcount
-            || prev_mipsrate  != sysblk.mipsrate
-            || prev_siosrate  != sysblk.siosrate
+            || prev_mipsrate  != (sysblk.ic_history_panel_enabled ? ( (U32) ( sysblk.ic_history_current_mips * 1000000.0 ) ) : sysblk.mipsrate )
+            || prev_siosrate  != (sysblk.ic_history_panel_enabled ? ( (U32) ( sysblk.ic_history_current_sios + 0.5) ) : sysblk.siosrate )
 #if defined( OPTION_SHARED_DEVICES )
             || prev_shrdcount != sysblk.shrdcount
 #endif
@@ -2975,8 +2975,8 @@ FinishShutdown:
             prev_cpupct    = regs->cpupct;
             prev_cpustate  = regs->cpustate;
             prev_instcount = sysblk.instcount;
-            prev_mipsrate  = sysblk.mipsrate;
-            prev_siosrate  = sysblk.siosrate;
+            prev_mipsrate  = (sysblk.ic_history_panel_enabled ? ( (U32) (sysblk.ic_history_current_mips * 1000000.0) ) : sysblk.mipsrate );
+            prev_siosrate  = (sysblk.ic_history_panel_enabled ? ( (U32) (sysblk.ic_history_current_sios + 0.5 ) ) : sysblk.siosrate );
 #if defined( OPTION_SHARED_DEVICES )
             prev_shrdcount = sysblk.shrdcount;
 #endif
