@@ -3342,7 +3342,7 @@ int     pgm_check;
     get_lf(&fl, &regs->FPR_L(r2));
 
     /* Rounding */
-    fl.long_fract += ((regs->FPR_L(r2 + 2) >> 56) & 1);
+    fl.long_fract += ((regs->FPR_L(r2 + 2) >> 55) & 1);
 
     /* Handle overflow */
     if (fl.long_fract & 0x0F00000000000000ULL) {
@@ -3421,7 +3421,7 @@ int     pgm_check;
     pgm_check = mul_lf_to_ef(&fl, &mul_fl, &result_fl, regs);
 
     /* Back to register */
-    store_ef(&result_fl, &regs->FPR_L(r1), &regs->FPR_L(r1)+2);
+    store_ef(&result_fl, &regs->FPR_L(r1), &regs->FPR_L(r1+2));
 
     /* Program check ? */
     if (pgm_check) {
