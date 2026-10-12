@@ -1237,16 +1237,21 @@ static void NP_update(REGS *regs)
     /* Rates */
     if ((!NPmips_valid || sysblk.mipsrate != NPmips) && sysblk.hicpu)
     {
+        /* display mipsrate from ic_history (mips command) if panel has been enabled; */
+        /* otherwise standard sysblk.mipsrate                                         */
+        U32 current_mipsrate;
+        current_mipsrate = (sysblk.ic_history_panel_enabled ? ( (U32) ( sysblk.ic_history_current_mips * 1000000.0 ) ) : sysblk.mipsrate );
+
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
-        if((sysblk.mipsrate / 1000000) > 999)
-          MSGBUF(buf, "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
-        else if((sysblk.mipsrate / 1000000) > 99)
-          MSGBUF(buf, "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
-        else if((sysblk.mipsrate / 1000000) > 9)
-          MSGBUF(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+        if((current_mipsrate / 1000000) > 999)
+          MSGBUF(buf, "%2d,%03d", current_mipsrate / 1000000000, current_mipsrate % 1000000000 / 1000000);
+        else if((current_mipsrate / 1000000) > 99)
+          MSGBUF(buf, "%4d.%01d", current_mipsrate / 1000000, current_mipsrate % 1000000 / 100000);
+        else if((current_mipsrate / 1000000) > 9)
+          MSGBUF(buf, "%3d.%02d", current_mipsrate / 1000000, current_mipsrate % 1000000 / 10000);
         else
-          MSGBUF(buf, "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
+          MSGBUF(buf, "%2d.%03d", current_mipsrate / 1000000, current_mipsrate % 1000000 / 1000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
@@ -1260,9 +1265,15 @@ static void NP_update(REGS *regs)
 #endif
     )
     {
+
+        /* display iorate from ic_history (mips command) if panel has been enabled; */
+        /* otherwise standard sysblk.siosrate                                       */
+        U32 current_iorate;
+        current_iorate = (sysblk.ic_history_panel_enabled ? ( (U32) (sysblk.ic_history_current_sios + 0.5 ) ) : sysblk.siosrate );
+
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
-        MSGBUF(buf, "%6.6s", format_int(sysblk.siosrate));
+        MSGBUF(buf, "%6.6s", format_int(current_iorate));
         draw_text (buf);
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
