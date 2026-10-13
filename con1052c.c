@@ -263,6 +263,7 @@ static void* con1052_panel_command( char *cmd )
     DEVBLK  *dev;
     char    *input;
     int      i;
+    int      waiters;
     size_t   pfxlen;
 
     void* (*next_panel_command_handler)( char *cmd );
@@ -288,30 +289,34 @@ static void* con1052_panel_command( char *cmd )
             WRMSG( HHC00013, "I", dev->filename, LCSS_DEVNUM, input );
             LOGMSG( "%s\n", input );
 
-            /* Convert ASCII input to EBCDIC */
-            for (i=0; i < dev->bufsize && input[i] != '\0'; i++)
-                dev->buf[i] = isprint( (unsigned char)input[i] ) ?
-                        host_to_guest( input[i] ) : ' ';
-
-            /* Update number of bytes in keyboard buffer */
-            dev->keybdrem = i;
-            dev->buflen   = i;
-
-            /* Wakup the channel if it's waiting for input
-               or present unsolicited attention interrupt.
-            */
             OBTAIN_DEVLOCK( dev );
+            {
+                /* Convert ASCII input to EBCDIC */
+                for (i=0; i < dev->bufsize && input[i] != '\0'; i++)
+                    dev->buf[i] = isprint( (unsigned char)input[i] ) ?
+                            host_to_guest( input[i] ) : ' ';
 
-            if (dev->kbwaiters)
-            {
-                signal_condition( &dev->kbcond );
-                RELEASE_DEVLOCK( dev );
+                /* Update number of bytes in keyboard buffer */
+                dev->keybdrem = i;
+                dev->buflen   = i;
+
+                /* Count the input, even an empty one: it is what a
+                   waiting READ INQUIRY waits for, since empty input
+                   leaves keybdrem at zero.
+                */
+                dev->kbinput++;
+
+                /* Wakup the channel if it's waiting for input */
+                waiters = dev->kbwaiters;
+                if (waiters)
+                    signal_condition( &dev->kbcond );
             }
-            else
-            {
-                RELEASE_DEVLOCK( dev );
+            RELEASE_DEVLOCK( dev );
+
+            /* Otherwise present unsolicited attention interrupt */
+            if (!waiters)
                 device_attention( dev, CSW_ATTN );
-            }
+
             return NULL;
         }
     }
@@ -337,6 +342,7 @@ static void con1052_execute_ccw( DEVBLK *dev, BYTE code, BYTE flags,
 U32     len;                            /* Length of data            */
 U32     num;                            /* Number of bytes to move   */
 BYTE    c;                              /* Print character           */
+u_int   kbinput;                        /* Keyboard input count      */
 
     UNREFERENCED( chained );
     UNREFERENCED( prevcode );
@@ -424,21 +430,32 @@ BYTE    c;                              /* Print character           */
     /* READ INQUIRY                                                  */
     /*---------------------------------------------------------------*/
 
+        OBTAIN_DEVLOCK( dev );
+
         /* Solicit console input if no data in the device buffer */
         if (!dev->keybdrem)
         {
+            /* Register as a waiter BEFORE prompting. The prompt can be
+               answered (by an HAO rule, for instance) before we would
+               otherwise get to wait, and that input must not be lost.
+            */
+            kbinput = dev->kbinput;
+            dev->kbwaiters++;
+
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
+            {
+                RELEASE_DEVLOCK( dev );
                 // "Enter '%s' input for console %1d:%04X"
                 WRMSG( HHC00010, "A", dev->filename, LCSS_DEVNUM );
-
-            OBTAIN_DEVLOCK( dev );
-            {
-                dev->kbwaiters++;
-                wait_condition( &dev->kbcond, &dev->lock );
-                dev->kbwaiters--;
+                OBTAIN_DEVLOCK( dev );
             }
-            RELEASE_DEVLOCK( dev );
+
+            /* Wait for input to arrive, unless it already has */
+            while (dev->kbinput == kbinput)
+                wait_condition( &dev->kbcond, &dev->lock );
+
+            dev->kbwaiters--;
         }
 
         /* Calculate number of bytes to move and residual byte count */
@@ -460,6 +477,8 @@ BYTE    c;                              /* Print character           */
         {
             dev->keybdrem = 0;
         }
+
+        RELEASE_DEVLOCK( dev );
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
