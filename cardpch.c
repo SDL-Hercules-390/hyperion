@@ -23,6 +23,12 @@
 #define HEX40           ((BYTE)0x40)
 
 /*-------------------------------------------------------------------*/
+/* Default(s) for printer output files                               */
+/*-------------------------------------------------------------------*/
+#define DEFAULT_PUNCH_FILE_EXTENSION ".pch"
+#define URO_TYPE "Card"
+
+/*-------------------------------------------------------------------*/
 /* Subroutine to write data to the card punch                        */
 /*-------------------------------------------------------------------*/
 static void
@@ -191,6 +197,7 @@ static int cardpch_init_handler( DEVBLK* dev, int argc, char* argv[] )
 {
 int     i;                              /* Array subscript           */
 bool    sockdev = false;
+char    work[16];                       /* work area for strings     */
 
     /* Close the existing file, if any */
     if (dev->fd >= 0)
@@ -259,6 +266,7 @@ bool    sockdev = false;
     dev->crlf    = 0;
     dev->excps   = 0;
     dev->stopdev = FALSE;
+    dev->handshake = 0; // 'handshake' option
 
     /* Process the driver arguments */
     for (i=1; i < argc; i++)
@@ -307,6 +315,17 @@ bool    sockdev = false;
             continue;
         }
 
+        /* 'handshake' option: default=false
+           this enables the use of the x'f7' and x'ff'
+           CCW opcodes that are the file open/close
+           handshaking interface with the guest O/S
+        */
+        if (strcasecmp(argv[i], "handshake") == 0)
+        {
+            dev->handshake = 1;
+            continue;
+        }
+
         // "%1d:%04X Card: parameter %s in argument %d is invalid"
         WRMSG( HHC01209, "E", LCSS_DEVNUM, argv[i], i+1 );
         return -1;
@@ -331,6 +350,21 @@ bool    sockdev = false;
         return -1;
     }
 
+    if (sockdev && dev->handshake)
+    {
+        // "%1d:%04X Printer: option %s is incompatible"
+        WRMSG(HHC01210, "E", LCSS_DEVNUM,
+            "sockdev/handshake");
+        return -1;
+    }
+    if (dev->handshake && dev->append)
+    {
+        // "%1d:%04X Card: option %s is incompatible"
+        WRMSG( HHC01210, "E", LCSS_DEVNUM,
+            "append/handshake" );
+        return -1;
+    }
+
     /* If socket device, create a listening socket
        to accept connections on.
     */
@@ -340,9 +374,25 @@ bool    sockdev = false;
         return -1;  // (error msg already issued)
     }
 
-    /* Open the device file right away */
-    if (!sockdev && open_punch( dev ) != 0)
-        return -1;  // (error msg already issued)
+    /*
+       If handshaking, capture elements of the target for later
+     */
+    if (dev->handshake)
+    {
+        MSGBUF(work, "punch_%04X", LCSS_DEVNUM);
+        /* Prepare the UROUTBLK for use with output file naming */
+        if ( uro_initfile(dev, work, DEFAULT_PUNCH_FILE_EXTENSION, URO_TYPE) )
+        {
+            // error already issued
+            return -1;
+        }
+    }
+    else
+    {
+        /* Open the device file right away */
+        if (!sockdev && open_punch( dev ) != 0)
+            return -1;  // (error msg already issued)
+    }
 
     return 0;
 } /* end function cardpch_init_handler */
@@ -357,12 +407,13 @@ static void cardpch_query_device (DEVBLK *dev, char **devclass,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, devclass, buflen, buffer );
 
-    snprintf (buffer, buflen, "%s%s%s%s%s%s IO[%"PRIu64"]",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s%s IO[%"PRIu64"]",
                 filename,
                 (dev->ascii                ? " ascii"     : " ebcdic"),
                 (dev->bs                   ? " sockdev"   : ""),
                 ((dev->ascii && dev->crlf) ? " crlf"      : ""),
                 (dev->append               ? " append"    : ""),
+                (dev->handshake            ? " handshake" : ""),
                 (dev->stopdev              ? " (stopped)" : ""),
                 dev->excps );
 
@@ -385,6 +436,13 @@ off_t           filesize = 0;           /* file size for ftruncate   */
 
     if (!dev->append)
         open_flags |= O_TRUNC;
+
+    // Resolve the name of the ourput file
+    if (dev->handshake && uro_resolvefilename(dev) < 0)
+    {
+        // error already issued
+        return -1;
+    }
 
     if ((dev->fd = HOPEN( dev->filename, open_flags, S_IRUSR | S_IWUSR | S_IRGRP )) < 0)
     {
@@ -434,6 +492,14 @@ static int cardpch_close_device( DEVBLK* dev )
     dev->fd = -1;
     dev->stopdev = FALSE;
 
+    /*
+     * Clear out any other residual from prior file
+     */
+    if (dev->handshake)
+    {
+        uro_closefromccw(dev);
+    }
+
     return 0;
 } /* end function cardpch_close_device */
 
@@ -444,6 +510,8 @@ static void cardpch_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
+int             rc;
+BYTE            *work;                  // string manipulation
 U32             i;                      /* Loop counter              */
 U32             num;                    /* Number of bytes to move   */
 BYTE            c;                      /* Output character          */
@@ -458,6 +526,88 @@ BYTE            c;                      /* Output character          */
         dev->sense[0] = SENSE_IR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return;
+    }
+
+    /* Handle the VM Handshake CCWs first since they
+       will have an impact on how the output file
+       gets opened on the first data xfer CCW
+    */
+    if (code == HANDSHAKE_OPEN) // CCW code X'F7'
+    {
+        /*---------------------------------------------------------------*/
+        /* OPEN & NAME A NEW FILE                         (VM Handshake) */
+        /*---------------------------------------------------------------*/
+        if (dev->handshake)
+        {
+            /* Close any existing file */
+            cardpch_close_device(dev);
+
+            /* Translate CCW data from EBCDIC */
+            work = NULL;
+            if (count > 0)
+            {
+                work = malloc(count);
+                buf_guest_to_host(iobuf, work, count);
+            }
+
+            /* Save the name of the new file */
+            rc = uro_namefromccw(dev, work, count);
+            free(work); work = NULL;
+
+            if (rc < 0)
+            {
+                // return DATACHK (oom on new file name)
+                dev->sense[0] = SENSE_DC;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            }
+            else
+            {
+                /* Return normal status */
+                *unitstat = CSW_CE | CSW_DE;
+            }
+        }
+        else  // handshake not enabled
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        return;
+    }
+
+    if (code == HANDSHAKE_CLOSE)  // CCW code X'FF"
+    {
+        /*---------------------------------------------------------------*/
+        /* CLOSE CURRENT FILE                             (VM Handshake) */
+        /*---------------------------------------------------------------*/
+        if (dev->handshake)
+        {
+            /* Close the existing file */
+            cardpch_close_device(dev);
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
+        else  // handshake not enabled
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        return;
+    }
+
+    /* Open the device file if necessary */
+    if (dev->fd < 0 && !IS_CCW_SENSE( code ))
+    {
+        rc = open_punch( dev );
+        if (rc < 0)
+        {
+            /* Set unit check with intervention required */
+            dev->sense[0] = SENSE_IR;
+            *unitstat = CSW_UC;
+            return;
+        }
     }
 
     /* Process depending on CCW opcode */

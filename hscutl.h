@@ -431,6 +431,35 @@ HUT_DLL_IMPORT const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
 HUT_DLL_IMPORT bool are_big_endian();
 
 /*-------------------------------------------------------------------*/
+/*      Methods to help with URO file naming for HANDSHAKE option    */
+/*-------------------------------------------------------------------*/
+/*
+    These methods are used in unit-record out drivers
+    (printer.c,cardpch.c)
+    in processing the names of the output files
+
+    uro_initfile:
+        initialize the UROUTBLK with the filename
+        components for handling files created by
+        the unit record output devices
+    uro_namefromccw:
+        Process the file name from a CCW and save it in
+        the UROUTBLK.
+    uro_resolvefilename:
+        Determine the full name of the output file.
+        This might involve reenaming existing files
+        if the 'append' option is not specified.
+    uri_closefromccw:
+        Resets any device fields when the close
+        handshake ccw is issued. The caller is
+        responsible for actually closing the file.
+*/
+HUT_DLL_IMPORT int uro_initfile ( DEVBLK* dev, const char *defaultName, const char *defaultExt, const char *devclass );
+HUT_DLL_IMPORT int uro_namefromccw ( DEVBLK* dev, const BYTE *ccwdata, int ccwlen );
+HUT_DLL_IMPORT int uro_resolvefilename ( DEVBLK* dev );
+HUT_DLL_IMPORT int uro_closefromccw ( DEVBLK* dev );
+
+/*-------------------------------------------------------------------*/
 /*      Determine if running under the control of a debugger         */
 /*-------------------------------------------------------------------*/
 
