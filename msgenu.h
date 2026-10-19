@@ -242,7 +242,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface %s"
 #define HHC00007 "Previous message from function '%s' at %s(%d)"
-//efine HHC00008 (available)
+#define HHC00008 "'%s' input for console %1d:%04X discarded, ignored by the guest: \"%s\""
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter '%s' input for console %1d:%04X"
 #define HHC00011 "Function %s failed; cache %d size %d: [%02d] %s"
@@ -250,7 +250,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00013 "'%s' input entered for console %1d:%04X: \"%s\""
 #define HHC00014 "select: %s"
 #define HHC00015 "keyboard read: %s"
-//efine HHC00016 (available)
+#define HHC00016 "'%s' input for console %1d:%04X discarded, %d lines not yet read: \"%s\""
 #define HHC00017 "Crash dumps NOT enabled"
 #define HHC00018 "Hercules is %srunning in elevated mode"
 #define HHC00019 "Hercules IS running in test mode"

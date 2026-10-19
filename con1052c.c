@@ -22,11 +22,46 @@
 /*                 Tweakable build constants                         */
 /*-------------------------------------------------------------------*/
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
+#define KBQLEN_1052     16              /* Max unread input lines    */
+#define ATTN_TRIES_1052 100             /* Attention retries, 1ms    */
+#define ATTN_STALE_1052 2               /* Secs until an attention
+                                           without READ is ignored   */
+#define ATTN_WATCH_1052 250000          /* Usecs between checks      */
+
+/*-------------------------------------------------------------------*/
+/*  Keyboard input lines not yet read by the guest. While any are    */
+/*  queued, the guest is told by an attention interrupt, and told    */
+/*  again once it has read: a READ that leaves lines behind ends     */
+/*  with attention in its ending status, since the device is still   */
+/*  busy with that READ and an unsolicited one would be rejected.    */
+/*                                                                   */
+/*  Attentions are not counted against READs. A guest may answer     */
+/*  two with one READ, or ignore one altogether (MVS does during     */
+/*  NIP). An attention still unanswered after a few seconds, and no  */
+/*  longer pending, is taken as ignored: the oldest line, which the  */
+/*  guest did not want, is discarded with a message, and the guest   */
+/*  is told about the lines behind it with another attention.        */
+/*-------------------------------------------------------------------*/
+typedef struct KBQ1052
+{
+    int     head;                       /* Index of oldest line      */
+    int     count;                      /* Number of lines queued    */
+    int     attn;                       /* 1=Attention presented (or
+                                           being presented) and not
+                                           answered by a READ yet    */
+    u_int   attngen;                    /* Attention generation      */
+    struct timeval attntime;            /* When it was presented     */
+    int     watching;                   /* 1=Watch thread running    */
+    int     len [ KBQLEN_1052 ];        /* Length of each line       */
+    BYTE    line[ KBQLEN_1052 ][ BUFLEN_1052 ]; /* EBCDIC input      */
+}
+KBQ1052;
 
 /*-------------------------------------------------------------------*/
 /*                     Forward reference                             */
 /*-------------------------------------------------------------------*/
 static DEVHND con1052_device_hndinfo;
+static void   con1052_attention( DEVBLK *dev );
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
@@ -94,6 +129,10 @@ static int con1052_close_device( DEVBLK *dev )
         i = (p - sysblk.cmd_pfxs);
         sysblk.used_pfxs[i] = FALSE;
     }
+
+    /* Discard any input the guest has not read */
+    free( dev->dev_data );
+    dev->dev_data = NULL;
 
     dev->fd = -1;   /* device has now been closed */
 
@@ -243,6 +282,15 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
         sysblk.used_pfxs[i] = TRUE;
     }
 
+    /* Allocate the keyboard input queue */
+    if (!(dev->dev_data = calloc( 1, sizeof( KBQ1052 ))))
+    {
+        // "%1d:%04X %s: Error in function %s: %s"
+        WRMSG( HHC00900, "E", LCSS_DEVNUM, dev->typname, "calloc()",
+            strerror( errno ));
+        return -1;
+    }
+
     /* PROGRAMMING NOTE: it is CRITICAL that we set our file
        descriptor integer to a non-zero value greater than 2
        (even though we'll never use it) in order to force the
@@ -256,14 +304,207 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
 }
 
 /*-------------------------------------------------------------------*/
+/*        DISCARD THE LINE OF AN ATTENTION THE GUEST IGNORED         */
+/*-------------------------------------------------------------------*/
+static int con1052_stale_attn( DEVBLK *dev, KBQ1052 *kbq, int inccw,
+                               char *discarded )
+{
+    struct timeval  now, age;
+    int             i;
+
+    /* NOTE: the device lock must be held! */
+
+    /* A guest answers an attention within milliseconds. One still
+       unanswered after seconds, and no longer pending, was ignored;
+       left standing, it would keep every queued line waiting. Within
+       a channel program the device is busy, but no attention can be
+       pending then either.
+    */
+    if (0
+        || !kbq->attn
+        || (!inccw && (dev->busy || IOPENDING( dev )))
+    )
+        return 0;
+
+    gettimeofday( &now, NULL );
+    timeval_subtract( &kbq->attntime, &now, &age );
+
+    if (age.tv_sec < ATTN_STALE_1052)
+        return 0;
+
+    kbq->attn = 0;
+
+    /* Discard the oldest line rather than present it later. Typed
+       ahead of a guest that was not ready for it, it could end up as
+       the answer to a question asked afterwards: a reply "R 00,..."
+       meant for one WTOR reaching the next one numbered 00. Without
+       the queue, the next line entered overwrote it.
+    */
+    if (!kbq->count)
+        return 0;
+
+    for (i=0; i < kbq->len[ kbq->head ]; i++)
+        discarded[i] = guest_to_host( kbq->line[ kbq->head ][i] );
+    discarded[i] = '\0';
+
+    kbq->head = (kbq->head + 1) % KBQLEN_1052;
+    kbq->count--;
+
+    return 1;
+}
+
+/*-------------------------------------------------------------------*/
+/*       WATCH AN OUTSTANDING ATTENTION WHILE INPUT IS QUEUED        */
+/*-------------------------------------------------------------------*/
+static void* con1052_watch_thread( void *arg )
+{
+    DEVBLK  *dev = (DEVBLK*) arg;
+    KBQ1052 *kbq;
+    int      ignored;
+    int      dropped;
+    char     discarded[ BUFLEN_1052 + 1 ];
+
+    /* Present another attention if the guest ignored the last one
+       while input is still queued. Nothing else may happen on the
+       device that would: no input entered, no channel program run.
+    */
+    for (;;)
+    {
+        USLEEP( ATTN_WATCH_1052 );
+
+        OBTAIN_DEVLOCK( dev );
+        {
+            /* Done once the input is read, or the device closed */
+            if (0
+                || !(kbq = dev->dev_data)
+                || !kbq->count
+                || !kbq->attn
+            )
+            {
+                if (kbq)
+                    kbq->watching = 0;
+                RELEASE_DEVLOCK( dev );
+                return NULL;
+            }
+
+            dropped = con1052_stale_attn( dev, kbq, FALSE, discarded );
+            ignored = !kbq->attn;
+        }
+        RELEASE_DEVLOCK( dev );
+
+        if (dropped)
+            // "'%s' input for console %1d:%04X discarded, ignored by the guest: \"%s\""
+            WRMSG( HHC00008, "W", dev->filename, LCSS_DEVNUM, discarded );
+
+        if (ignored)
+            con1052_attention( dev );
+    }
+
+    UNREACHABLE_CODE( return NULL );
+}
+
+/*-------------------------------------------------------------------*/
+/*              START WATCHING AN OUTSTANDING ATTENTION              */
+/*-------------------------------------------------------------------*/
+static void con1052_watch( DEVBLK *dev, KBQ1052 *kbq )
+{
+    TID      tid;
+
+    /* NOTE: the device lock must be held! */
+
+    if (!kbq->watching)
+    {
+        kbq->watching = 1;
+
+        if (create_thread( &tid, DETACHED, con1052_watch_thread,
+                dev, "con1052_watch_thread" ) != 0)
+            kbq->watching = 0;
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*           PRESENT ATTENTION FOR THE QUEUED INPUT LINES            */
+/*-------------------------------------------------------------------*/
+static void con1052_attention( DEVBLK *dev )
+{
+    KBQ1052 *kbq;
+    u_int    gen;
+    int      tries;
+    int      rc;
+
+    /* NOTE: the device lock must *NOT* be held! */
+
+    /* The attention is rejected while the device is busy or still
+       has an interrupt pending, which a console the guest is writing
+       to usually is only for a moment. Retry briefly. If that fails,
+       the ending status of the next channel program for the device
+       presents it instead.
+    */
+    for (tries=0; ; tries++)
+    {
+        /* Claim the attention before presenting it, unless one is
+           outstanding, the guest is waiting to read anyway, or has
+           read everything meanwhile.
+        */
+        OBTAIN_DEVLOCK( dev );
+        {
+            if (0
+                || !(kbq = dev->dev_data)
+                || !kbq->count
+                || kbq->attn
+                || dev->kbwaiters
+            )
+            {
+                RELEASE_DEVLOCK( dev );
+                return;
+            }
+            kbq->attn = 1;
+            gen = ++kbq->attngen;
+            gettimeofday( &kbq->attntime, NULL );
+        }
+        RELEASE_DEVLOCK( dev );
+
+        rc = device_attention( dev, CSW_ATTN );
+
+        OBTAIN_DEVLOCK( dev );
+        {
+            if ((kbq = dev->dev_data) && kbq->attngen == gen)
+            {
+                /* Presented: see that it is answered */
+                if (rc == 0)
+                    con1052_watch( dev, kbq );
+
+                /* Not presented: give the claim back, unless a READ
+                   has answered it meanwhile and another been claimed
+                */
+                else
+                    kbq->attn = 0;
+            }
+        }
+        RELEASE_DEVLOCK( dev );
+
+        if (rc != 1 || tries >= ATTN_TRIES_1052)
+            return;
+
+        USLEEP( 1000 );
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*        CONSOLE PRINTER KEYBOARD PANEL COMMAND FUNCTION            */
 /*-------------------------------------------------------------------*/
 static void* con1052_panel_command( char *cmd )
 {
     DEVBLK  *dev;
+    KBQ1052 *kbq;
     char    *input;
     int      i;
+    int      queued;
+    int      slot;
     int      waiters;
+    int      attn = 0;
+    int      dropped;
+    char     discarded[ BUFLEN_1052 + 1 ];
     size_t   pfxlen;
 
     void* (*next_panel_command_handler)( char *cmd );
@@ -291,31 +532,63 @@ static void* con1052_panel_command( char *cmd )
 
             OBTAIN_DEVLOCK( dev );
             {
-                /* Convert ASCII input to EBCDIC */
-                for (i=0; i < dev->bufsize && input[i] != '\0'; i++)
-                    dev->buf[i] = isprint( (unsigned char)input[i] ) ?
-                            host_to_guest( input[i] ) : ' ';
+                /* The device may have been detached meanwhile */
+                if (!(kbq = dev->dev_data))
+                {
+                    RELEASE_DEVLOCK( dev );
+                    return NULL;
+                }
 
-                /* Update number of bytes in keyboard buffer */
-                dev->keybdrem = i;
-                dev->buflen   = i;
+                /* An attention the guest ignored discards its line */
+                dropped = con1052_stale_attn( dev, kbq, FALSE, discarded );
 
-                /* Count the input, even an empty one: it is what a
-                   waiting READ INQUIRY waits for, since empty input
-                   leaves keybdrem at zero.
+                /* Keep the input queued until the guest reads it.
+                   Replacing an unread line would lose it silently.
                 */
-                dev->kbinput++;
+                queued = kbq->count;
+                if (queued < KBQLEN_1052)
+                {
+                    slot = (kbq->head + queued) % KBQLEN_1052;
 
-                /* Wakup the channel if it's waiting for input */
-                waiters = dev->kbwaiters;
-                if (waiters)
-                    signal_condition( &dev->kbcond );
+                    /* Convert ASCII input to EBCDIC */
+                    for (i=0; i < BUFLEN_1052 && input[i] != '\0'; i++)
+                        kbq->line[slot][i] = isprint( (unsigned char)input[i] ) ?
+                                host_to_guest( input[i] ) : ' ';
+
+                    kbq->len[slot] = i;
+                    kbq->count++;
+
+                    /* Count the input, even an empty one: it is what a
+                       waiting READ INQUIRY waits for, since empty input
+                       leaves keybdrem at zero.
+                    */
+                    dev->kbinput++;
+
+                    /* Wakup the channel if it's waiting for input */
+                    waiters = dev->kbwaiters;
+                    if (waiters)
+                        signal_condition( &dev->kbcond );
+
+                    /* Otherwise present an attention interrupt,
+                       unless one is outstanding: the READ that
+                       answers it ends with another if lines remain.
+                    */
+                    attn = (!waiters && !kbq->attn);
+                }
             }
             RELEASE_DEVLOCK( dev );
 
-            /* Otherwise present unsolicited attention interrupt */
-            if (!waiters)
-                device_attention( dev, CSW_ATTN );
+            if (dropped)
+                // "'%s' input for console %1d:%04X discarded, ignored by the guest: \"%s\""
+                WRMSG( HHC00008, "W", dev->filename, LCSS_DEVNUM, discarded );
+
+            if (queued >= KBQLEN_1052)
+                // "'%s' input for console %1d:%04X discarded, %d lines not yet read: \"%s\""
+                WRMSG( HHC00016, "W", dev->filename, LCSS_DEVNUM, queued, input );
+
+            /* Present unsolicited attention interrupt */
+            else if (attn)
+                con1052_attention( dev );
 
             return NULL;
         }
@@ -343,6 +616,9 @@ U32     len;                            /* Length of data            */
 U32     num;                            /* Number of bytes to move   */
 BYTE    c;                              /* Print character           */
 u_int   kbinput;                        /* Keyboard input count      */
+KBQ1052 *kbq;                           /* Keyboard input queue      */
+int     dropped;                        /* 1=Input line discarded    */
+char    discarded[ BUFLEN_1052 + 1 ];   /* The discarded input line  */
 
     UNREFERENCED( chained );
     UNREFERENCED( prevcode );
@@ -432,30 +708,51 @@ u_int   kbinput;                        /* Keyboard input count      */
 
         OBTAIN_DEVLOCK( dev );
 
-        /* Solicit console input if no data in the device buffer */
+        kbq = dev->dev_data;
+
+        /* Take the next input line unless data chaining continues one */
         if (!dev->keybdrem)
         {
-            /* Register as a waiter BEFORE prompting. The prompt can be
-               answered (by an HAO rule, for instance) before we would
-               otherwise get to wait, and that input must not be lost.
-            */
-            kbinput = dev->kbinput;
-            dev->kbwaiters++;
-
-            /* Display prompting message on console if allowed */
-            if (dev->prompt1052)
+            /* Solicit console input if none is queued */
+            if (!kbq->count)
             {
-                RELEASE_DEVLOCK( dev );
-                // "Enter '%s' input for console %1d:%04X"
-                WRMSG( HHC00010, "A", dev->filename, LCSS_DEVNUM );
-                OBTAIN_DEVLOCK( dev );
+                /* Register as a waiter BEFORE prompting. The prompt can be
+                   answered (by an HAO rule, for instance) before we would
+                   otherwise get to wait, and that input must not be lost.
+                */
+                kbinput = dev->kbinput;
+                dev->kbwaiters++;
+
+                /* Display prompting message on console if allowed */
+                if (dev->prompt1052)
+                {
+                    RELEASE_DEVLOCK( dev );
+                    // "Enter '%s' input for console %1d:%04X"
+                    WRMSG( HHC00010, "A", dev->filename, LCSS_DEVNUM );
+                    OBTAIN_DEVLOCK( dev );
+                }
+
+                /* Wait for input to arrive, unless it already has */
+                while (dev->kbinput == kbinput)
+                    wait_condition( &dev->kbcond, &dev->lock );
+
+                dev->kbwaiters--;
             }
 
-            /* Wait for input to arrive, unless it already has */
-            while (dev->kbinput == kbinput)
-                wait_condition( &dev->kbcond, &dev->lock );
+            /* Move the oldest line into the device buffer */
+            if (kbq->count)
+            {
+                len = kbq->len[ kbq->head ];
+                memcpy( dev->buf, kbq->line[ kbq->head ], len );
+                dev->keybdrem = len;
+                dev->buflen   = len;
 
-            dev->kbwaiters--;
+                kbq->head = (kbq->head + 1) % KBQLEN_1052;
+                kbq->count--;
+
+                /* The outstanding attention, if any, is answered */
+                kbq->attn = 0;
+            }
         }
 
         /* Calculate number of bytes to move and residual byte count */
@@ -540,6 +837,38 @@ u_int   kbinput;                        /* Keyboard input count      */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
 
     } /* end switch(code) */
+
+    /* Input lines still waiting without an outstanding attention
+       get one with the ending status of the channel program. Either
+       this READ answered the last one, or the device was busy when
+       the attention was due, so an unsolicited one was rejected.
+    */
+    if (1
+        && *unitstat == (CSW_CE | CSW_DE)
+        && !(flags & (CCW_FLAGS_CC | CCW_FLAGS_CD))
+    )
+    {
+        OBTAIN_DEVLOCK( dev );
+        {
+            kbq = dev->dev_data;
+
+            dropped = con1052_stale_attn( dev, kbq, TRUE, discarded );
+
+            if (kbq->count && !kbq->attn)
+            {
+                kbq->attn = 1;
+                kbq->attngen++;
+                gettimeofday( &kbq->attntime, NULL );
+                con1052_watch( dev, kbq );
+                *unitstat |= CSW_ATTN;
+            }
+        }
+        RELEASE_DEVLOCK( dev );
+
+        if (dropped)
+            // "'%s' input for console %1d:%04X discarded, ignored by the guest: \"%s\""
+            WRMSG( HHC00008, "W", dev->filename, LCSS_DEVNUM, discarded );
+    }
 
 } /* end function con1052_execute_ccw */
 
