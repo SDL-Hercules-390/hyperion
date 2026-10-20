@@ -334,6 +334,11 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         Ccom_opn [m] = 1;
 
+        /* Cerr [m] is per socket number, and the number is re-used: start
+           it clean, or GETERRORS on the new socket reads the last error of
+           whoever held the number before. */
+        Cerr [m] = 0;
+
         release_lock (&tcpip_lock);
 
         t->ret_cd = m;
@@ -521,6 +526,8 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         Ccom_opn [m] = 1;
 
+        Cerr [m] = 0;   /* a fresh socket, see SOCKET */
+
         release_lock (&tcpip_lock);
 
         t->len_out = sizeof (Clocal_adx);
@@ -637,6 +644,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
             Ccom_opn [aux1] = 0;
             Ccom_han [aux1] = -1;
             Ccom_blk [aux1] = 1;
+            Cerr [aux1] = 0;
 
             /* The select state goes with the socket.  It is keyed by socket
                number -- the guest hands in the highest socket of its set as
