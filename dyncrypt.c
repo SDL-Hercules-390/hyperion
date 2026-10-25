@@ -4572,6 +4572,71 @@ DEF_INST(dyn_cipher_message_with_chaining)
   }
 }
 
+/*----------------------------------------------------------------------------*/
+/* B929 KMA   - Cipher message with authentication                    [RRF-b] */
+/*----------------------------------------------------------------------------*/
+DEF_INST(dyn_cipher_message_with_authentication)
+{
+  static const BYTE query_bits[16] = { 0x80 };
+  int r1, r2, r3;
+
+  RRF_M(inst, regs, r1, r2, r3);
+  PER_ZEROADDR_CHECK( regs, 1 );
+  TXFC_INSTR_CHECK( regs );
+
+  /* Query-only compatibility support; do not require or advertise MSA 8. */
+  FACILITY_CHECK( 017_MSA, regs );
+
+  /* Register designators must be valid even for Query. */
+  if(unlikely(!r1 || (r1 & 1) || !r2 || (r2 & 1) ||
+              !r3 || (r3 & 1) || r3 == r1 || r3 == r2))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* No encryption or authentication functions are implemented. */
+  if(unlikely(GR0_fc(regs) != 0))
+  {
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+    return;
+  }
+
+  /* Bit 0 denotes Query; all other function bits remain clear. */
+  ARCH_DEP(vstorec)(query_bits, 15,
+    GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+  regs->psw.cc = 0;
+}
+
+/*----------------------------------------------------------------------------*/
+/* B93A KDSA  - Compute digital signature authentication                [RRE] */
+/*----------------------------------------------------------------------------*/
+DEF_INST(dyn_compute_digital_signature_authentication)
+{
+  static const BYTE query_bits[16] = { 0x80 };
+  int r1, r2;
+
+  RRE(inst, regs, r1, r2);
+  PER_ZEROADDR_CHECK( regs, 1 );
+  TXFC_INSTR_CHECK( regs );
+
+  /* Query-only compatibility support; do not require or advertise MSA 9. */
+  FACILITY_CHECK( 017_MSA, regs );
+
+  /* Register designators must be valid even for Query. */
+  if(unlikely(r1 || !r2 || (r2 & 1)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* No digital signature functions are implemented. */
+  if(unlikely(GR0_fc(regs) != 0))
+  {
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+    return;
+  }
+
+  /* Bit 0 denotes Query; all other function bits remain clear. */
+  ARCH_DEP(vstorec)(query_bits, 15,
+    GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+  regs->psw.cc = 0;
+}
+
 #if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
 /*----------------------------------------------------------------------------*/
 /* B92D KMCTR - Cipher message with counter                           [RRF-b] */
@@ -5315,6 +5380,8 @@ DEF_INST(dyn_perform_random_number_operation)
  HDL_UNDEF_INST( dyn_compute_intermediate_message_digest )
  HDL_UNDEF_INST( dyn_compute_last_message_digest         )
  HDL_UNDEF_INST( dyn_compute_message_authentication_code )
+ HDL_UNDEF_INST( dyn_cipher_message_with_authentication  )
+ HDL_UNDEF_INST( dyn_compute_digital_signature_authentication )
 #endif
 
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
@@ -5377,6 +5444,8 @@ HDL_INSTRUCTION_SECTION;
   /* Install our instructions for the architectures we support */
 
 #if defined( _FEATURE_017_MSA_FACILITY )
+  HDL_INST( ARCH_________900, OPCODE( B929 ), dyn_cipher_message_with_authentication );
+  HDL_INST( ARCH_________900, OPCODE( B93A ), dyn_compute_digital_signature_authentication );
   #if !defined( _FEATURE_370_EXTENSION )
   HDL_INST( ARCH_____390_900, OPCODE( B93E ), dyn_compute_intermediate_message_digest );
   HDL_INST( ARCH_____390_900, OPCODE( B93F ), dyn_compute_last_message_digest         );

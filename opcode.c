@@ -109,6 +109,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( compute_message_authentication_code )
 #endif
 
+/* KMA Query is supplied by dyncrypt; keep a fallback if it is absent. */
+ UNDEF_INST( cipher_message_with_authentication )
+
+/* KDSA Query is supplied by dyncrypt; keep a fallback if it is absent. */
+ UNDEF_INST( compute_digital_signature_authentication )
+
 #if !defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
  UNDEF_INST( add_y )
  UNDEF_INST( add_halfword_y )
@@ -4520,7 +4526,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B926*/ GENx37Xx390x900 ( "LBR"       , RRE  , ASMFMT_RRE      , load_byte_register                                  ),
  /*B927*/ GENx37Xx390x900 ( "LHR"       , RRE  , ASMFMT_RRE      , load_halfword_register                              ),
  /*B928*/ GENx___x390x900 ( "PCKMO"     , RRE  , ASMFMT_RRE      , perform_cryptographic_key_management_operation      ),
- /*B929*/ GENx___x___x___ ,
+ /*B929*/ GENx___x___x900 ( "KMA"       , RRF_b, ASMFMT_RRF_M    , cipher_message_with_authentication                  ),
  /*B92A*/ GENx___x390x900 ( "KMF"       , RRE  , ASMFMT_RRE      , cipher_message_with_cipher_feedback                 ),
  /*B92B*/ GENx___x390x900 ( "KMO"       , RRE  , ASMFMT_RRE      , cipher_message_with_output_feedback                 ),
  /*B92C*/ GENx___x390x900 ( "PCC"       , RRE  , ASMFMT_none     , perform_cryptographic_computation                   ),
@@ -4537,7 +4543,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B937*/ GENx___x___x___ ,
  /*B938*/ GENx___x___x___ ,
  /*B939*/ GENx___x___x___ ,
- /*B93A*/ GENx___x___x___ ,
+ /*B93A*/ GENx___x___x900 ( "KDSA"      , RRE  , ASMFMT_RRE      , compute_digital_signature_authentication            ),
  /*B93B*/ GENx___x___x900 ( "NNPA"      , RRE  , ASMFMT_RRE_NONE , neural_network_processing_assist                    ),
  /*B93C*/ GENx___x390x900 ( "PRNO"      , RRE  , ASMFMT_RRE      , perform_random_number_operation                     ),
  /*B93D*/ GENx___x___x___ ,
