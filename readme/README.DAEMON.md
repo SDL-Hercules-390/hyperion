@@ -44,6 +44,7 @@ For this reason, you _must_ supply some other means for issuing commands to Herc
 [`HTTP PORT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPPORT), [`HTTP ROOT`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPROOT) and [`HTTP START`](https://sdl-hercules-390.github.io/html/hercconf.html#HTTPSTRT)
 configuration file statements:
 
+On non Windows platforms (Linux, macOS, etc.) when the <b>--NoUI</b> option is specified Hercules detaches any <b><i>tty</i></b> devices connected to <i>stdin, stdout</i> and <i>stderr</i>. This allows Hercules to be started using <b>nohup</b> and as a background process.
 ___
 <pre>
     # Shared Device Server with no guest (i.e. NUMCPU 0)
