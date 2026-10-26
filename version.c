@@ -171,8 +171,10 @@ static const char *build_info[] = {
      "Visual Studio 2017"
 #elif _MSC_VER >= VS2019  && _MSC_VER < VS2022
      "Visual Studio 2019"
-#elif _MSC_VER >= VS2022
-     "Visual Studio 2022"
+#elif _MSC_VER >= VS2022  && _MSC_VER < VS2026
+    "Visual Studio 2022"
+#ELIF _MSC_VER >= VS2026
+    "Visual Studio 2026"
 #else
      "Visual C"
 #endif
