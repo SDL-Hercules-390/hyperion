@@ -1641,7 +1641,7 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 static void  LCS_Shutdown( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 {
 //    char        Reply[128];
-    LCSSTDFRM   Reply;
+    LCSSTDFRM   Reply = { 0 };
     int         iReplyLen = sizeof(Reply);  /* Used and changed by INIT_REPLY_FRAME */
     PLCSSTDFRM  pLCSSTDFRM = (PLCSSTDFRM)&Reply;
 
@@ -1810,7 +1810,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 
 static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 {
-    LCSSTDFRM   Reply;
+    LCSSTDFRM   Reply = { 0 };
     int         iReplyLen = sizeof(Reply);  /* Used and changed by INIT_REPLY_FRAME */
     PLCSSTDFRM  pLCSSTDFRM = (PLCSSTDFRM)&Reply;
     PLCSPORT    pLCSPORT;
@@ -2109,7 +2109,7 @@ static  void  LCS_DelMulticast( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdL
 
 static void  LCS_DefaultCmdProc( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 {
-    LCSSTDFRM   Reply;
+    LCSSTDFRM   Reply = { 0 };
     int         iReplyLen = sizeof(Reply);  /* Used and changed by INIT_REPLY_FRAME */
     PLCSSTDFRM  pLCSSTDFRM = (PLCSSTDFRM)&Reply;
 
