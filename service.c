@@ -163,9 +163,9 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
         */
 
         // usually find at beginning of message
-        if ( memcmp( p, OSC3008, OSC3008_len )     == 0   ||
-             memcmp( p, P_status, P_status_len )   == 0   ||
-             memcmp( p, PQ_status, PQ_status_len ) == 0   ||
+        if ( (msglen >= OSC3008_len && memcmp( p, OSC3008, OSC3008_len ) == 0) ||
+             (msglen >= P_status_len && memcmp( p, P_status, P_status_len ) == 0) ||
+             (msglen >= PQ_status_len && memcmp( p, PQ_status, PQ_status_len ) == 0) ||
              o3008ContNext
            )
         {
