@@ -194,7 +194,10 @@ static void gh534_fix( int msglen, BYTE* /*EBCDIC*/ e_msg )
         // across messages.
 
         c_bracket = strchr( (char*)p, OSC3008[0] );
-        if ( c_bracket && memcmp( c_bracket, OSC3008, OSC3008_len ) == 0 )
+        if ( c_bracket &&
+             msglen - (c_bracket - p) >= OSC3008_len &&
+             memcmp( c_bracket, OSC3008, OSC3008_len ) == 0
+           )
         {
             // Find end of string; BACKSLASH
             BYTE* bslash_end = memchr( c_bracket, BACKSLASH, msglen - (c_bracket - p) );
