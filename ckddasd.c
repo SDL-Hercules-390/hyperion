@@ -1847,7 +1847,6 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         )
             break;
 
-        /*  ((( Something to do with LR/LRE Read Count Suffix?? )))  */
         if (1
             && IS_CCW_MTRACK( code )
             && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
@@ -1863,13 +1862,18 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         {
             memcpy( rechdr, dev->ckdfcwrk, CKD_RECHDR_SIZE );
 
-            cyl  = fetch_hw( rechdr->cyl );
-            head = fetch_hw( rechdr->head );
+            dev->ckdcurrec = rechdr->rec;
+            dev->ckdcurkl  = rechdr->klen;
+            dev->ckdcurdl  = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
+            dev->ckdrem    = 0;
 
-            if ((rc = ckd_seek( dev, cyl, head, NULL, unitstat )) < 0)
-                return -1;
+            if (dev->ckdcyls < 32768)
+                dev->ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
+            else
+                dev->ckdtrkof = 0;
 
-            continue;
+            dev->ckdfcoun = 0;
+            break;
         }
 
         /* End of track found, so terminate with no record found
