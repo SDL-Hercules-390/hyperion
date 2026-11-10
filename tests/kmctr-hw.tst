@@ -508,3 +508,41 @@ r 900.10
 * Expected results
 *Want  20212223 24252627 28292A2B 2C2D2E2F
 *Done
+
+*Testcase KMCTR fc18 in place
+* Same register for the first and second operand (R1 = R2). The third
+* operand address must still be advanced for every block, so that each
+* block is processed with its own counter block.
+sysclear
+archmode z
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=41000012     # LA R0,18          R0->function code 18
+r 204=41100500     # LA R1,PB          R1->parameter block address
+r 208=41400600     # LA R4,SO          R4->first and second operand
+r 20C=41500020     # LA R5,SOL         R5->second operand length (2 blocks)
+r 210=41600800     # LA R6,TO          R6->third operand (2 counter blocks)
+r 214=B92D6044     # KMCTR R4,R6,R4    Cipher message with counter, in place
+r 218=EB0F0F000024 # STMG R0,R15,REGS  Save the registers
+r 21E=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=00020001800000000000000000000000 # WAITPSW Enabled wait state PSW
+*
+r 500=000102030405060708090A0B0C0D0E0F # Parameter block
+r 600=101112131415161718191A1B1C1D1E1F # First/second operand, block 1
+r 610=202122232425262728292A2B2C2D2E2F # First/second operand, block 2
+r 800=303132333435363738393A3B3C3D3E3F # Third operand, counter block 1
+r 810=404142434445464748494A4B4C4D4E4F # Third operand, counter block 2
+*
+runtest .1
+*Compare
+* Expected results
+r 600.10
+*Want  13E3D1AE DE977DE7 9ACED5AB 29D0A6DE
+r 610.10
+*Want  F512C7B8 618475CA 5677B676 D0D06485
+* R4/R5 and R6 after the instruction
+r F20.10
+*Want  00000000 00000620 00000000 00000000
+r F30.8
+*Want  00000000 00000820
+*Done

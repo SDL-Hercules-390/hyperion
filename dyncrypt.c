@@ -2766,7 +2766,14 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;
   r1_is_not_r3 = r1 != r3;
-  r2_is_not_r3 = r1 != r2;
+  /* The original assignment (kept below as a comment) compared R1 with R2 */
+  /* a second time instead of R2 with R3. With R1 = R2 (in-place operation */
+  /* using the same register) the third operand address in R3 was never    */
+  /* advanced, so every block was processed with the first counter block   */
+  /* and the output was wrong from the second block on. With R2 = R3 that  */
+  /* register was advanced twice per block. kmctr_dea() was always right.  */
+  // r2_is_not_r3 = r1 != r2;
+  r2_is_not_r3 = r2 != r3;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data and counter-value */
