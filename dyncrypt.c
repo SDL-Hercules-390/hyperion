@@ -43,6 +43,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #define OPTION_KIMD_DEBUG
 #define OPTION_KLMD_DEBUG
 #define OPTION_KM_DEBUG
+#define OPTION_KDSA_DEBUG
 #define OPTION_KMA_DEBUG
 #define OPTION_KMAC_DEBUG
 #define OPTION_KMC_DEBUG
@@ -714,6 +715,65 @@ static void wrap_dea(BYTE *key, int keylen)
 }
 #endif // defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 
+#if defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Wrap and unwrap ECC private keys (PCKMO FC 32-34, 40, 41 and the KDSA      */
+/* encrypted-key functions) with the AES wrapping key.                        */
+/*----------------------------------------------------------------------------*/
+/* The wrapping method of real hardware is not documented, and the wrapping   */
+/* key is random per Hercules instance anyway. Hercules uses AES-256 in CBC   */
+/* mode with a zero IV over the whole key field (32, 48, 64 or 80 bytes, all  */
+/* multiples of the block size); for a 32-byte field this is the same method  */
+/* as wrap_aes() uses for AES-256 keys. The key field is followed by the      */
+/* 32-byte AES wrapping key verification pattern.                             */
+/*----------------------------------------------------------------------------*/
+static void wrap_ecc(BYTE *key, int keylen)
+{
+  rijndael_ctx context;
+  int i;
+  int j;
+
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
+  for(i = 0; i < keylen; i += 16)
+  {
+    if(i)
+    {
+      for(j = 0; j < 16; j++)
+        key[i + j] ^= key[i + j - 16];
+    }
+    rijndael_encrypt(&context, &key[i], &key[i]);
+  }
+  memcpy(&key[keylen], sysblk.wkvpaes_reg, 32);
+  crypto_secure0(&context, sizeof(context));
+}
+
+/* Returns 1 if the verification pattern does not match (cc 1) */
+static int unwrap_ecc(BYTE *key, int keylen)
+{
+  rijndael_ctx context;
+  BYTE cv[16];
+  BYTE next[16];
+  int i;
+  int j;
+
+  if(unlikely(memcmp(&key[keylen], sysblk.wkvpaes_reg, 32)))
+    return(1);
+
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
+  memset(cv, 0, 16);
+  for(i = 0; i < keylen; i += 16)
+  {
+    memcpy(next, &key[i], 16);
+    rijndael_decrypt(&context, &key[i], &key[i]);
+    for(j = 0; j < 16; j++)
+      key[i + j] ^= cv[j];
+    memcpy(cv, next, 16);
+  }
+  crypto_secure0(&context, sizeof(context));
+  return(0);
+}
+#endif // defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+
 /*----------------------------------------------------------------------------*/
 /* 2^m table with GF multiplication entries 127, 126, 125, ...                */
 /* 2                  2^b1                                                    */
@@ -952,6 +1012,13 @@ static int sha3_rate(int fc)
 
   return(rates[fc - 32]);
 }
+
+#if defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Elliptic curve support for KDSA and PCC (MSA 9), including LibTomMath      */
+/*----------------------------------------------------------------------------*/
+#include "dyncrypt_ecc.h"
+#endif /* defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
 #endif /* #ifndef __STATIC_FUNCTIONS__ */
 
 /*----------------------------------------------------------------------------*/
@@ -5311,36 +5378,386 @@ DEF_INST(dyn_cipher_message_with_authentication)
   }
 }
 
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Fetch and store parameter blocks longer than 256 bytes (MSA 9)             */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(fetch_parameter_block)(BYTE *dst, int len, REGS *regs)
+{
+  int done;
+  int n;
+
+  for(done = 0; done < len; done += n)
+  {
+    n = min(256, len - done);
+    ARCH_DEP(vfetchc)(dst + done, n - 1, (GR_A(1, regs) + done) & ADDRESS_MAXWRAP(regs), 1, regs);
+  }
+}
+
+static void ARCH_DEP(store_parameter_block)(const BYTE *src, int len, REGS *regs)
+{
+  int done;
+  int n;
+
+  for(done = 0; done < len; done += n)
+  {
+    n = min(256, len - done);
+    ARCH_DEP(vstorec)(src + done, n - 1, (GR_A(1, regs) + done) & ADDRESS_MAXWRAP(regs), 1, regs);
+  }
+}
+
+static void ARCH_DEP(validate_parameter_block)(int len, REGS *regs)
+{
+  int done;
+  int n;
+
+  for(done = 0; done < len; done += n)
+  {
+    n = min(256, len - done);
+    ARCH_DEP(validate_operand)((GR_A(1, regs) + done) & ADDRESS_MAXWRAP(regs), 1, n - 1, ACCTYPE_WRITE, regs);
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* Hash the second operand (the message of KDSA EdDSA) from guest storage.    */
+/* The registers are not updated here, an access exception leaves the        */
+/* instruction restartable.                                                   */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kdsa_hash_message)(ECC_HASH *h, int r2, REGS *regs)
+{
+  BYTE buf[256];
+  U64 done;
+  U64 len;
+  int n;
+
+  len = GR_A(r2 + 1, regs);
+  for(done = 0; done < len; done += n)
+  {
+    n = (int) min((U64) 256, len - done);
+    ARCH_DEP(vfetchc)(buf, n - 1, (GR_A(r2, regs) + done) & ADDRESS_MAXWRAP(regs), r2, regs);
+    ecc_hash_update(h, buf, n);
+  }
+}
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B93A KDSA  - Compute digital signature authentication                [RRE] */
 /*----------------------------------------------------------------------------*/
+/* The digital signature functions require Message-Security-Assist           */
+/* Extension 9 (facility 155). Without it only the query function is         */
+/* provided, which reports no function besides query itself. This            */
+/* compatibility support exists because z/OS ICSF issues the KDSA query      */
+/* regardless of facility 155 (SDL-Hercules-390/hyperion issue #890); for    */
+/* the same reason disabling facility 155 does not remove the instruction.   */
+/*                                                                            */
+/* Functions:                                                                 */
+/*                                                                            */
+/*   1-3   ECDSA-Verify-P256, -P384, -P521                                    */
+/*   9-11  ECDSA-Sign-P256, -P384, -P521                                      */
+/*   17-19 Encrypted-ECDSA-Sign-P256, -P384, -P521                            */
+/*   32    EdDSA-Verify-Ed25519            36   EdDSA-Verify-Ed448            */
+/*   40    EdDSA-Sign-Ed25519              44   EdDSA-Sign-Ed448              */
+/*   48    Encrypted-EdDSA-Sign-Ed25519    52   Encrypted-EdDSA-Sign-Ed448    */
+/*                                                                            */
+/* The encrypted-key functions take the private key wrapped by PCKMO          */
+/* (FC 32-34, 40, 41) followed by the 32-byte AES wrapping key verification   */
+/* pattern: for ECDSA after the random number field, for EdDSA after the key  */
+/* field. A mismatching verification pattern gives condition code 1.         */
+/*                                                                            */
+/* EdDSA (pure, RFC 8032) takes the message from the second operand (R2,      */
+/* R2+1), which is processed completely; R2 and R2+1 are updated at the end.  */
+/* The parameter block has fields of 32 (Ed25519) or 64 (Ed448) bytes, the    */
+/* encodings of R, S and the public key are stored byte-reversed (right-      */
+/* aligned big-endian), the private key seed as is, right-aligned:            */
+/*                                                                            */
+/*   verify:  R, S, public key                                                */
+/*   sign:    R, S (both output), private key                                 */
+/*                                                                            */
+/* ECDSA parameter blocks consist of 5 fields of 32 (P-256), 48 (P-384) or    */
+/* 80 (P-521) bytes, each a right-aligned big-endian integer:                 */
+/*                                                                            */
+/*   verify:  r, s, hash, public key x, public key y                          */
+/*   sign:    r, s (both output), hash, private key, random number            */
+/*                                                                            */
+/* Bit 56 of GR0 is the deterministic bit for ECDSA sign: when one, the       */
+/* random number in the parameter block is used, otherwise the CPU generates  */
+/* its own.                                                                   */
+/*                                                                            */
+/* Condition codes: 0 verified / signed, 1 invalid parameter (hash zero,      */
+/* private key out of range, public key not on the curve or not a valid      */
+/* encoding), 2 signature invalid (verify) or random number unusable (ECDSA  */
+/* sign, the program should retry).                                           */
+/*----------------------------------------------------------------------------*/
 DEF_INST(dyn_compute_digital_signature_authentication)
 {
-  static const BYTE query_bits[16] = { 0x80 };
-  int r1, r2;
+  BYTE query_bits[16] = { 0x80 };
+  int msa9 = FALSE;
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+  BYTE parameter_block[5 * ECC_MAX_FIELD + 32];
+  BYTE random_number[ECC_MAX_FIELD];
+  BYTE enc[ECC_MAX_ENC];
+  BYTE rhash[ECC_MAX_HASH];
+  BYTE khash[ECC_MAX_HASH];
+  BYTE wrapped[ECC_MAX_FIELD + 32];
+  ECC_HASH hash;
+  ECC_EDDSA_SIGN sign;
+  int cc;
+  int curve;
+  int encrypted;
+  int fc;
+  int i;
+  int len;
+  int mask_bits;
+  int n;
+  int tries;
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+  int r1;
+  int r2;
 
   RRE(inst, regs, r1, r2);
   PER_ZEROADDR_CHECK( regs, 1 );
+  PER_ZEROADDR_LCHECK( regs, r2, r2 + 1 );
   TXFC_INSTR_CHECK( regs );
 
-  /* Query-only compatibility support; do not require or advertise MSA 9. */
+  /* The query function is available with any MSA level, see above */
   FACILITY_CHECK( 017_MSA, regs );
 
-  /* Register designators must be valid even for Query. */
-  if(unlikely(r1 || !r2 || (r2 & 1)))
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+  msa9 = FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs );
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
+#ifdef OPTION_KDSA_DEBUG
+  WRMSG(HHC90100, "D", "KDSA: compute digital signature authentication");
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
+#endif /* #ifdef OPTION_KDSA_DEBUG */
+
+  /* Register designators must be valid even for query. The R1 field   */
+  /* is not used by KDSA and is ignored; programs may issue the query   */
+  /* with a nonzero R1, e.g. KDSA 14,14 (B93A00EE).                     */
+  if(unlikely(!r2 || (r2 & 1)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-  /* No digital signature functions are implemented. */
-  if(unlikely(GR0_fc(regs) != 0))
+  switch(GR0_fc(regs))
   {
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-    return;
-  }
+    case 0: /* Query */
+    {
+      if(msa9)
+      {
+        query_bits[0] = 0xF0;   /* query, ecdsa-verify-p256/p384/p521 */
+        query_bits[1] = 0x70;   /* ecdsa-sign-p256/p384/p521          */
+        query_bits[2] = 0x70;   /* encrypted-ecdsa-sign-p256/p384/p521 */
+        query_bits[4] = 0x88;   /* eddsa-verify-ed25519/ed448         */
+        query_bits[5] = 0x88;   /* eddsa-sign-ed25519/ed448           */
+        query_bits[6] = 0x88;   /* encrypted-eddsa-sign-ed25519/ed448 */
+      }
 
-  /* Bit 0 denotes Query; all other function bits remain clear. */
-  ARCH_DEP(vstorec)(query_bits, 15,
-    GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-  regs->psw.cc = 0;
+      /* Store the parameter block */
+      ARCH_DEP(vstorec)(query_bits, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KDSA_DEBUG
+      LOGBYTE("output:", query_bits, 16);
+#endif /* #ifdef OPTION_KDSA_DEBUG */
+
+      regs->psw.cc = 0;
+      return;
+    }
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+    case 1: /* ecdsa-verify-p256 */
+    case 2: /* ecdsa-verify-p384 */
+    case 3: /* ecdsa-verify-p521 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      fc = GR0_fc(regs);
+      curve = fc - 1;
+      len = ecc_wcurve_len(curve);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 5 * len, regs);
+      regs->psw.cc = ecc_ecdsa_verify(curve, parameter_block);
+      return;
+    }
+    case 9: /* ecdsa-sign-p256 */
+    case 10: /* ecdsa-sign-p384 */
+    case 11: /* ecdsa-sign-p521 */
+    case 17: /* encrypted-ecdsa-sign-p256 */
+    case 18: /* encrypted-ecdsa-sign-p384 */
+    case 19: /* encrypted-ecdsa-sign-p521 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      fc = GR0_fc(regs);
+      encrypted = fc >= 17;
+      curve = (fc & 0x07) - 1;
+      len = ecc_wcurve_len(curve);
+
+      /* The signature is stored into the first two fields. With an     */
+      /* encrypted key the wrapping key verification pattern follows    */
+      /* the random number.                                             */
+      ARCH_DEP(validate_parameter_block)(2 * len, regs);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 5 * len + (encrypted ? 32 : 0), regs);
+
+      if(encrypted)
+      {
+        memcpy(wrapped, parameter_block + 3 * len, len);
+        memcpy(wrapped + len, parameter_block + 5 * len, 32);
+        if(unwrap_ecc(wrapped, len))
+        {
+          /* Verification pattern mismatch */
+          crypto_secure0(parameter_block, sizeof(parameter_block));
+          regs->psw.cc = 1;
+          return;
+        }
+        memcpy(parameter_block + 3 * len, wrapped, len);
+        crypto_secure0(wrapped, sizeof(wrapped));
+      }
+
+      if(GR0_m(regs))
+      {
+        /* Deterministic: use the random number of the parameter block */
+        cc = ecc_ecdsa_sign(curve, parameter_block, parameter_block + 4 * len);
+      }
+      else
+      {
+        /* Generate the random number, with the leading bits beyond the  */
+        /* bit length of the order cleared, until it is usable           */
+        if(!sysblk.PRNOrandhand)
+          VERIFY( hopen_CSRNG( &sysblk.PRNOrandhand ) );
+        mask_bits = 8 * len - ecc_wcurve_order_bits(curve);
+        cc = ECC_CC_FAILED;
+        for(tries = 0; tries < 64 && cc == ECC_CC_FAILED; tries++)
+        {
+          VERIFY( hget_random_bytes( random_number, len, &sysblk.PRNOrandhand ) );
+          for(i = 0; i < mask_bits / 8; i++)
+            random_number[i] = 0;
+          if(mask_bits % 8)
+            random_number[mask_bits / 8] &= 0xFF >> (mask_bits % 8);
+          cc = ecc_ecdsa_sign(curve, parameter_block, random_number);
+        }
+        crypto_secure0(random_number, sizeof(random_number));
+      }
+
+      if(cc == ECC_CC_OK)
+        ARCH_DEP(store_parameter_block)(parameter_block, 2 * len, regs);
+
+      /* Do not leave the private key and random number behind */
+      crypto_secure0(parameter_block, sizeof(parameter_block));
+
+      regs->psw.cc = cc;
+      return;
+    }
+    case 32: /* eddsa-verify-ed25519 */
+    case 36: /* eddsa-verify-ed448 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      curve = GR0_fc(regs) == 32 ? ECC_ED25519 : ECC_ED448;
+      len = ecc_ecurve_fld(curve);
+      n = ecc_ecurve_enclen(curve);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 3 * len, regs);
+
+      /* k = H(R || A || M) */
+      ecc_hash_init(&hash, curve);
+      ecc_eddsa_field_to_enc(curve, enc, parameter_block);
+      ecc_hash_update(&hash, enc, n);
+      ecc_eddsa_field_to_enc(curve, enc, parameter_block + 2 * len);
+      ecc_hash_update(&hash, enc, n);
+      ARCH_DEP(kdsa_hash_message)(&hash, r2, regs);
+      ecc_hash_final(&hash, khash);
+
+      cc = ecc_eddsa_verify(curve, parameter_block, khash);
+
+      /* The message has been processed completely */
+      SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+      SET_GR_A(r2 + 1, regs, 0);
+
+      regs->psw.cc = cc;
+      return;
+    }
+    case 40: /* eddsa-sign-ed25519 */
+    case 44: /* eddsa-sign-ed448 */
+    case 48: /* encrypted-eddsa-sign-ed25519 */
+    case 52: /* encrypted-eddsa-sign-ed448 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      fc = GR0_fc(regs);
+      encrypted = fc >= 48;
+      curve = (fc == 40 || fc == 48) ? ECC_ED25519 : ECC_ED448;
+      len = ecc_ecurve_fld(curve);
+      n = ecc_ecurve_enclen(curve);
+
+      /* The signature is stored into the first two fields. With an     */
+      /* encrypted key the wrapping key verification pattern follows    */
+      /* the key.                                                       */
+      ARCH_DEP(validate_parameter_block)(2 * len, regs);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 3 * len + (encrypted ? 32 : 0), regs);
+
+      if(encrypted && unwrap_ecc(parameter_block + 2 * len, len))
+      {
+        /* Verification pattern mismatch */
+        crypto_secure0(parameter_block, sizeof(parameter_block));
+        regs->psw.cc = 1;
+        return;
+      }
+
+      /* Secret scalar, prefix and public key from the seed, which is */
+      /* right-aligned in the third field                             */
+      cc = ECC_CC_INVALID;
+      if(ecc_eddsa_sign_start(curve, &sign, parameter_block + 3 * len - n))
+      {
+        /* r = H(prefix || M) mod L, R = rB */
+        ecc_hash_init(&hash, curve);
+        ecc_hash_update(&hash, sign.prefix, n);
+        ARCH_DEP(kdsa_hash_message)(&hash, r2, regs);
+        ecc_hash_final(&hash, rhash);
+        if(ecc_eddsa_sign_r(curve, &sign, rhash))
+        {
+          /* k = H(R || A || M), S = r + k*s mod L */
+          ecc_hash_init(&hash, curve);
+          ecc_hash_update(&hash, sign.r_enc, n);
+          ecc_hash_update(&hash, sign.a_enc, n);
+          ARCH_DEP(kdsa_hash_message)(&hash, r2, regs);
+          ecc_hash_final(&hash, khash);
+          if(ecc_eddsa_sign_finish(curve, &sign, khash, parameter_block))
+            cc = ECC_CC_OK;
+        }
+      }
+
+      if(cc == ECC_CC_OK)
+      {
+        ARCH_DEP(store_parameter_block)(parameter_block, 2 * len, regs);
+
+        /* The message has been processed completely */
+        SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+        SET_GR_A(r2 + 1, regs, 0);
+      }
+
+      /* Do not leave the private key and derived secrets behind */
+      crypto_secure0(&sign, sizeof(sign));
+      crypto_secure0(rhash, sizeof(rhash));
+      crypto_secure0(parameter_block, sizeof(parameter_block));
+
+      regs->psw.cc = cc;
+      return;
+    }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
+    default:
+    {
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+  }
 }
 
 #if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
@@ -5638,6 +6055,72 @@ DEF_INST(dyn_cipher_message_with_output_feedback)
   }
 }
 
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Perform cryptographic computation (PCC) FC 64-66, 72-73 and 80-81          */
+/*----------------------------------------------------------------------------*/
+/* Scalar multiply (MSA 9). All values are right-aligned big-endian integers  */
+/* in fields of 32 (P-256, Ed25519, X25519), 48 (P-384), 64 (Ed448, X448) or  */
+/* 80 (P-521) bytes:                                                          */
+/*                                                                            */
+/*   64-66  P-256, P-384, P-521    result x, result y, source x, source y,    */
+/*   72-73  Ed25519, Ed448         scalar (affine coordinates)                */
+/*   80-81  X25519, X448           result u, source u, scalar                 */
+/*                                                                            */
+/* The scalar is used as given (X25519/X448 clamping is done by the program). */
+/* Condition code 2 for an invalid source point or the point at infinity      */
+/* (neutral element) as the result.                                           */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(pcc_scalar_multiply)(REGS *regs)
+{
+  BYTE parameter_block[5 * ECC_MAX_FIELD];
+  int cc;
+  int fc;
+  int len;
+  int fields;
+  int results;
+
+  fc = GR0_fc(regs);
+  if(fc <= 66)
+  {
+    len = ecc_wcurve_len(fc - 64);
+    fields = 5;
+    results = 2;
+  }
+  else if(fc <= 73)
+  {
+    len = ecc_ecurve_fld(fc - 72);
+    fields = 5;
+    results = 2;
+  }
+  else
+  {
+    len = ecc_ecurve_fld(fc - 80);
+    fields = 3;
+    results = 1;
+  }
+
+  /* The result is stored into the first field(s) */
+  ARCH_DEP(validate_parameter_block)(results * len, regs);
+  ARCH_DEP(fetch_parameter_block)(parameter_block, fields * len, regs);
+
+  if(fc <= 66)
+    cc = ecc_w_scalar_multiply(fc - 64, parameter_block);
+  else if(fc <= 73)
+    cc = ecc_e_scalar_multiply(fc - 72, parameter_block);
+  else
+    cc = ecc_x_scalar_multiply(fc - 80, parameter_block);
+
+  if(cc == ECC_CC_OK)
+    ARCH_DEP(store_parameter_block)(parameter_block, results * len, regs);
+
+  /* The scalar may be a private key */
+  crypto_secure0(parameter_block, sizeof(parameter_block));
+
+  regs->psw.cc = cc;
+}
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B92C PCC   - Perform cryptographic computation                       [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -5648,6 +6131,7 @@ DEF_INST(dyn_perform_cryptographic_computation)
   {
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
   };
+  BYTE bits[16];
 
   UNREFERENCED(inst);              /* This operation has no operands */
   INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
@@ -5668,11 +6152,23 @@ DEF_INST(dyn_perform_cryptographic_computation)
   switch(GR0_fc(regs))
   {
     case 0: /* Query */
+      memcpy(bits, query_bits[msa - 4], 16);
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+      /* Scalar multiply P-256, P-384, P-521, Ed25519, Ed448, X25519, X448 (MSA 9) */
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+      {
+        bits[8] |= 0xE0;
+        bits[9] |= 0xC0;
+        bits[10] |= 0xC0;
+      }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa - 4], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+      ARCH_DEP(vstorec)(bits, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
-      LOGBYTE("output:", query_bits[msa - 4], 16);
+      LOGBYTE("output:", bits, 16);
 #endif /* #ifdef OPTION_PCC_DEBUG */
 
       /* Set condition code 0 */
@@ -5700,6 +6196,22 @@ DEF_INST(dyn_perform_cryptographic_computation)
     case 60: /* encrypted aes-256 */
       ARCH_DEP(pcc_xts_aes)(regs);
       break;
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+    case 64: /* scalar-multiply-p256 */
+    case 65: /* scalar-multiply-p384 */
+    case 66: /* scalar-multiply-p521 */
+    case 72: /* scalar-multiply-ed25519 */
+    case 73: /* scalar-multiply-ed448 */
+    case 80: /* scalar-multiply-x25519 */
+    case 81: /* scalar-multiply-x448 */
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+        ARCH_DEP(pcc_scalar_multiply)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
@@ -5708,6 +6220,52 @@ DEF_INST(dyn_perform_cryptographic_computation)
 #endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
 
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Perform cryptographic key management operation (PCKMO) FC 32-34, 40-41     */
+/*----------------------------------------------------------------------------*/
+/* Encrypt-ECC-P256/P384/P521-Key and Encrypt-ECC-Ed25519/Ed448-Key (MSA 9).  */
+/* The parameter block holds the clear private key in the format of the KDSA  */
+/* sign parameter block (32, 48, 80, 32 or 64 bytes, right-aligned) followed  */
+/* by 32 bytes for the AES wrapping key verification pattern. The key is      */
+/* replaced by the wrapped key and the verification pattern is stored.        */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(pckmo_ecc)(REGS *regs)
+{
+  BYTE parameter_block[ECC_MAX_FIELD + 32];
+  int keylen;
+
+  switch(GR0_fc(regs))
+  {
+    case 32: keylen = 32; break;        /* P-256   */
+    case 33: keylen = 48; break;        /* P-384   */
+    case 34: keylen = 80; break;        /* P-521   */
+    case 40: keylen = 32; break;        /* Ed25519 */
+    default: keylen = 64; break;        /* Ed448   */
+  }
+
+  /* Test writeability */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, keylen + 31, ACCTYPE_WRITE, regs);
+
+  /* Fetch the key, wrap it and store the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, keylen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key in : ", parameter_block, keylen > 32 ? 32 : keylen);
+#endif /* #ifdef OPTION_PCKMO_DEBUG */
+
+  wrap_ecc(parameter_block, keylen);
+  ARCH_DEP(vstorec)(parameter_block, keylen + 31, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key out: ", parameter_block, keylen > 32 ? 32 : keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], 32);
+#endif /* #ifdef OPTION_PCKMO_DEBUG */
+
+  crypto_secure0(parameter_block, sizeof(parameter_block));
+}
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -5756,6 +6314,15 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
   {
     case 0: /* Query */
     {
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+      /* Encrypt-ECC-P256/P384/P521-Key, -Ed25519/Ed448-Key (MSA 9) */
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+      {
+        query_bits[msa][4] |= 0xE0;
+        query_bits[msa][5] |= 0xC0;
+      }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
       /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -5785,6 +6352,22 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+    case 32: /* encrypt-ecc-p256-key */
+    case 33: /* encrypt-ecc-p384-key */
+    case 34: /* encrypt-ecc-p521-key */
+    case 40: /* encrypt-ecc-ed25519-key */
+    case 41: /* encrypt-ecc-ed448-key */
+    {
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+        ARCH_DEP(pckmo_ecc)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
     default:
     {
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -6211,7 +6794,9 @@ HDL_REGISTER_SECTION;
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");
 
-#if defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+#if defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 ) && defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6, 7, 8 and 9");
+#elif defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
   WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6, 7 and 8");
 #elif defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
   WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6 and 7");

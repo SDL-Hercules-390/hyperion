@@ -322,6 +322,7 @@ EXTRA_DIST =                    \
      invpsw.assemble            \
      invpsw.listing             \
      invpsw.tst                 \
+     kdsa.tst                   \
      kimd-hw.tst                \
      kimd0.txt                  \
      kimd1.txt                  \

@@ -1046,6 +1046,7 @@
     <None Include="tests\invpsw.assemble" />
     <None Include="tests\invpsw.listing" />
     <None Include="tests\invpsw.tst" />
+    <None Include="tests\kdsa.tst" />
     <None Include="tests\kimd-hw.tst" />
     <None Include="tests\klmd-hw.tst" />
     <None Include="tests\km-hw.tst" />

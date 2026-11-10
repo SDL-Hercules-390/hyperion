@@ -817,6 +817,14 @@ EXTRA_DIST =                  \
   hercules.cnf.rexx           \
   hercules.ico                \
   hercules.m4                 \
+  libtommath/LICENSE          \
+  libtommath/README.hercules.txt \
+  libtommath/mpi.c            \
+  libtommath/tommath.h        \
+  libtommath/tommath_class.h  \
+  libtommath/tommath_cutoffs.h \
+  libtommath/tommath_private.h \
+  libtommath/tommath_superclass.h \
   Hercules_VS2008.sln         \
   Hercules_VS2008.vcproj      \
   Hercules_VS2015.sln              \
@@ -1043,6 +1051,7 @@ noinst_HEADERS =          \
   dat.h                   \
   dbgtrace.h              \
   devtype.h               \
+  dyncrypt_ecc.h          \
   ecpsvm.h                \
   esa390.h                \
   esa390io.h              \

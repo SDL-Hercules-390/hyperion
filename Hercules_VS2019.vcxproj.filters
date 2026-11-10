@@ -2360,6 +2360,9 @@
     <None Include="tests\invpsw.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\kdsa.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\leapfrog.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>

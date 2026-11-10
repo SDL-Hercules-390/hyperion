@@ -649,7 +649,7 @@ FT( NONE, NONE, NONE, 153_IBM_INTERNAL )
 FT( NONE, NONE, NONE, 154_UNDEFINED )
 
 #if defined(  FEATURE_155_MSA_EXTENSION_FACILITY_9 )
-FT( NONE, NONE, NONE, 155_MSA_EXTENSION_9 )
+FT( Z900, Z900, NONE, 155_MSA_EXTENSION_9 )
 #endif
 
 FT( NONE, NONE, NONE, 156_IBM_INTERNAL )
@@ -1003,7 +1003,6 @@ static  void  instr146  ( int arch, bool enable );
 static  void  instr148  ( int arch, bool enable );
 static  void  instr150  ( int arch, bool enable );
 static  void  instr151  ( int arch, bool enable );
-static  void  instr155  ( int arch, bool enable );
 static  void  instr165  ( int arch, bool enable );
 static  void  instr192  ( int arch, bool enable );
 static  void  instr193  ( int arch, bool enable );
@@ -1207,7 +1206,7 @@ FT2( NULL,      instr151,  151_DEFLATE_CONV,           "DEFLATE-Conversion Facil
 FT2( mod152,    NULL,      152_VECT_PACKDEC_ENH,       "Vector-Packed-Decimal-Enhancement Facility" )
 FT2( NULL,      NULL,      153_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      154_UNDEFINED,              "Undefined" )
-FT2( mod155,    instr155,  155_MSA_EXTENSION_9,        "Message-Security-Assist Extension 9" )
+FT2( mod155,    NULL,      155_MSA_EXTENSION_9,        "Message-Security-Assist Extension 9" )
 FT2( NULL,      NULL,      156_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      157_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      158_ULTRAV_CALL,            "Ultravisor-Call facility" )
@@ -4195,11 +4194,10 @@ END_DIS_FAC_INS_FUNC()
 
 /*-------------------------------------------------------------------*/
 
-BEG_DIS_FAC_INS_FUNC( instr155 )
-{
-    DIS_FAC_INS( B93A, "KDSA    B93A  COMPUTE DIGITAL SIGNATURE AUTHENTICATION" );
-}
-END_DIS_FAC_INS_FUNC()
+/*  instr155: KDSA (B93A) is intentionally NOT disabled together with */
+/*  facility 155. Without MSA 9 the instruction provides the query    */
+/*  function only, because z/OS ICSF issues the KDSA query regardless */
+/*  of facility 155 (SDL-Hercules-390/hyperion issue #890).            */
 
 /*-------------------------------------------------------------------*/
 
