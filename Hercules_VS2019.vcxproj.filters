@@ -3758,6 +3758,9 @@
     <None Include="tests\km-hw.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\kma.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\kmo-hw.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>

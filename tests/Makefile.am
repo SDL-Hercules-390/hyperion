@@ -351,6 +351,7 @@ EXTRA_DIST =                    \
      km58.txt                   \
      km60.txt                   \
      km9.txt                    \
+     kma.tst                    \
      kmac-hw.tst                \
      kmac0.txt                  \
      kmac1.txt                  \

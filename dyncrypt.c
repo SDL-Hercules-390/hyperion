@@ -43,6 +43,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #define OPTION_KIMD_DEBUG
 #define OPTION_KLMD_DEBUG
 #define OPTION_KM_DEBUG
+#define OPTION_KMA_DEBUG
 #define OPTION_KMAC_DEBUG
 #define OPTION_KMC_DEBUG
 #define OPTION_KMCTR_DEBUG
@@ -96,6 +97,17 @@ static const int kmctr_pblens[32] =
 #define GR0_lcfb(regs)  ((regs)->GR_L(0) >> 24)
 #define GR0_wrap(egs)   (((regs)->GR_L(0) & 0x08) ? TRUE : FALSE)
 #define GR0_tfc(regs)   (GR0_fc(regs) & 0x77)
+
+/*----------------------------------------------------------------------------*/
+/* KMA specific GR0 bits                                                      */
+/*----------------------------------------------------------------------------*/
+/* hs   : Hash-subkey supplied                (bit 53)                        */
+/* laad : Last additional authenticated data  (bit 54)                        */
+/* lpc  : Last plaintext/ciphertext           (bit 55)                        */
+/*----------------------------------------------------------------------------*/
+#define GR0_kma_hs(regs)    (((regs)->GR_L(0) & 0x00000400) ? TRUE : FALSE)
+#define GR0_kma_laad(regs)  (((regs)->GR_L(0) & 0x00000200) ? TRUE : FALSE)
+#define GR0_kma_lpc(regs)   (((regs)->GR_L(0) & 0x00000100) ? TRUE : FALSE)
 
 /*----------------------------------------------------------------------------*/
 /* Write bytes on one line                                                    */
@@ -3990,6 +4002,255 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
 }
 #endif /* defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
 
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+/*----------------------------------------------------------------------------*/
+/* Cipher message with authentication (KMA) FC 18-20 and 26-28                */
+/*----------------------------------------------------------------------------*/
+/* Galois/Counter Mode (GCM) with AES as specified in NIST SP 800-38D.        */
+/*                                                                            */
+/* Parameter block:                                                           */
+/*                                                                            */
+/*   offset  len  field                                                       */
+/*   ------  ---  ---------------------------------------------------------   */
+/*      0     12  reserved                                                    */
+/*     12      4  CV     32-bit counter value of the last counter block used  */
+/*     16     16  T      tag (intermediate GHASH value until LPC processing)  */
+/*     32     16  H      hash subkey (computed and stored when HS is zero)    */
+/*     48      8  TAADL  total AAD length in bits (used when LPC is one)      */
+/*     56      8  TPCL   total plaintext/ciphertext length in bits (LPC)      */
+/*     64     16  J0     pre-counter block                                    */
+/*     80  16-32  K      cryptographic key                                    */
+/*  80+kl     32  WKaVP  AES wrapping key verification pattern (FC 26-28)     */
+/*                                                                            */
+/* The third operand (AAD) is authenticated first. Then the second operand    */
+/* is encrypted (M=0) or decrypted (M=1) into the first operand location and  */
+/* the ciphertext is authenticated. The counter block for each 16-byte block  */
+/* is formed from bytes 0-11 of J0 and the incremented counter value. When    */
+/* LPC is one and all data has been processed, the length block (TAADL ||     */
+/* TPCL) is authenticated and the final tag E(K,J0) xor GHASH replaces T.     */
+/* Comparing the tag after decryption is the responsibility of the program.   */
+/*                                                                            */
+/* A partial last block is only allowed for the AAD when LAAD is one and for  */
+/* the plaintext/ciphertext when LPC is one.                                  */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kma_gcm_aes)(int r1, int r2, int r3, REGS *regs)
+{
+  rijndael_ctx context;
+  BYTE counter_block[16];
+  U32 cv;
+  BYTE ghash_block[16];
+  BYTE *h;
+  int i;
+  BYTE *j0;
+  BYTE *key;
+  int keylen;
+  BYTE message_block[16];
+  int modifier_bit;
+  int n;
+  int processed;
+  BYTE parameter_block[80 + 32 + 32];
+  int parameter_blocklen;
+  int r1_is_not_r2;
+  BYTE *t;
+  int tfc;
+  int wrap;
+
+  /* Check special conditions */
+  if(unlikely(!GR0_kma_laad(regs) && (GR_A(r3 + 1, regs) % 16)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+  if(unlikely(!GR0_kma_lpc(regs) && (GR_A(r2 + 1, regs) % 16)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Initialize values */
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  modifier_bit = GR0_m(regs);
+  keylen = (tfc - 16) * 8;
+  parameter_blocklen = 80 + keylen;
+  if(wrap)
+    parameter_blocklen += 32;
+  t = &parameter_block[16];
+  h = &parameter_block[32];
+  j0 = &parameter_block[64];
+  key = &parameter_block[80];
+
+  /* Test writeability of the counter value, tag and hash subkey fields */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 47, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KMA_DEBUG
+  LOGBYTE("cv    :", &parameter_block[12], 4);
+  LOGBYTE("t     :", t, 16);
+  LOGBYTE("h     :", h, 16);
+  LOGBYTE("taadl :", &parameter_block[48], 8);
+  LOGBYTE("tpcl  :", &parameter_block[56], 8);
+  LOGBYTE("j0    :", j0, 16);
+  LOGBYTE("k     :", key, keylen);
+  if(wrap)
+    LOGBYTE("wkvp  :", &key[keylen], 32);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  /* Verify and unwrap the key */
+  if(wrap && unwrap_aes(key, keylen))
+  {
+
+#ifdef OPTION_KMA_DEBUG
+    WRMSG(HHC90111, "D");
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    regs->psw.cc = 1;
+    return;
+  }
+
+  /* Set the cryptographic key */
+  rijndael_set_key(&context, key, keylen * 8);
+
+  /* Compute and store the hash subkey if it is not supplied */
+  if(!GR0_kma_hs(regs))
+  {
+    memset(h, 0, 16);
+    rijndael_encrypt(&context, h, h);
+    ARCH_DEP(vstorec)(h, 15, (GR_A(1, regs) + 32) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("h out :", h, 16);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  }
+
+  cv = fetch_fw(&parameter_block[12]);
+  processed = 0;
+
+  /* Authenticate the additional authenticated data (third operand) */
+  while(GR_A(r3 + 1, regs) && processed < PROCESS_MAX)
+  {
+    n = (int) min(16, GR_A(r3 + 1, regs));
+
+    /* Fetch a block of data, a partial block is padded with zeros */
+    memset(message_block, 0, 16);
+    ARCH_DEP(vfetchc)(message_block, n - 1, GR_A(r3, regs) & ADDRESS_MAXWRAP(regs), r3, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("aad   :", message_block, n);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    /* XOR and multiply */
+    for(i = 0; i < 16; i++)
+      t[i] ^= message_block[i];
+    gcm_gf_mult(t, h, t);
+
+    /* Store the intermediate tag */
+    ARCH_DEP(vstorec)(t, 15, (GR_A(1, regs) + 16) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    /* Update the registers */
+    SET_GR_A(r3, regs, GR_A(r3, regs) + n);
+    SET_GR_A(r3 + 1, regs, GR_A(r3 + 1, regs) - n);
+    processed += 16;
+
+#ifdef OPTION_KMA_DEBUG
+    WRMSG(HHC90108, "D", r3, (regs)->GR(r3));
+    WRMSG(HHC90108, "D", r3 + 1, (regs)->GR(r3 + 1));
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  }
+
+  /* Encrypt or decrypt the second operand and authenticate the ciphertext */
+  r1_is_not_r2 = r1 != r2;
+  while(GR_A(r2 + 1, regs) && processed < PROCESS_MAX)
+  {
+    n = (int) min(16, GR_A(r2 + 1, regs));
+
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(message_block, n - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("input :", message_block, n);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    /* Compute the key stream from the next counter block */
+    cv++;
+    memcpy(counter_block, j0, 12);
+    store_fw(&counter_block[12], cv);
+    rijndael_encrypt(&context, counter_block, counter_block);
+
+    /* XOR, the ciphertext is the input for decryption and the output for */
+    /* encryption. A partial block is padded with zeros for the GHASH.     */
+    memset(ghash_block, 0, 16);
+    for(i = 0; i < n; i++)
+    {
+      if(modifier_bit)
+        ghash_block[i] = message_block[i];
+      message_block[i] ^= counter_block[i];
+      if(!modifier_bit)
+        ghash_block[i] = message_block[i];
+    }
+
+    /* XOR and multiply */
+    for(i = 0; i < 16; i++)
+      t[i] ^= ghash_block[i];
+    gcm_gf_mult(t, h, t);
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(message_block, n - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("output:", message_block, n);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    /* Store the counter value and the intermediate tag */
+    store_fw(&parameter_block[12], cv);
+    ARCH_DEP(vstorec)(&parameter_block[12], 19, (GR_A(1, regs) + 12) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    /* Update the registers */
+    SET_GR_A(r1, regs, GR_A(r1, regs) + n);
+    if(likely(r1_is_not_r2))
+      SET_GR_A(r2, regs, GR_A(r2, regs) + n);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - n);
+    processed += 16;
+
+#ifdef OPTION_KMA_DEBUG
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  }
+
+  /* CPU-determined amount of data processed */
+  if(GR_A(r3 + 1, regs) || GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 3;
+    return;
+  }
+
+  /* Compute the final tag after the last plaintext/ciphertext */
+  if(GR0_kma_lpc(regs))
+  {
+    /* Authenticate the length block TAADL || TPCL */
+    for(i = 0; i < 16; i++)
+      t[i] ^= parameter_block[48 + i];
+    gcm_gf_mult(t, h, t);
+
+    /* XOR with the encrypted pre-counter block */
+    rijndael_encrypt(&context, j0, counter_block);
+    for(i = 0; i < 16; i++)
+      t[i] ^= counter_block[i];
+
+    /* Store the tag */
+    ARCH_DEP(vstorec)(t, 15, (GR_A(1, regs) + 16) & ADDRESS_MAXWRAP(regs), 1, regs);
+  }
+
+#ifdef OPTION_KMA_DEBUG
+  LOGBYTE("cv out:", &parameter_block[12], 4);
+  LOGBYTE("t out :", t, 16);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  regs->psw.cc = 0;
+}
+#endif /* defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -4582,34 +4843,98 @@ DEF_INST(dyn_cipher_message_with_chaining)
 /*----------------------------------------------------------------------------*/
 /* B929 KMA   - Cipher message with authentication                    [RRF-b] */
 /*----------------------------------------------------------------------------*/
+/* The GCM-AES functions require Message-Security-Assist Extension 8          */
+/* (facility 146). When the facility is disabled with the FACILITY command,   */
+/* the facility support removes this instruction (operation exception), just */
+/* like on a machine without MSA 8. If the instruction is reached without     */
+/* MSA 8 nevertheless (e.g. a build without FEATURE_146), only the query      */
+/* function is provided, which reports no function besides query itself.     */
+/* This compatibility support exists because z/OS ICSF issues the KMA query   */
+/* regardless of facility 146 (SDL-Hercules-390/hyperion issue #890).         */
+/*----------------------------------------------------------------------------*/
 DEF_INST(dyn_cipher_message_with_authentication)
 {
-  static const BYTE query_bits[16] = { 0x80 };
-  int r1, r2, r3;
+  static const BYTE query_bits[16] =
+  {
+    0x80, 0x00, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+  static const BYTE query_bits_no_msa8[16] = { 0x80 };
+  int msa8 = FALSE;
+  int r1;
+  int r2;
+  int r3;
 
   RRF_M(inst, regs, r1, r2, r3);
   PER_ZEROADDR_CHECK( regs, 1 );
+  PER_ZEROADDR_LCHECK2( regs, r1, r2 + 1, r2, r2 + 1 );
+  PER_ZEROADDR_LCHECK( regs, r3, r3 + 1 );
   TXFC_INSTR_CHECK( regs );
 
-  /* Query-only compatibility support; do not require or advertise MSA 8. */
+  /* The query function is available with any MSA level, see above */
   FACILITY_CHECK( 017_MSA, regs );
 
-  /* Register designators must be valid even for Query. */
-  if(unlikely(!r1 || (r1 & 1) || !r2 || (r2 & 1) ||
-              !r3 || (r3 & 1) || r3 == r1 || r3 == r2))
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+  msa8 = FACILITY_ENABLED( 146_MSA_EXTENSION_8, regs );
+#endif /* defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) */
+
+#ifdef OPTION_KMA_DEBUG
+  WRMSG(HHC90100, "D", "KMA: cipher message with authentication");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90101, "D", 3, r3);
+  WRMSG(HHC90102, "D", regs->GR(r3));
+  WRMSG(HHC90103, "D", regs->GR(r3 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  /* Register designators must be valid even for query */
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || !r3 || r3 & 0x01 || r3 == r1 || r3 == r2))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-  /* No encryption or authentication functions are implemented. */
-  if(unlikely(GR0_fc(regs) != 0))
+  switch(GR0_fc(regs))
   {
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-    return;
-  }
+    case 0: /* Query */
+    {
+      /* Store the parameter block */
+      ARCH_DEP(vstorec)(msa8 ? query_bits : query_bits_no_msa8, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
-  /* Bit 0 denotes Query; all other function bits remain clear. */
-  ARCH_DEP(vstorec)(query_bits, 15,
-    GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-  regs->psw.cc = 0;
+#ifdef OPTION_KMA_DEBUG
+      LOGBYTE("output:", msa8 ? query_bits : query_bits_no_msa8, 16);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+      /* Set condition code 0 */
+      regs->psw.cc = 0;
+      return;
+    }
+
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+    case 18: /* gcm-aes-128 */
+    case 19: /* gcm-aes-192 */
+    case 20: /* gcm-aes-256 */
+    case 26: /* gcm-encrypted-aes-128 */
+    case 27: /* gcm-encrypted-aes-192 */
+    case 28: /* gcm-encrypted-aes-256 */
+    {
+      if(msa8)
+        ARCH_DEP(kma_gcm_aes)(r1, r2, r3, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) */
+
+    default:
+    {
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+  }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -5512,7 +5837,9 @@ HDL_REGISTER_SECTION;
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");
 
-#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+#if defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 7 and 8");
+#elif defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
   WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5 and 7");
 #else
   #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )

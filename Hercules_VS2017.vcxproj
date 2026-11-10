@@ -1049,6 +1049,7 @@
     <None Include="tests\kimd-hw.tst" />
     <None Include="tests\klmd-hw.tst" />
     <None Include="tests\km-hw.tst" />
+    <None Include="tests\kma.tst" />
     <None Include="tests\kmac-hw.tst" />
     <None Include="tests\kmc-hw.tst" />
     <None Include="tests\kmctr-hw.tst" />
