@@ -1118,6 +1118,7 @@
     <None Include="tests\privop.core" />
     <None Include="tests\privop.list" />
     <None Include="tests\privop.tst" />
+    <None Include="tests\prno-drng.tst" />
     <None Include="tests\prno.asm" />
     <None Include="tests\prno.core" />
     <None Include="tests\prno.list" />

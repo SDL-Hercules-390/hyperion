@@ -5086,6 +5086,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\prno-drng.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\prno.tst"
 							>
 						</File>

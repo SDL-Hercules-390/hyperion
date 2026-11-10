@@ -6379,78 +6379,221 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
 
 #if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
 /*----------------------------------------------------------------------------*/
+/* PRNO SHA-512-DRNG: Hash_DRBG of NIST SP 800-90A with SHA-512               */
+/*----------------------------------------------------------------------------*/
+/* Parameter block (240 bytes):                                               */
+/*                                                                            */
+/*   offset  len  field                                                       */
+/*   ------  ---  ---------------------------------------------------------   */
+/*      0      4  reserved                                                    */
+/*      4      4  reseed counter (zero before the first seed operation)      */
+/*      8      8  stream bytes (number of bytes generated)                    */
+/*     16      1  reserved                                                    */
+/*     17    111  V (seedlen 888 bits)                                        */
+/*    128      1  reserved                                                    */
+/*    129    111  C                                                           */
+/*                                                                            */
+/* Seed (GR0 bit 56 one): the second operand is the seed material. With a     */
+/* reseed counter of zero the DRBG is instantiated, V = Hash_df(material)     */
+/* and the stream bytes are cleared, otherwise it is reseeded, V =            */
+/* Hash_df(0x01 || V || material). Then C = Hash_df(0x00 || V) and the        */
+/* reseed counter is set to one. The second operand is consumed.             */
+/*                                                                            */
+/* Generate (GR0 bit 56 zero): the first operand is filled with Hashgen(V),   */
+/* then V = V + Hash(0x03 || V) + C + reseed counter (mod 2^888), the reseed  */
+/* counter is incremented and the stream bytes are increased. A generate      */
+/* request produces at most 64 KB (the SP 800-90A limit per request); for a  */
+/* longer first operand condition code 3 is set and the program repeats the  */
+/* instruction, which continues with the next request.                        */
+/*                                                                            */
+/* Verified against the NIST Hash_DRBG SHA-512 test vector (Count #0) of the  */
+/* Linux s390 prng self test. This replaces a placeholder which recognized    */
+/* one known-answer test and otherwise returned plain random bytes.           */
+/*----------------------------------------------------------------------------*/
+#define DRBG_SEEDLEN    111           /* 888 bits                          */
+#define DRBG_MAX_GEN    65536         /* bytes per generate request        */
+
+/* v = v + a (mod 2^888), a is a big-endian number of alen bytes */
+static void ARCH_DEP(drbg_add)(BYTE *v, const BYTE *a, int alen)
+{
+  int carry = 0;
+  int i;
+  int k;
+
+  for(i = DRBG_SEEDLEN - 1, k = alen - 1; i >= 0; i--, k--)
+  {
+    carry += v[i] + (k >= 0 ? a[k] : 0);
+    v[i] = (BYTE) carry;
+    carry >>= 8;
+  }
+}
+
+/* out = Hash_df(prefix || second operand, 888 bits). The second operand is */
+/* only included when r2 is not negative.                                   */
+static void ARCH_DEP(drbg_hash_df)(BYTE *out, const BYTE *prefix, int prefixlen, int r2, REGS *regs)
+{
+  SHA2_CTX ctx;
+  BYTE buf[256];
+  BYTE digest[SHA512_DIGEST_LENGTH];
+  BYTE hdr[5];
+  U64 done;
+  U64 len;
+  int i;
+  int n;
+
+  for(i = 0; i * SHA512_DIGEST_LENGTH < DRBG_SEEDLEN; i++)
+  {
+    hdr[0] = (BYTE)(i + 1);                     /* counter                  */
+    store_fw(&hdr[1], DRBG_SEEDLEN * 8);        /* number of bits to return */
+    SHA512Init(&ctx);
+    SHA512Update(&ctx, hdr, sizeof(hdr));
+    if(prefixlen)
+      SHA512Update(&ctx, prefix, prefixlen);
+    if(r2 >= 0)
+    {
+      len = GR_A(r2 + 1, regs);
+      for(done = 0; done < len; done += n)
+      {
+        n = (int) min((U64) sizeof(buf), len - done);
+        ARCH_DEP(vfetchc)(buf, n - 1, (GR_A(r2, regs) + done) & ADDRESS_MAXWRAP(regs), r2, regs);
+        SHA512Update(&ctx, buf, n);
+      }
+    }
+    SHA512Final(digest, &ctx);
+    memcpy(out + i * SHA512_DIGEST_LENGTH, digest,
+           min(SHA512_DIGEST_LENGTH, DRBG_SEEDLEN - i * SHA512_DIGEST_LENGTH));
+  }
+  crypto_secure0(&ctx, sizeof(ctx));
+  crypto_secure0(buf, sizeof(buf));
+  crypto_secure0(digest, sizeof(digest));
+}
+
+static void ARCH_DEP(prno_sha512_drng)(int r1, int r2, REGS *regs)
+{
+  SHA2_CTX ctx;
+  BYTE parameter_block[240];
+  BYTE prefix[1 + DRBG_SEEDLEN];
+  BYTE data[DRBG_SEEDLEN];
+  BYTE out[256];
+  BYTE digest[SHA512_DIGEST_LENGTH];
+  BYTE counter[4];
+  static const BYTE one[1] = { 1 };
+  BYTE *v = &parameter_block[17];
+  BYTE *c = &parameter_block[129];
+  U32 rc;
+  U64 sb;
+  U64 done;
+  U64 len;
+  int k;
+  int n;
+
+  /* The parameter block is updated */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 239, ACCTYPE_WRITE, regs);
+  ARCH_DEP(vfetchc)(parameter_block, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+  rc = fetch_fw(&parameter_block[4]);
+  sb = fetch_dw(&parameter_block[8]);
+
+#ifdef OPTION_PRNO_DEBUG
+  LOGBYTE("V in  :", v, 32);
+  LOGBYTE("C in  :", c, 32);
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+  if(GR0_m(regs))
+  {
+    /* Seed: instantiate or reseed */
+    if(!rc)
+    {
+      ARCH_DEP(drbg_hash_df)(v, NULL, 0, r2, regs);
+      sb = 0;
+    }
+    else
+    {
+      prefix[0] = 0x01;
+      memcpy(&prefix[1], v, DRBG_SEEDLEN);
+      ARCH_DEP(drbg_hash_df)(v, prefix, sizeof(prefix), r2, regs);
+    }
+    prefix[0] = 0x00;
+    memcpy(&prefix[1], v, DRBG_SEEDLEN);
+    ARCH_DEP(drbg_hash_df)(c, prefix, sizeof(prefix), -1, regs);
+    store_fw(&parameter_block[4], 1);
+    store_dw(&parameter_block[8], sb);
+    ARCH_DEP(vstorec)(parameter_block, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    /* The seed material has been consumed */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+    SET_GR_A(r2 + 1, regs, 0);
+    regs->psw.cc = 0;
+  }
+  else
+  {
+    /* Generate: Hashgen output, stored in chunks of up to 256 bytes. An */
+    /* access exception leaves the state unchanged (restartable).        */
+    len = min((U64) GR_A(r1 + 1, regs), (U64) DRBG_MAX_GEN);
+    memcpy(data, v, DRBG_SEEDLEN);
+    for(done = 0; done < len; done += n)
+    {
+      n = (int) min((U64) sizeof(out), len - done);
+      for(k = 0; k < n; k += SHA512_DIGEST_LENGTH)
+      {
+        SHA512Init(&ctx);
+        SHA512Update(&ctx, data, DRBG_SEEDLEN);
+        SHA512Final(digest, &ctx);
+        memcpy(&out[k], digest, min(SHA512_DIGEST_LENGTH, n - k));
+        ARCH_DEP(drbg_add)(data, one, sizeof(one));
+      }
+      ARCH_DEP(vstorec)(out, n - 1, (GR_A(r1, regs) + done) & ADDRESS_MAXWRAP(regs), r1, regs);
+    }
+
+    /* V = V + Hash(0x03 || V) + C + reseed counter */
+    prefix[0] = 0x03;
+    memcpy(&prefix[1], v, DRBG_SEEDLEN);
+    SHA512Init(&ctx);
+    SHA512Update(&ctx, prefix, sizeof(prefix));
+    SHA512Final(digest, &ctx);
+    store_fw(counter, rc);
+    ARCH_DEP(drbg_add)(v, digest, sizeof(digest));
+    ARCH_DEP(drbg_add)(v, c, DRBG_SEEDLEN);
+    ARCH_DEP(drbg_add)(v, counter, sizeof(counter));
+    store_fw(&parameter_block[4], rc + 1);
+    store_dw(&parameter_block[8], sb + len);
+    ARCH_DEP(vstorec)(parameter_block, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    SET_GR_A(r1, regs, GR_A(r1, regs) + len);
+    SET_GR_A(r1 + 1, regs, GR_A(r1 + 1, regs) - len);
+    regs->psw.cc = GR_A(r1 + 1, regs) ? 3 : 0;
+  }
+
+#ifdef OPTION_PRNO_DEBUG
+  LOGBYTE("V out :", v, 32);
+  LOGBYTE("C out :", c, 32);
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+  /* Do not leave the DRBG state behind */
+  crypto_secure0(&ctx, sizeof(ctx));
+  crypto_secure0(parameter_block, sizeof(parameter_block));
+  crypto_secure0(prefix, sizeof(prefix));
+  crypto_secure0(data, sizeof(data));
+  crypto_secure0(out, sizeof(out));
+  crypto_secure0(digest, sizeof(digest));
+}
+
+/*----------------------------------------------------------------------------*/
 /* B93C PRNO - Perform random number operation                          [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(dyn_perform_random_number_operation)
 {
   int fc;
-  int modifier_bit;
   int msa;
-#ifdef OPTION_PRNO_DEBUG
-  U64 n;
-#endif
   U64 randbytes;
   U64 randnum;
   U64 randaddr;
-  BYTE entropy_input[512];
 #define         RAND_CHUNK_SIZE     256
   BYTE randbuf[ RAND_CHUNK_SIZE ] = {0};
-  struct DRNG_parmblock {
-    BYTE rsvd1[4];
-    U32  rc;
-    U64  sb;
-    BYTE rsvd2[1];
-    BYTE V[111];
-    BYTE rsvd3[1];
-    BYTE C[111];};
-  union DRNG {
-    struct DRNG_parmblock drng;
-    BYTE drng_parmblock[240];};
-  union DRNG DRNG;
   BYTE query_bits[16] = { 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa0, 0x00 };
   int r1;
   int r2;
   /* TRNG Query Raw to Conditioned Ratio -- hardcoded for now */
   BYTE trng_query_bits[8] = { 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x20 };
-  /* FIPS-140 known answer test data -- hardcoded for now */
-  BYTE entropy[64] =              { 0x32, 0x95, 0x11, 0x7f, 0x02, 0x37, 0x12, 0x70, 0x10, 0x5a, 0x37, 0x83, 0xcf, 0xe0, 0xbf, 0x5a,
-                                    0xc1, 0x40, 0x8e, 0x6c, 0xea, 0xc5, 0xae, 0xeb, 0xd6, 0xd8, 0x14, 0xbc, 0x82, 0x7d, 0xc0, 0x4d,
-                                    0x21, 0xa1, 0xe4, 0x80, 0xe3, 0xd5, 0xf2, 0xe3, 0x78, 0x31, 0x9a, 0xde, 0x9b, 0xdd, 0xda, 0x4c,
-                                    0x2e, 0x93, 0xb7, 0x4e, 0x34, 0x8d, 0x5e, 0xe3, 0x2e, 0xd4, 0x6a, 0x1a, 0xe6, 0x25, 0x66, 0xe0 };
-  BYTE generated[64] =            { 0xf1, 0xdf, 0xe8, 0x33, 0x08, 0x11, 0xec, 0xd1, 0x0a, 0xeb, 0x68, 0x72, 0x8f, 0xac, 0x57, 0xb0,
-                                    0x5d, 0xc8, 0xb4, 0x11, 0x6d, 0xfc, 0xc0, 0x66, 0xc4, 0xfb, 0xb6, 0x54, 0xb3, 0x17, 0xfb, 0x0e,
-                                    0x01, 0x12, 0x65, 0x74, 0x8f, 0x79, 0x29, 0xb0, 0x18, 0x03, 0x66, 0x62, 0x5d, 0xe0, 0x66, 0x5b,
-                                    0x11, 0x6c, 0x87, 0x8b, 0x0f, 0x05, 0xba, 0xd8, 0x31, 0x94, 0x16, 0x25, 0x88, 0x24, 0xdf, 0xdc };
-  BYTE parmblock_seeded[240] =    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                    0x00, 0x41, 0xf5, 0x9e, 0xd5, 0x80, 0x25, 0xaa, 0x04, 0x0e, 0x42, 0x04, 0x3c, 0xa5, 0xd1, 0x21,
-                                    0xb4, 0x94, 0x20, 0x25, 0xe6, 0x16, 0xb0, 0x95, 0xb7, 0xfb, 0x26, 0x6d, 0xdb, 0x63, 0x65, 0xb6,
-                                    0x9b, 0xa6, 0x09, 0xc0, 0xbb, 0x9f, 0xfe, 0x2c, 0xb7, 0xdc, 0x31, 0x33, 0x87, 0xb0, 0x0c, 0x09,
-                                    0x5f, 0xbb, 0x2d, 0x2b, 0x80, 0x1a, 0xff, 0xfb, 0x12, 0x97, 0x9f, 0xbf, 0x42, 0x1b, 0x3a, 0x4d,
-                                    0xbc, 0x7b, 0x21, 0x41, 0x9e, 0x7c, 0x62, 0x20, 0xd5, 0x08, 0xfe, 0x94, 0xf8, 0xa2, 0x5f, 0xee,
-                                    0xbe, 0x07, 0x9c, 0x1d, 0x02, 0xc0, 0xcd, 0x96, 0x5b, 0x3e, 0x51, 0x84, 0x4e, 0x5b, 0xfb, 0x22,
-                                    0xf4, 0xd1, 0x90, 0xfd, 0x57, 0x73, 0x86, 0xd1, 0x96, 0xac, 0x1b, 0xba, 0x14, 0xda, 0x99, 0x64,
-                                    0x00, 0x4b, 0xf2, 0x22, 0x39, 0xf6, 0xeb, 0xf3, 0xc2, 0xe4, 0xed, 0xf6, 0xa5, 0x3a, 0x7d, 0x82,
-                                    0x14, 0xda, 0x99, 0x64, 0x7c, 0xc1, 0xfc, 0x3b, 0xd9, 0x0d, 0xb2, 0x49, 0xcf, 0x0b, 0x82, 0x53,
-                                    0x1c, 0x30, 0xe5, 0x2d, 0x5e, 0xd3, 0x11, 0xb5, 0xaa, 0xc5, 0x2c, 0xf9, 0xe7, 0x67, 0x81, 0xc8,
-                                    0x84, 0x14, 0xb2, 0x36, 0x59, 0xf5, 0x5f, 0x54, 0xfa, 0x28, 0xa9, 0x08, 0x81, 0x46, 0xcd, 0x2d,
-                                    0x37, 0xaa, 0x9c, 0x0e, 0xa3, 0xfd, 0x06, 0xce, 0x26, 0x75, 0xf8, 0x95, 0x49, 0xb2, 0xa4, 0xcb,
-                                    0xb0, 0xd8, 0x53, 0xc3, 0xc6, 0xa0, 0x09, 0xf7, 0x33, 0xc5, 0xb3, 0xd2, 0xb3, 0x29, 0xd8, 0x9c,
-                                    0x60, 0xef, 0x29, 0xb9, 0x02, 0xf1, 0x39, 0x42, 0x49, 0xb1, 0x94, 0x18, 0xcd, 0xab, 0xf6, 0x28 };
-  BYTE parmblock_generated[240] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
-                                    0x00, 0x8d, 0xe7, 0xc1, 0x0f, 0x77, 0x11, 0x9d, 0xc6, 0xf3, 0x2f, 0xfa, 0xe1, 0xe0, 0x4e, 0xa3,
-                                    0xf1, 0x41, 0xc2, 0xfc, 0x62, 0xd8, 0xac, 0xd1, 0x91, 0x08, 0xd8, 0xb7, 0xaa, 0x6e, 0xe8, 0x09,
-                                    0xb7, 0xd6, 0xee, 0xee, 0x1a, 0x73, 0x0f, 0xe2, 0x62, 0xa1, 0x5e, 0x2d, 0x6f, 0x17, 0x8d, 0xd1,
-                                    0xf4, 0x09, 0xa9, 0x0e, 0x43, 0x50, 0x71, 0xd4, 0x7f, 0xa4, 0x7c, 0x5f, 0x67, 0x0f, 0x03, 0x14,
-                                    0x42, 0xbb, 0x6b, 0x11, 0x69, 0xf7, 0xdf, 0xb2, 0xf0, 0x36, 0xed, 0x5a, 0x15, 0x71, 0x9f, 0x08,
-                                    0xef, 0xd4, 0x94, 0x42, 0xf5, 0x49, 0x91, 0x93, 0x51, 0x1b, 0x92, 0x4f, 0xc1, 0x96, 0xaa, 0xb3,
-                                    0xa7, 0xc2, 0xbb, 0x8c, 0xaa, 0x8b, 0xae, 0xd2, 0x0f, 0x45, 0xd0, 0x3d, 0xff, 0xb8, 0x74, 0x6e,
-                                    0x00, 0x4b, 0xf2, 0x22, 0x39, 0xf6, 0xeb, 0xf3, 0xc2, 0xe4, 0xed, 0xf6, 0xa5, 0x3a, 0x7d, 0x82,
-                                    0xff, 0xb8, 0x74, 0x6e, 0x7c, 0xc1, 0xfc, 0x3b, 0xd9, 0x0d, 0xb2, 0x49, 0xcf, 0x0b, 0x82, 0x53,
-                                    0x1c, 0x30, 0xe5, 0x2d, 0x5e, 0xd3, 0x11, 0xb5, 0xaa, 0xc5, 0x2c, 0xf9, 0xe7, 0x67, 0x81, 0xc8,
-                                    0x84, 0x14, 0xb2, 0x36, 0x59, 0xf5, 0x5f, 0x54, 0xfa, 0x28, 0xa9, 0x08, 0x81, 0x46, 0xcd, 0x2d,
-                                    0x37, 0xaa, 0x9c, 0x0e, 0xa3, 0xfd, 0x06, 0xce, 0x26, 0x75, 0xf8, 0x95, 0x49, 0xb2, 0xa4, 0xcb,
-                                    0xb0, 0xd8, 0x53, 0xc3, 0xc6, 0xa0, 0x09, 0xf7, 0x33, 0xc5, 0xb3, 0xd2, 0xb3, 0x29, 0xd8, 0x9c,
-                                    0x60, 0xef, 0x29, 0xb9, 0x02, 0xf1, 0x39, 0x42, 0x49, 0xb1, 0x94, 0x18, 0xcd, 0xab, 0xf6, 0x28 };
 
   RRE(inst, regs, r1, r2);
   PER_ZEROADDR_CHECK( regs, 1 );
@@ -6479,7 +6622,6 @@ DEF_INST(dyn_perform_random_number_operation)
 
   /* Initialize values */
   fc = GR0_fc(regs);
-  modifier_bit = GR0_m(regs);
   switch(fc)
   {
     case 0: /* Query */
@@ -6489,101 +6631,9 @@ DEF_INST(dyn_perform_random_number_operation)
       regs->psw.cc = 0;
       return;
     }
-    case 3: /* DRNG */
+    case 3: /* SHA-512-DRNG */
     {
-      /* Fetch the parameter block */
-      ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-      /*      */
-      /* seed */
-      /*      */
-      if (GR0_m(regs))
-      {
-        randbytes = GR_A( r2 + 1, regs );
-        randaddr  = GR_A( r2,     regs );
-        randnum   = min( RAND_CHUNK_SIZE, randbytes );
-        ARCH_DEP(vfetchc)(entropy_input, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-        if (randbytes > RAND_CHUNK_SIZE)
-            ARCH_DEP(vfetchc)(entropy_input + RAND_CHUNK_SIZE, randbytes - (RAND_CHUNK_SIZE+1), randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-
-#ifdef OPTION_PRNO_DEBUG
-        logmsg("DRNG Seed: Input Parmblock = ");
-        for(n=0; n < 240; n++)
-          logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
-        logmsg("\n");
-        logmsg("DRNG Seed: Entropy Size = %"PRIu64"\n", (U64) (GR_A( r2 + 1, regs )));
-        logmsg("DRNG Seed: Entropy Data = ");
-        for(n=0; n < randbytes; n++)
-          logmsg("%02x",entropy_input[n]);
-        logmsg("\n");
-#endif
-        /* known answer test */
-        if ((randbytes == 64) && (!memcmp(entropy, entropy_input, 64)))
-        {
-          ARCH_DEP(vstorec)(parmblock_seeded, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-          ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-        else
-        /* pseudo seed */
-        {
-          if (!DRNG.drng.rc) DRNG.drng.sb = 0;
-          DRNG.drng.rc = CSWAP32( 1 );
-          VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
-          VERIFY( hget_random_bytes( DRNG.drng.C, 111, &sysblk.PRNOrandhand ) );
-          ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-
-#ifdef OPTION_PRNO_DEBUG
-      logmsg("DRNG Seed: Output Parmblock = ");
-      for(n=0; n < 240; n++)
-        logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
-      logmsg("\n");
-#endif
-      }
-      else
-      /*          */
-      /* generate */
-      /*          */
-      {
-        randaddr  = GR_A( r1,     regs );
-        randbytes = GR_A( r1 + 1, regs );
-#ifdef OPTION_PRNO_DEBUG
-        LOGMSG("+++ %s mode DRNG Generate: r1+1 randbytes = %"PRIu64"\n", regs->psw.amode64 ? "64" : regs->psw.amode ? "31" : "24",  randbytes );
-#endif
-
-        /* known answer test */
-        if ((randbytes == 64) && (!memcmp(parmblock_seeded, DRNG.drng_parmblock, 240)))
-        {
-          ARCH_DEP(vstorec)(generated, 63, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-          ARCH_DEP(vstorec)(parmblock_generated, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-          ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-        else
-        /* real generate */
-        {
-          do
-          {
-            randnum = min( RAND_CHUNK_SIZE, randbytes );
-            VERIFY( hget_random_bytes( randbuf, randnum, &sysblk.PRNOrandhand ));
-            ARCH_DEP(vstorec)(randbuf, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-            if (randbytes > RAND_CHUNK_SIZE)
-            {
-              randbytes -=  RAND_CHUNK_SIZE;
-              randaddr  +=  RAND_CHUNK_SIZE;
-            }
-            else randbytes = 0;
-          }
-          while (randbytes);
-          DRNG.drng.rc = ARCH_DEP(vfetch4) ( regs->GR( 1 ) + 4, 1, regs ) + 1;
-          DRNG.drng.rc = CSWAP32( DRNG.drng.rc );
-          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, 1, regs ) + GR_A( r1 + 1, regs );
-          DRNG.drng.sb = CSWAP64( DRNG.drng.sb );
-          VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
-          ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-        SET_GR_A( r1 + 1, regs, 0 );
-      }
-      /* Set condition code 0 */
-      regs->psw.cc = 0;
+      ARCH_DEP(prno_sha512_drng)(r1, r2, regs);
       return;
     }
     case 112: /* TRNG-Query-Raw-to-Conditioned-Ratio */

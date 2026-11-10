@@ -502,6 +502,7 @@ EXTRA_DIST =                    \
      privop.core                \
      privop.list                \
      privop.tst                 \
+     prno-drng.tst              \
      prno.asm                   \
      prno.core                  \
      prno.list                  \

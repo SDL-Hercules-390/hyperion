@@ -3770,6 +3770,9 @@
     <None Include="tests\privop.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\prno-drng.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\prno.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
