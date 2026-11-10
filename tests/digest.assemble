@@ -74,7 +74,7 @@ go equ *
  punch 'runtest program .1' Good query                                          
  punch '*Compare'                                                               
  punch 'r 200.10'                                                               
- punch '*Want F0000000 00000000 40000000 00000000 '                             
+ punch '*Want F0000000 FC000000 40000000 00000000 '                             
 *                                                                               
 * Function 1   KIMD                                                             
 *                                                                               

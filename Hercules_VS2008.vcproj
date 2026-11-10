@@ -5102,6 +5102,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\sha3.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\ShiftLeft.tst"
 							>
 						</File>

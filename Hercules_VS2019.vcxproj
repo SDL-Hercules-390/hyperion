@@ -1140,6 +1140,7 @@
     <None Include="tests\semipriv.core" />
     <None Include="tests\semipriv.list" />
     <None Include="tests\semipriv.tst" />
+    <None Include="tests\sha3.tst" />
     <None Include="tests\ShiftLeft.asm" />
     <None Include="tests\ShiftLeft.core" />
     <None Include="tests\ShiftLeft.list" />

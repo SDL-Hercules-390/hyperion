@@ -132,7 +132,7 @@
                                                74  punch 'runtest program .1' Good query                                 
                                                75  punch '*Compare'                                                      
                                                76  punch 'r 200.10'                                                      
-                                               77  punch '*Want F0000000 00000000 40000000 00000000 '                    
+                                               77  punch '*Want F0000000 FC000000 40000000 00000000 '                    
                                                78 *                                                                      
                                                79 * Function 1   KIMD                                                    
                                                80 *                                                                      

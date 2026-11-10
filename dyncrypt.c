@@ -110,6 +110,15 @@ static const int kmctr_pblens[32] =
 #define GR0_kma_lpc(regs)   (((regs)->GR_L(0) & 0x00000100) ? TRUE : FALSE)
 
 /*----------------------------------------------------------------------------*/
+/* KLMD specific GR0 bits                                                     */
+/*----------------------------------------------------------------------------*/
+/* ps   : Padding state for SHAKE (bit 55), one when the padding has already  */
+/*        been processed and only further output is to be squeezed           */
+/*----------------------------------------------------------------------------*/
+#define GR0_klmd_ps(regs)   (((regs)->GR_L(0) & 0x00000100) ? TRUE : FALSE)
+#define SET_GR0_klmd_ps(regs) ((regs)->GR_L(0) |= 0x00000100)
+
+/*----------------------------------------------------------------------------*/
 /* Write bytes on one line                                                    */
 /*----------------------------------------------------------------------------*/
 #define LOGBYTE(s, v, x) \
@@ -844,6 +853,105 @@ static BYTE exp_table[128][16] =
   { 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
   { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
+
+/*----------------------------------------------------------------------------*/
+/* Keccak-f[1600] permutation (FIPS 202) used by SHA-3 and SHAKE (MSA 6)      */
+/*----------------------------------------------------------------------------*/
+/* The 200-byte state is kept in the format of the KIMD/KLMD parameter block, */
+/* which is the byte order of FIPS 202: lane x+5y occupies the bytes          */
+/* 8*(x+5y) to 8*(x+5y)+7 in little-endian order. Message bytes are XORed     */
+/* into the state bytes directly and the digest is the leftmost part of the   */
+/* state.                                                                     */
+/*----------------------------------------------------------------------------*/
+#define KECCAK_ROTL64(x, n)  (((x) << (n)) | ((x) >> (64 - (n))))
+
+static void keccak_f1600(BYTE state[200])
+{
+  static const U64 round_constants[24] =
+  {
+    0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808AULL, 0x8000000080008000ULL,
+    0x000000000000808BULL, 0x0000000080000001ULL, 0x8000000080008081ULL, 0x8000000000008009ULL,
+    0x000000000000008AULL, 0x0000000000000088ULL, 0x0000000080008009ULL, 0x000000008000000AULL,
+    0x000000008000808BULL, 0x800000000000008BULL, 0x8000000000008089ULL, 0x8000000000008003ULL,
+    0x8000000000008002ULL, 0x8000000000000080ULL, 0x000000000000800AULL, 0x800000008000000AULL,
+    0x8000000080008081ULL, 0x8000000000008080ULL, 0x0000000080000001ULL, 0x8000000080008008ULL
+  };
+  /* Rotation offsets and lane order of the combined rho and pi steps */
+  static const int rho[24] =
+  {
+     1,  3,  6, 10, 15, 21, 28, 36, 45, 55,  2, 14, 27, 41, 56,  8, 25, 43, 62, 18, 39, 61, 20, 44
+  };
+  static const int pi[24] =
+  {
+    10,  7, 11, 17, 18,  3,  5, 16,  8, 21, 24,  4, 15, 23, 19, 13, 12,  2, 20, 14, 22,  9,  6,  1
+  };
+  U64 a[25];
+  U64 c[5];
+  U64 t;
+  int round;
+  int i;
+  int j;
+
+  /* Load the lanes (little-endian) */
+  for(i = 0; i < 25; i++)
+  {
+    a[i] = 0;
+    for(j = 7; j >= 0; j--)
+      a[i] = (a[i] << 8) | state[i * 8 + j];
+  }
+
+  for(round = 0; round < 24; round++)
+  {
+    /* Theta */
+    for(i = 0; i < 5; i++)
+      c[i] = a[i] ^ a[i + 5] ^ a[i + 10] ^ a[i + 15] ^ a[i + 20];
+    for(i = 0; i < 5; i++)
+    {
+      t = c[(i + 4) % 5] ^ KECCAK_ROTL64(c[(i + 1) % 5], 1);
+      for(j = 0; j < 25; j += 5)
+        a[j + i] ^= t;
+    }
+
+    /* Rho and pi */
+    t = a[1];
+    for(i = 0; i < 24; i++)
+    {
+      j = pi[i];
+      c[0] = a[j];
+      a[j] = KECCAK_ROTL64(t, rho[i]);
+      t = c[0];
+    }
+
+    /* Chi */
+    for(j = 0; j < 25; j += 5)
+    {
+      for(i = 0; i < 5; i++)
+        c[i] = a[j + i];
+      for(i = 0; i < 5; i++)
+        a[j + i] ^= (~c[(i + 1) % 5]) & c[(i + 2) % 5];
+    }
+
+    /* Iota */
+    a[0] ^= round_constants[round];
+  }
+
+  /* Store the lanes (little-endian) */
+  for(i = 0; i < 25; i++)
+  {
+    for(j = 0; j < 8; j++)
+      state[i * 8 + j] = (BYTE)(a[i] >> (8 * j));
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* SHA-3 and SHAKE block size (rate) in bytes for KIMD/KLMD FC 32-37          */
+/*----------------------------------------------------------------------------*/
+static int sha3_rate(int fc)
+{
+  static const int rates[6] = { 144, 136, 104, 72, 168, 136 };
+
+  return(rates[fc - 32]);
+}
 #endif /* #ifndef __STATIC_FUNCTIONS__ */
 
 /*----------------------------------------------------------------------------*/
@@ -1337,6 +1445,228 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   /* Set condition code */
   regs->psw.cc = 0;
 }
+
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+/*----------------------------------------------------------------------------*/
+/* Compute intermediate message digest (KIMD) FC 32-37                        */
+/*----------------------------------------------------------------------------*/
+/* SHA3-224, SHA3-256, SHA3-384, SHA3-512, SHAKE-128 and SHAKE-256 (MSA 6).   */
+/* Message-Security-Assist Extension 6 has no facility bit of its own; like   */
+/* extension 7 it is provided together with extension 5.                      */
+/*                                                                            */
+/* The parameter block is the 200-byte Keccak state. The second operand       */
+/* length must be a multiple of the block size (rate) of the function.        */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kimd_sha3)(int r1, int r2, REGS *regs)
+{
+  int crypted;
+  int i;
+  BYTE message_block[168];
+  int rate;
+  BYTE state[200];
+
+  UNREFERENCED(r1);
+
+  /* Initialize values */
+  rate = sha3_rate(GR0_fc(regs));
+
+  /* Check special conditions */
+  if(unlikely(GR_A(r2 + 1, regs) % rate))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Test writeability of the state */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 199, ACCTYPE_WRITE, regs);
+
+  /* Fetch the state */
+  ARCH_DEP(vfetchc)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+  LOGBYTE("icv   :", state, 32);
+#endif /* #ifdef OPTION_KIMD_DEBUG */
+
+  /* Try to process the CPU-determined amount of data */
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += rate)
+  {
+    /* Fetch and absorb a block of data */
+    ARCH_DEP(vfetchc)(message_block, rate - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    for(i = 0; i < rate; i++)
+      state[i] ^= message_block[i];
+    keccak_f1600(state);
+
+    /* Store the state */
+    ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+    LOGBYTE("ocv   :", state, 32);
+#endif /* #ifdef OPTION_KIMD_DEBUG */
+
+    /* Update the registers */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + rate);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - rate);
+
+#ifdef OPTION_KIMD_DEBUG
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif /* #ifdef OPTION_KIMD_DEBUG */
+
+    /* check for end of data */
+    if(unlikely(!GR_A(r2 + 1, regs)))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* Compute last message digest (KLMD) FC 32-37                                */
+/*----------------------------------------------------------------------------*/
+/* SHA3-224, SHA3-256, SHA3-384, SHA3-512, SHAKE-128 and SHAKE-256 (MSA 6).   */
+/*                                                                            */
+/* The parameter block is the 200-byte Keccak state. Full blocks of the       */
+/* second operand are absorbed, then the remaining bytes (possibly none) are  */
+/* padded (SHA-3: 0x06...0x80, SHAKE: 0x1F...0x80) and absorbed. For SHA-3    */
+/* the digest is the leftmost part of the resulting state.                    */
+/*                                                                            */
+/* For SHAKE the output is squeezed into the first operand (R1, R1+1). The    */
+/* first output block is taken from the state after the padded block has     */
+/* been absorbed, every further block after another permutation. When the    */
+/* padding has been processed, the padding state (PS) bit 55 of GR0 is set    */
+/* to one, so that a resumed execution (cc 3) or a later execution with PS    */
+/* set by the program only squeezes: permute, then output the next block.     */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(klmd_sha3)(int r1, int r2, REGS *regs)
+{
+  int i;
+  BYTE message_block[168];
+  int n;
+  int processed;
+  int rate;
+  int shake;
+  BYTE state[200];
+
+  /* Initialize values */
+  rate = sha3_rate(GR0_fc(regs));
+  shake = GR0_fc(regs) >= 36;
+
+  /* Check special conditions */
+  if(unlikely(shake && (!r1 || r1 & 0x01)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Test writeability of the state */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 199, ACCTYPE_WRITE, regs);
+
+  /* Fetch the state */
+  ARCH_DEP(vfetchc)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KLMD_DEBUG
+  LOGBYTE("icv   :", state, 32);
+#endif /* #ifdef OPTION_KLMD_DEBUG */
+
+  processed = 0;
+  if(!shake || !GR0_klmd_ps(regs))
+  {
+    /* Absorb the full blocks */
+    while(GR_A(r2 + 1, regs) >= (U64) rate)
+    {
+      /* CPU-determined amount of data processed */
+      if(processed >= PROCESS_MAX)
+      {
+        regs->psw.cc = 3;
+        return;
+      }
+
+      ARCH_DEP(vfetchc)(message_block, rate - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+      for(i = 0; i < rate; i++)
+        state[i] ^= message_block[i];
+      keccak_f1600(state);
+      ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+      SET_GR_A(r2, regs, GR_A(r2, regs) + rate);
+      SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - rate);
+      processed += rate;
+    }
+
+    /* Pad and absorb the last (partial or empty) block */
+    n = (int) GR_A(r2 + 1, regs);
+    memset(message_block, 0, rate);
+    if(n)
+      ARCH_DEP(vfetchc)(message_block, n - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    message_block[n] ^= shake ? 0x1F : 0x06;
+    message_block[rate - 1] ^= 0x80;
+    for(i = 0; i < rate; i++)
+      state[i] ^= message_block[i];
+    keccak_f1600(state);
+
+    if(shake)
+    {
+      /* Output the first block taken from the current state */
+      n = (int) min((U64) rate, GR_A(r1 + 1, regs));
+      if(n)
+        ARCH_DEP(vstorec)(state, n - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
+    }
+
+    /* Store the state */
+    ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KLMD_DEBUG
+    LOGBYTE("ocv   :", state, 32);
+#endif /* #ifdef OPTION_KLMD_DEBUG */
+
+    /* Update the registers */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+    SET_GR_A(r2 + 1, regs, 0);
+    if(!shake)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    SET_GR_A(r1, regs, GR_A(r1, regs) + n);
+    SET_GR_A(r1 + 1, regs, GR_A(r1 + 1, regs) - n);
+    SET_GR0_klmd_ps(regs);
+    processed += rate;
+  }
+
+  /* Squeeze further output blocks (SHAKE only) */
+  while(GR_A(r1 + 1, regs))
+  {
+    /* CPU-determined amount of data processed */
+    if(processed >= PROCESS_MAX)
+    {
+      regs->psw.cc = 3;
+      return;
+    }
+
+    keccak_f1600(state);
+    n = (int) min((U64) rate, GR_A(r1 + 1, regs));
+    ARCH_DEP(vstorec)(state, n - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
+    ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    SET_GR_A(r1, regs, GR_A(r1, regs) + n);
+    SET_GR_A(r1 + 1, regs, GR_A(r1 + 1, regs) - n);
+    processed += rate;
+  }
+
+#ifdef OPTION_KLMD_DEBUG
+  WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+  WRMSG(HHC90108, "D", r1 + 1, (regs)->GR(r1 + 1));
+  WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+  WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif /* #ifdef OPTION_KLMD_DEBUG */
+
+  regs->psw.cc = 0;
+}
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
 /*----------------------------------------------------------------------------*/
 /* Cipher message (KM) FC 1-3 and 9-11                                        */
@@ -4297,6 +4627,12 @@ DEF_INST(dyn_compute_intermediate_message_digest)
   {
     case 0: /* Query */
     {
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+      /* SHA-3 and SHAKE (MSA 6) are provided together with MSA 5 */
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        query_bits[msa][4] |= 0xFC;
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
+
       /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -4346,6 +4682,22 @@ DEF_INST(dyn_compute_intermediate_message_digest)
       break;
     }
 #endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
+
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+    case 32: /* sha3-224 */
+    case 33: /* sha3-256 */
+    case 34: /* sha3-384 */
+    case 35: /* sha3-512 */
+    case 36: /* shake-128 */
+    case 37: /* shake-256 */
+    {
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        ARCH_DEP(kimd_sha3)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
     default:
     {
@@ -4409,6 +4761,12 @@ DEF_INST(dyn_compute_last_message_digest)
   {
     case 0: /* Query */
     {
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+      /* SHA-3 and SHAKE (MSA 6) are provided together with MSA 5 */
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        query_bits[msa][4] |= 0xFC;
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
+
       /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -4446,6 +4804,22 @@ DEF_INST(dyn_compute_last_message_digest)
       break;
     }
 #endif /* defined( FEATURE_MSA_EXTENSION_FACILITY_2 ) */
+
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+    case 32: /* sha3-224 */
+    case 33: /* sha3-256 */
+    case 34: /* sha3-384 */
+    case 35: /* sha3-512 */
+    case 36: /* shake-128 */
+    case 37: /* shake-256 */
+    {
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        ARCH_DEP(klmd_sha3)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
     default:
     {
@@ -5838,9 +6212,9 @@ HDL_REGISTER_SECTION;
   WRMSG( HHC00151, "I", "Message Security Assist");
 
 #if defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 7 and 8");
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6, 7 and 8");
 #elif defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5 and 7");
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6 and 7");
 #else
   #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
     WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4");

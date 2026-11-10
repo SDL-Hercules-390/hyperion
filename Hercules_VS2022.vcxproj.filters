@@ -3776,6 +3776,9 @@
     <None Include="tests\semipriv.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\sha3.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\ShiftLeft.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
