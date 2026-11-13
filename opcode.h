@@ -2358,13 +2358,20 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
+  /* PoP SA22-7832-12 page 5-98: a restricted instruction attempted in a     */
+  /* NONCONSTRAINED transaction aborts it with abort code 11 and condition   */
+  /* code 3, and no program interruption occurs. Only in the CONSTRAINED     */
+  /* mode may a transaction-constraint program interruption be recognized.  */
+  #define TXF_RESTRICTED_RETRY( _regs )                                                 \
+    ((_regs)->txf_contran ? ABORT_RETRY_PGMCHK : ABORT_RETRY_CC)
+
   #define TXF_INSTR_CHECK( _regs )                                                      \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
       if ((_regs)->txf_tnd)                                                             \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_INSTR;                                         \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), TXF_RESTRICTED_RETRY( _regs ), TAC_INSTR );               \
       }                                                                                 \
     } while (0)
 
@@ -2380,7 +2387,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_FLOAT_INSTR;                                   \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), TXF_RESTRICTED_RETRY( _regs ), TAC_INSTR );               \
       }                                                                                 \
     } while (0)
 
@@ -2393,7 +2400,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_ACCESS_INSTR;                                  \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), TXF_RESTRICTED_RETRY( _regs ), TAC_INSTR );               \
       }                                                                                 \
     } while (0)
 
@@ -2407,11 +2414,11 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         /* Since the instruction hasn't been decoded yet, regs->ip is still             \
-           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           pointing to the instruction so we use a NEGATIVE retry code.                 \
            See the comments in the "abort_transaction" function in transact.c           \
         */                                                                              \
         (_regs)->txf_why |= TXF_WHY_TRAN_NONRELATIVE_BRANCH;                            \
-        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+        ABORT_TRANS( (_regs), -TXF_RESTRICTED_RETRY( _regs ), TAC_INSTR );              \
       }                                                                                 \
     } while (0)
 
@@ -2425,11 +2432,11 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         /* Since the instruction hasn't been decoded yet, regs->ip is still             \
-           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           pointing to the instruction so we use a NEGATIVE retry code.                 \
            See the comments in the "abort_transaction" function in transact.c           \
         */                                                                              \
         (_regs)->txf_why |= TXF_WHY_TRAN_BRANCH_SET_MODE;                               \
-        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+        ABORT_TRANS( (_regs), -TXF_RESTRICTED_RETRY( _regs ), TAC_INSTR );              \
       }                                                                                 \
     } while (0)
 
@@ -2442,7 +2449,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_SET_ADDRESSING_MODE;                           \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), TXF_RESTRICTED_RETRY( _regs ), TAC_INSTR );               \
       }                                                                                 \
     } while (0)
 
@@ -2452,7 +2459,7 @@ do {                                                                  \
       if ((_regs)->txf_tnd)                                                             \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_MISC_INSTR;                                    \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_MISC );                           \
+        ABORT_TRANS( (_regs), TXF_RESTRICTED_RETRY( _regs ), TAC_MISC );                \
       }                                                                                 \
     } while (0)
 
