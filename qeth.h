@@ -160,6 +160,25 @@ typedef struct _OSA_IPV6 {
 
 
 /*-------------------------------------------------------------------*/
+/* ARP cache entry (opt-in TAP+bridge mode, keyword 'tap')           */
+/*-------------------------------------------------------------------*/
+#define QETH_ARP_MAX 32
+typedef struct _QETH_ARP_ENTRY {
+        BYTE    ip[4];
+        BYTE    mac[IFHWADDRLEN];
+        int     valid;
+} QETH_ARP_ENTRY;
+
+/* Packets awaiting ARP resolution (opt-in l2tap mode)               */
+#define QETH_ARP_PEND_MAX  8
+typedef struct _QETH_ARP_PEND {
+        BYTE    nh[4];              /* next-hop IP awaiting MAC      */
+        BYTE*   ip;                 /* buffered IP packet            */
+        int     len;                /* buffered IP packet length     */
+} QETH_ARP_PEND;
+
+
+/*-------------------------------------------------------------------*/
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
@@ -181,6 +200,7 @@ typedef struct _OSA_GRP {
     char *ttipaddr;             /* IPv4 address of the interface     */
     char *ttpfxlen;             /* IPv4 Prefix length of interface   */
     char *ttnetmask;            /* IPv4 Netmask of the interface     */
+    char *ttgateway;            /* IPv4 default gateway (l2tap mode) */
 
     char *ttipaddr6;            /* IPv6 address of the interface     */
     char *ttpfxlen6;            /* IPv6 Prefix length of interface   */
@@ -192,6 +212,7 @@ typedef struct _OSA_GRP {
                                 /* contains the binary equivalent of */
                                 /* the ttipaddr string.              */
     BYTE  confpfxmask4[4];      /* IPv4 prefix mask in network order */
+    BYTE  confgateway4[4];      /* IPv4 default gateway (l2tap mode) */
     BYTE  confipaddr6[16];      /* IPv6 address of the interface in  */
                                 /* network byte order. This variable */
                                 /* contains the binary equivalent of */
@@ -201,6 +222,9 @@ typedef struct _OSA_GRP {
  OSA_IPV4 ipaddr4[OSA_MAXIPV4]; /* Locally recognised IPv4 addresses */
  OSA_IPV6 ipaddr6[OSA_MAXIPV6]; /* Locally recognised IPv6 addresses */
  OSA_MAC  mac    [OSA_MAXMAC];  /* Locally recognised MAC  addresses */
+
+ QETH_ARP_ENTRY arp[QETH_ARP_MAX]; /* ARP cache (l2tap mode)        */
+ QETH_ARP_PEND arppend[QETH_ARP_PEND_MAX]; /* waiting for ARP (l2tap) */
 
     int   promisc;              /* Adapter is in promiscuous mode    */
 
@@ -237,6 +261,7 @@ typedef struct _OSA_GRP {
 #define DBGQETHQUEUES   0x00000400  /* Queues                        */
 
     int   l3;                   /* Adapter in layer 3 mode           */
+    int   l2tap;                /* Opt-in: TAP+bridge transport      */
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
     int   iqPCI;                /* Input  Queue PCI was requested    */
