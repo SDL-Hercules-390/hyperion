@@ -5635,8 +5635,8 @@ prefetch:
                 /* Set prefetch remaining byte count */
                 prefetch_remaining = count - residual;
 
-                /* Determine prefetched CCW limit and raise requested
-                   PCI interrupts */
+                /* Determine prefetched CCW limit. Requested PCI
+                   interrupts were raised when each CCW was fetched. */
                 for (ps = ts = 0,
                         prevccwaddr = 1;
                      ts < prefetch.seq;
@@ -5652,11 +5652,6 @@ prefetch:
                         flags = prefetch.ccwflags[ps];
                         prevccwaddr = prefetch.ccwaddr[ps];
                         residual = count = prefetch.ccwcount[ps];
-
-                        /* Raise PCI interrupt */
-                        if (flags & CCW_FLAGS_PCI)
-                            ARCH_DEP(raise_pci) (dev, ccwkey, ccwfmt,
-                                                 prevccwaddr);
                     }
 
                     /* Adjust counts */
