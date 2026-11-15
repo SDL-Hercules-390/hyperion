@@ -1100,6 +1100,16 @@
     <None Include="tests\pfpo.list" />
     <None Include="tests\PFPO.pdf" />
     <None Include="tests\pfpo.tst" />
+    <None Include="tests\plo-01-extension.asm" />
+    <None Include="tests\plo-01-extension.core" />
+    <None Include="tests\plo-01-extension.list" />
+    <None Include="tests\plo-01-extension.pdf" />
+    <None Include="tests\plo-01-extension.tst" />
+    <None Include="tests\plo-02-extension-armode.asm" />
+    <None Include="tests\plo-02-extension-armode.core" />
+    <None Include="tests\plo-02-extension-armode.list" />
+    <None Include="tests\plo-02-extension-armode.pdf" />
+    <None Include="tests\plo-02-extension-armode.tst" />
     <None Include="tests\pr.subtst" />
     <None Include="tests\pr.tst" />
     <None Include="tests\privop.asm" />

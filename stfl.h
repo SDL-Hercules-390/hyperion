@@ -257,7 +257,7 @@
 
 #define STFL_085_UNDEFINED            85    /* Undefined                 */
 #define STFL_086_UNDEFINED            86    /* Undefined                 */
-#define STFL_087_UNDEFINED            87    /* Undefined                 */
+#define STFL_087_PLO_EXTENSION        87    /* PLO-extension facility    */
 #define STFL_088_UNDEFINED            88    /* Undefined                 */
 #define STFL_089_UNDEFINED            89    /* Undefined                 */
 #define STFL_090_UNDEFINED            90    /* Undefined                 */

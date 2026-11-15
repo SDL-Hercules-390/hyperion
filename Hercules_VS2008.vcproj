@@ -3643,6 +3643,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\plo-01-extension.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\plo-02-extension-armode.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\privop.core"
 						>
 					</File>
@@ -5054,6 +5062,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\plo-01-extension.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\plo-02-extension-armode.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\pr.tst"
 							>
 						</File>
@@ -5719,6 +5735,14 @@
 						</File>
 						<File
 							RelativePath=".\tests\pfpo.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\plo-01-extension.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\plo-02-extension-armode.asm"
 							>
 						</File>
 						<File
@@ -6490,6 +6514,22 @@
 							</File>
 							<File
 								RelativePath=".\tests\PFPO.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\plo-01-extension.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\plo-01-extension.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\plo-02-extension-armode.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\plo-02-extension-armode.pdf"
 								>
 							</File>
 							<File

@@ -513,7 +513,11 @@ FT( Z900, Z900, NONE, 084_MISC_INSTR_EXT_4 )
 
 FT( NONE, NONE, NONE, 085_UNDEFINED )
 FT( NONE, NONE, NONE, 086_UNDEFINED )
-FT( NONE, NONE, NONE, 087_UNDEFINED )
+
+#if defined( FEATURE_087_PLO_EXTENSION )
+FT( Z900, Z900, NONE, 087_PLO_EXTENSION )
+#endif
+
 FT( NONE, NONE, NONE, 088_UNDEFINED )
 FT( NONE, NONE, NONE, 089_UNDEFINED )
 FT( NONE, NONE, NONE, 090_UNDEFINED )
@@ -1134,7 +1138,7 @@ FT2( NULL,      NULL,      083_UNDEFINED,              "Undefined" )
 FT2( NULL,      instr84,   084_MISC_INSTR_EXT_4,       "Miscellaneous-Instruction-Extensions Facility 4" )
 FT2( NULL,      NULL,      085_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      086_UNDEFINED,              "Undefined" )
-FT2( NULL,      NULL,      087_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      087_PLO_EXTENSION,          "PLO-extension facility" )
 FT2( NULL,      NULL,      088_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      089_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      090_UNDEFINED,              "Undefined" )

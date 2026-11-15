@@ -664,6 +664,10 @@ do { \
     if( (_value) & 15 ) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
+#define OW_CHECK(_value, _regs) \
+    if( (_value) & 31 ) \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
     /* Program check if m is not 0, 1, or 4 to 7 */
 #define HFPM_CHECK(_m, _regs) \
     if (((_m) == 2) || ((_m) == 3) || ((_m) & 8)) \
@@ -2921,6 +2925,85 @@ int ARCH_DEP( plo_cststgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
 int ARCH_DEP( plo_cststx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
+
+#if defined( FEATURE_087_PLO_EXTENSION )
+int ARCH_DEP( plo_clo    ) (int r1, int r3, VADR effective_addr2, int b2,
+                                VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_cso    ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dcso     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_cssto    ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_csdsto   ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_cststo   ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tcs      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tcsg     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tcsx     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tcso     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qcs      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qcsg     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qcsx     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qcso     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_lo       ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dlx      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dlo      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tl       ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tlg      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tlx      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tlo      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_ql       ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qlg      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qlx      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qlo      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_sto      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dst      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dstg     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dstx     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_dsto     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tst      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tstg     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tstx     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_tsto     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qst      ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qstg     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qstx     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP( plo_qsto     ) (int r1, int r3, VADR effective_addr2, int b2,
+                               VADR effective_addr4, int b4,  REGS *regs);
+#endif
 
 
 /*-------------------------------------------------------------------*/

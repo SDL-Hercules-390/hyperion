@@ -1696,6 +1696,47 @@ typedef struct MBK  MBK;
 #define PLO_CSTSTGR             22      /* C/S/TS              ESAME */
 #define PLO_CSTSTX              23      /* C/S/TS              ESAME */
 
+/* Definitions for PLO instruction with PLO_extension facility       */
+
+#define PLO_CLO                 24      /* Compare and load          */
+#define PLO_CSO                 25      /* Compare and swap          */
+#define PLO_DCSO                26      /* Double compare and swap   */
+#define PLO_CSSTO               27      /* C/S and store             */
+#define PLO_CSDSTO              28      /* C/S and double store      */
+#define PLO_CSTSTO              29      /* C/S and triple store      */
+#define PLO_TCS                 30      /* Triple compare and swap   */
+#define PLO_TCSG                31      /* Triple compare and swap   */
+#define PLO_TCSX                32      /* Triple compare and swap   */
+#define PLO_TCSO                33      /* Triple compare and swap   */
+#define PLO_QCS                 34      /* Quadruple compare and swap*/
+#define PLO_QCSG                35      /* Quadruple compare and swap*/
+#define PLO_QCSX                36      /* Quadruple compare and swap*/
+#define PLO_QCSO                37      /* Quadruple compare and swap*/
+#define PLO_LO                  38      /* Load                      */
+#define PLO_DLX                 39      /* Double load               */
+#define PLO_DLO                 40      /* Double load               */
+#define PLO_TL                  41      /* Triple load               */
+#define PLO_TLG                 42      /* Triple load               */
+#define PLO_TLX                 43      /* Triple load               */
+#define PLO_TLO                 44      /* Triple load               */
+#define PLO_QL                  45      /* Quadruple load            */
+#define PLO_QLG                 46      /* Quadruple load            */
+#define PLO_QLX                 47      /* Quadruple load            */
+#define PLO_QLO                 48      /* Quadruple load            */
+#define PLO_STO                 49      /* Store                     */
+#define PLO_DST                 50      /* Double store              */
+#define PLO_DSTG                51      /* Double store              */
+#define PLO_DSTX                52      /* Double store              */
+#define PLO_DSTO                53      /* Double store              */
+#define PLO_TST                 54      /* Triple store              */
+#define PLO_TSTG                55      /* Triple store              */
+#define PLO_TSTX                56      /* Triple store              */
+#define PLO_TSTO                57      /* Triple store              */
+#define PLO_QST                 58      /* Quadruple store           */
+#define PLO_QSTG                59      /* Quadruple store           */
+#define PLO_QSTX                60      /* Quadruple store           */
+#define PLO_QSTO                61      /* Quadruple store           */
+
 /*-------------------------------------------------------------------*/
 /* Perform Frame Management Function definitions */
 

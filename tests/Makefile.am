@@ -481,6 +481,16 @@ EXTRA_DIST =                    \
      pfpo.list                  \
      PFPO.pdf                   \
      pfpo.tst                   \
+     plo-01-extension.asm       \
+     plo-01-extension.core      \
+     plo-01-extension.list      \
+     plo-01-extension.pdf       \
+     plo-01-extension.tst       \
+     plo-02-extension-armode.asm  \
+     plo-02-extension-armode.core \
+     plo-02-extension-armode.list \
+     plo-02-extension-armode.pdf  \
+     plo-02-extension-armode.tst  \
      popcnt.txt                 \
      pr.subtst                  \
      pr.tst                     \

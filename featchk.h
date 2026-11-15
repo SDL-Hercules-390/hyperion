@@ -364,6 +364,10 @@
  #define    _FEATURE_084_MISC_INSTR_EXT_FACILITY_4
 #endif
 
+#if defined( FEATURE_087_PLO_EXTENSION )
+ #define    _FEATURE_087_PLO_EXTENSION
+#endif
+
 #if defined( FEATURE_129_ZVECTOR_FACILITY )
  #define    _FEATURE_129_ZVECTOR_FACILITY
 #endif

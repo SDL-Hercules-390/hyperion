@@ -361,6 +361,8 @@ int     r1, r3;                         /* Length values             */
 int     b2, b4;                         /* Values of base registers  */
 VADR    effective_addr2,
         effective_addr4;                /* Effective addresses       */
+bool    isAvailable = false;            /* plo-extension switches    */
+bool    isActioned  = false;
 
     SS(inst, regs, r1, r3, b2, effective_addr2, b4, effective_addr4);
     PER_ZEROADDR_XCHECK2( regs, b2, b4 );
@@ -370,45 +372,113 @@ VADR    effective_addr2,
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
     if(regs->GR_L(0) & PLO_GPR0_T)
-        switch(regs->GR_L(0) & PLO_GPR0_FC)
     {
-        case PLO_CL:
-        case PLO_CLG:
-        case PLO_CS:
-        case PLO_CSG:
-        case PLO_DCS:
-        case PLO_DCSG:
-        case PLO_CSST:
-        case PLO_CSSTG:
-        case PLO_CSDST:
-        case PLO_CSDSTG:
-        case PLO_CSTST:
-        case PLO_CSTSTG:
+        /* PLO Test bit set */
+        switch(regs->GR_L(0) & PLO_GPR0_FC)
+        {
+            case PLO_CL:
+            case PLO_CLG:
+            case PLO_CS:
+            case PLO_CSG:
+            case PLO_DCS:
+            case PLO_DCSG:
+            case PLO_CSST:
+            case PLO_CSSTG:
+            case PLO_CSDST:
+            case PLO_CSDSTG:
+            case PLO_CSTST:
+            case PLO_CSTSTG:
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-        case PLO_CLGR:
-        case PLO_CLX:
-        case PLO_CSGR:
-        case PLO_CSX:
-        case PLO_DCSGR:
-        case PLO_DCSX:
-        case PLO_CSSTGR:
-        case PLO_CSSTX:
-        case PLO_CSDSTGR:
-        case PLO_CSDSTX:
-        case PLO_CSTSTGR:
-        case PLO_CSTSTX:
+            case PLO_CLGR:
+            case PLO_CLX:
+            case PLO_CSGR:
+            case PLO_CSX:
+            case PLO_DCSGR:
+            case PLO_DCSX:
+            case PLO_CSSTGR:
+            case PLO_CSSTX:
+            case PLO_CSDSTGR:
+            case PLO_CSDSTX:
+            case PLO_CSTSTGR:
+            case PLO_CSTSTX:
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
+                /* Indicate function supported */
+                isAvailable = true;
+                break;
+
+            default:
+                isAvailable = false;
+                break;
+        }
+
+        /* check plo-extension functions */
+        if ( !isAvailable && FACILITY_ENABLED( 087_PLO_EXTENSION, regs ) )
+        {
+            switch(regs->GR_L(0) & PLO_GPR0_FC)
+            {
+                case PLO_CLO:
+                case PLO_CSO:
+                case PLO_DCSO:
+                case PLO_CSSTO:
+                case PLO_CSDSTO:
+                case PLO_CSTSTO:
+                case PLO_TCS:
+                case PLO_TCSG:
+                case PLO_TCSX:
+                case PLO_TCSO:
+                case PLO_QCS:
+                case PLO_QCSG:
+                case PLO_QCSX:
+                case PLO_QCSO:
+                case PLO_LO:
+                case PLO_DLX:
+                case PLO_DLO:
+                case PLO_TL:
+                case PLO_TLG:
+                case PLO_TLX:
+                case PLO_TLO:
+                case PLO_QL:
+                case PLO_QLG:
+                case PLO_QLX:
+                case PLO_QLO:
+                case PLO_STO:
+                case PLO_DST:
+                case PLO_DSTG:
+                case PLO_DSTX:
+                case PLO_DSTO:
+                case PLO_TST:
+                case PLO_TSTG:
+                case PLO_TSTX:
+                case PLO_TSTO:
+                case PLO_QST:
+                case PLO_QSTG:
+                case PLO_QSTX:
+                case PLO_QSTO:
+                    /* Indicate function supported */
+                    isAvailable =true;
+                    break;
+
+                default:
+                    isAvailable = false;
+                    break;
+            }
+        }
+
+        /* set condition code */
+        if ( isAvailable )
+        {
             /* Indicate function supported */
             regs->psw.cc = 0;
-            break;
-
-        default:
+        }
+        else
+        {
             PTT_ERR("*PLO",regs->GR_L(0),regs->GR_L(r1),regs->psw.IA_L);
             /* indicate function not supported */
             regs->psw.cc = 3;
-            break;
+        }
     }
+
     else
     {
         /* gpr1/ar1 identify the program lock token, which is used
@@ -418,6 +488,7 @@ VADR    effective_addr2,
            and TS.                                               *JJ */
         OBTAIN_MAINLOCK_UNCONDITIONAL( regs );
         {
+            isActioned = true;          /* assume that the function code will be actioned */
             switch(regs->GR_L(0) & PLO_GPR0_FC)
             {
                 case PLO_CL:
@@ -517,15 +588,187 @@ VADR    effective_addr2,
                     regs->psw.cc = ARCH_DEP(plo_cststx) (r1, r3,
                             effective_addr2, b2, effective_addr4, b4, regs);
                     break;
-   #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
                 default:
-                    regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+                    isActioned = false;
+                    break;
+            }
+
+            /* check plo-extension functions */
+            if ( !isActioned && FACILITY_ENABLED( 087_PLO_EXTENSION, regs ) )
+            {
+                //logmsg(">>>> PLO-Extension facility: Function code: %d\n", regs->GR_L(0) & PLO_GPR0_FC);
+                isActioned = true;
+                switch(regs->GR_L(0) & PLO_GPR0_FC)
+                {
+                    case PLO_CLO:
+                        regs->psw.cc = ARCH_DEP(plo_clo) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_CSO:
+                        regs->psw.cc = ARCH_DEP(plo_cso) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DCSO:
+                        regs->psw.cc = ARCH_DEP(plo_dcso) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_CSSTO:
+                        regs->psw.cc = ARCH_DEP(plo_cssto) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_CSDSTO:
+                        regs->psw.cc = ARCH_DEP(plo_csdsto) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_CSTSTO:
+                        regs->psw.cc = ARCH_DEP(plo_cststo) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TCS:
+                        regs->psw.cc = ARCH_DEP(plo_tcs) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TCSG:
+                        regs->psw.cc = ARCH_DEP(plo_tcsg) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TCSX:
+                        regs->psw.cc = ARCH_DEP(plo_tcsx) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TCSO:
+                        regs->psw.cc = ARCH_DEP(plo_tcso) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QCS:
+                        regs->psw.cc = ARCH_DEP(plo_qcs) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QCSG:
+                        regs->psw.cc = ARCH_DEP(plo_qcsg) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QCSX:
+                        regs->psw.cc = ARCH_DEP(plo_qcsx) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QCSO:
+                        regs->psw.cc = ARCH_DEP(plo_qcso) (r1, r3,
+                                effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_LO:            /* does not set cc */
+                        ARCH_DEP(plo_lo) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DLX:           /* does not set cc */
+                        ARCH_DEP(plo_dlx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DLO:           /* does not set cc */
+                        ARCH_DEP(plo_dlo) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TL:            /* does not set cc */
+                        ARCH_DEP(plo_tl) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TLG:           /* does not set cc */
+                        ARCH_DEP(plo_tlg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TLX:           /* does not set cc */
+                        ARCH_DEP(plo_tlx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TLO:           /* does not set cc */
+                        ARCH_DEP(plo_tlo) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QL:            /* does not set cc */
+                        ARCH_DEP(plo_ql) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QLG:           /* does not set cc */
+                        ARCH_DEP(plo_qlg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QLX:           /* does not set cc */
+                        ARCH_DEP(plo_qlx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QLO:           /* does not set cc */
+                        ARCH_DEP(plo_qlo) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_STO:           /* does not set cc */
+                        ARCH_DEP(plo_sto) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DST:           /* does not set cc */
+                        ARCH_DEP(plo_dst) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DSTG:          /* does not set cc */
+                        ARCH_DEP(plo_dstg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DSTX:          /* does not set cc */
+                        ARCH_DEP(plo_dstx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_DSTO:          /* does not set cc */
+                        ARCH_DEP(plo_dsto) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TST:           /* does not set cc */
+                        ARCH_DEP(plo_tst) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TSTG:          /* does not set cc */
+                        ARCH_DEP(plo_tstg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TSTX:          /* does not set cc */
+                        ARCH_DEP(plo_tstx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_TSTO:          /* does not set cc */
+                        ARCH_DEP(plo_tsto) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QST:
+                        ARCH_DEP(plo_qst) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QSTG:          /* does not set cc */
+                        ARCH_DEP(plo_qstg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QSTX:          /* does not set cc */
+                        ARCH_DEP(plo_qstx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+                    case PLO_QSTO:          /* does not set cc */
+                        ARCH_DEP(plo_qsto) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                        break;
+
+                    default:
+                        isActioned = false;
+                }
+            }
+
+            if ( !isActioned )
+            {
+                regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
             }
         }
         RELEASE_MAINLOCK_UNCONDITIONAL( regs );
 
-        if(regs->psw.cc && sysblk.cpus > 1)
+        /* PLO function executed with mainlock held, let other CPUs run */
+        if ( isActioned && sysblk.cpus > 1 )
         {
             PTT_CSF("*PLO",regs->GR_L(0),regs->GR_L(r1),regs->psw.IA_L);
             sched_yield();
