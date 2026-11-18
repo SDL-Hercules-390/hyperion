@@ -268,6 +268,7 @@ EXTRA_DIST =                    \
      dfp-080-to-packed.core     \
      dfp-080-to-packed.list     \
      dfp-080-to-packed.tst      \
+     dfp-quantize.tst           \
      diag24.txt                 \
      diag8.txt                  \
      digest.assemble            \
