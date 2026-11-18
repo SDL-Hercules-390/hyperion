@@ -1989,6 +1989,10 @@ U16 offph;
                         strcat( dev->dev_data, ": CMD_0008" );         /* Prepare the contentstring */
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
+                    case IPA_SAS_CMD_ARP_QUERY_STATS:  /* 0x0204 */
+                        strcat( dev->dev_data, ": ARP_QUERY_STATS" );  /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
+                        break;
                     default:
                         {
                         char not_supp[12];
@@ -2042,6 +2046,26 @@ U16 offph;
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
                     case IPA_SAS_CMD_0008:       /* 0x0008 */
+                        STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        break;
+
+                    case IPA_SAS_CMD_ARP_QUERY_STATS:  /* 0x0204 */
+                        /* The guest requests the OSA ARP-processing
+                           statistics. IBM does not document the layout of
+                           the counters block, so the request block is
+                           returned unchanged (len + 4 bytes) with a
+                           successful return code. The subcommand is only
+                           honoured when the opt-in TAP transport is in
+                           use, since that is the only mode in which
+                           Hercules implements the ARP assist; otherwise
+                           the historical behaviour (reject the
+                           subcommand) is preserved. */
+                        if (!grp->l2tap)
+                        {
+                            STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                            break;
+                        }
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
