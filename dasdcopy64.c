@@ -304,7 +304,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Perform sanity checks on the options... */
 
-    if (sfile && !(in & COMPMASK))        return syntax( pgm, "%s",
+    /* Shadow files: over a compressed image, or an uncompressed CKD64 one */
+    if (sfile && !(in & COMPMASK) && in != CKD64) return syntax( pgm, "%s",
         "shadow files invalid if input not compressed" );
 
     if (comp != 255 && !(out & COMPMASK)) return syntax( pgm, "%s",
