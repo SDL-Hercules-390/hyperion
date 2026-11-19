@@ -7343,7 +7343,14 @@ int      rc;
     /* Set sf- flags in either cckdblk or the cckd extension */
     if (action == '-')
     {
-        if (dev)
+        if (dev && dev->cckd64)
+        {
+            CCKD64_EXT*  cckd = dev->cckd_ext;
+
+            cckd->sfmerge = (flag == 1);
+            cckd->sfforce = (flag == 2);
+        }
+        else if (dev)
         {
             CCKD_EXT*  cckd   = dev->cckd_ext;
 
@@ -7359,7 +7366,13 @@ int      rc;
     /* Set sfk level in either cckdblk or the cckd extension */
     else if (action == 'k')
     {
-        if (dev)
+        if (dev && dev->cckd64)
+        {
+            CCKD64_EXT*  cckd = dev->cckd_ext;
+
+            cckd->sflevel = level;
+        }
+        else if (dev)
         {
             CCKD_EXT*  cckd   = dev->cckd_ext;
 
