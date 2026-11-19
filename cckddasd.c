@@ -4386,6 +4386,11 @@ CCKD_EXT       *cckd;                   /* -> cckd extension         */
         return NULL;
     }
 
+    /* Specific device... */
+
+    if (dev->cckd64)
+        return cckd64_sf_add( data );
+
     cckd = dev->cckd_ext;
     if (!cckd)
     {
