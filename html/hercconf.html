@@ -4880,6 +4880,19 @@ ROUTE  00  172.21.3.32  255.255.255.224
     in a single file.
     <p>
 
+<a name="ckdblkdev"></a>
+    On Linux, the argument may also specify a host block device, such as
+    a disk partition or an LVM logical volume (for example
+    <code>/dev/vg0/MVSRES</code>), onto which an uncompressed single-file
+    CKD image (CKD or CKD64) has been copied with <code>dd</code>.
+    Such a device is usually larger than the image it holds (its size is
+    rounded up by the partitioning tool or by LVM), so the number of
+    cylinders cannot be derived from its size: the
+    <a href="#ckdcyls"><code>cyls=</code></a> argument is then required.
+    Compressed (CCKD) images, shadow files and multiple file volumes
+    are not supported on a block device.
+    <p>
+
     Alternatively, the argument may specify the name of a file containing
     a compressed CCKD DASD image.  The CKD driver will automatically detect
     whether the file contains a regular CKD image or a compressed CCKD
@@ -5075,6 +5088,24 @@ FISH TEST...
         Defines an optional overriding 12-digit serial number to be used for this device.
         The specified serial number will be used regardless of whatever
         permanent or randomly assigned serial number the device might have (if any).
+        <p>
+
+<a name="ckdcyls"></a>
+    <dt><code>cyls=<em>n</em></code>
+    <dd><p>
+        Specifies the number of cylinders of the volume.
+        <p>
+        It is required when the file name is a host
+        <a href="#ckdblkdev">block device</a>: the device must then be
+        at least as large as the image (512 + <em>n</em> &times; heads
+        &times; track size bytes), and anything beyond that is ignored.
+        Specify the exact number of cylinders of the image that was copied
+        onto the device: a larger value is accepted as long as the device
+        is large enough, and the guest would then see cylinders that do not
+        belong to the volume.
+        <p>
+        For a regular image file, <code>cyls=</code> is optional and is
+        only checked against the size of the image.
         <p>
 
     </dl> <!-- end (CKD) additional DASD arguments  -->

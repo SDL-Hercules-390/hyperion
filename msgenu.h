@@ -579,11 +579,14 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00470 "%1d:%04X %s file %s: model %s cu %s cyls %d heads %d tracks %d trklen %d"
 //efine HHC00471 (available)
 #define HHC00472 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
-//efine HHC00473 (available)
+#define HHC00473 "%1d:%04X %s file %s: cyls=%d does not match the %d cylinders of the image"
 //efine HHC00474 (available)
 #define HHC00475 "This might take a while... Please wait..."
 #define HHC00476 "%1d:%04X %s file %s: opened r/o%s"
-//efine HHC00477 - HHC00499 (available)
+#define HHC00477 "%1d:%04X %s file %s: %s not supported on a block device"
+#define HHC00478 "%1d:%04X %s file %s: block device requires the cyls= parameter"
+#define HHC00479 "%1d:%04X %s file %s: block device size %"PRIu64" is less than the %"PRIu64" bytes needed for %d cylinders"
+//efine HHC00480 - HHC00499 (available)
 
 // reserve 005xx for fba dasd device related messages
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"
