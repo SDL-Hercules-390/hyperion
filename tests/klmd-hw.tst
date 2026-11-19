@@ -13,7 +13,7 @@ r 300=00020001800000000000000000000000 #  WAITPSW Enabled wait state PSW
 *
 r 500=000102030405060708090A0B0C0D0E0F # Parameter block
 *
-r 580=F0000000000000000000000000000000 # Expected result
+r 580=F0000000FC0000000000000000000000 # Expected result
 *
 ostailor null
 runtest .1
@@ -21,7 +21,7 @@ ostailor default
 *Compare
 * Display parameter block
 r 500.10
-*Want  F0000000 00000000 00000000 00000000
+*Want  F0000000 FC000000 00000000 00000000
 *Done
 
 

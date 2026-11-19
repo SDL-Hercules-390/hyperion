@@ -1046,9 +1046,11 @@
     <None Include="tests\invpsw.assemble" />
     <None Include="tests\invpsw.listing" />
     <None Include="tests\invpsw.tst" />
+    <None Include="tests\kdsa.tst" />
     <None Include="tests\kimd-hw.tst" />
     <None Include="tests\klmd-hw.tst" />
     <None Include="tests\km-hw.tst" />
+    <None Include="tests\kma.tst" />
     <None Include="tests\kmac-hw.tst" />
     <None Include="tests\kmc-hw.tst" />
     <None Include="tests\kmctr-hw.tst" />
@@ -1116,6 +1118,7 @@
     <None Include="tests\privop.core" />
     <None Include="tests\privop.list" />
     <None Include="tests\privop.tst" />
+    <None Include="tests\prno-drng.tst" />
     <None Include="tests\prno.asm" />
     <None Include="tests\prno.core" />
     <None Include="tests\prno.list" />
@@ -1139,6 +1142,7 @@
     <None Include="tests\semipriv.core" />
     <None Include="tests\semipriv.list" />
     <None Include="tests\semipriv.tst" />
+    <None Include="tests\sha3.tst" />
     <None Include="tests\ShiftLeft.asm" />
     <None Include="tests\ShiftLeft.core" />
     <None Include="tests\ShiftLeft.list" />

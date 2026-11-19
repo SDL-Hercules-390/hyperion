@@ -322,6 +322,7 @@ EXTRA_DIST =                    \
      invpsw.assemble            \
      invpsw.listing             \
      invpsw.tst                 \
+     kdsa.tst                   \
      kimd-hw.tst                \
      kimd0.txt                  \
      kimd1.txt                  \
@@ -351,6 +352,7 @@ EXTRA_DIST =                    \
      km58.txt                   \
      km60.txt                   \
      km9.txt                    \
+     kma.tst                    \
      kmac-hw.tst                \
      kmac0.txt                  \
      kmac1.txt                  \
@@ -500,6 +502,7 @@ EXTRA_DIST =                    \
      privop.core                \
      privop.list                \
      privop.tst                 \
+     prno-drng.tst              \
      prno.asm                   \
      prno.core                  \
      prno.list                  \
@@ -525,6 +528,7 @@ EXTRA_DIST =                    \
      semipriv.core              \
      semipriv.list              \
      semipriv.tst               \
+     sha3.tst                   \
      ShiftLeft.asm              \
      ShiftLeft.core             \
      ShiftLeft.list             \

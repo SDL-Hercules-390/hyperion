@@ -234,7 +234,7 @@
                                               174  punch 'runtest program .1' OK query                                   
                                               175  punch '*Compare'                                                      
                                               176  punch 'r 200.10'                                                      
-                                              177  punch '*Want F0003800 00000000 00000000 00000000'                     
+                                              177  punch '*Want F0003800 E0C00000 00000000 00000000'                     
                                               178 *                                                                      
  0000072E 4100 0001               00000001    179  la 0,1                                                                
  00000732 4110 F238               00000238    180  la 1,dea_key                                                          

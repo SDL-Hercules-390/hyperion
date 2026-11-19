@@ -4986,6 +4986,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\kdsa.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\kimd-hw.tst"
 							>
 						</File>
@@ -4995,6 +4999,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\km-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\kma.tst"
 							>
 						</File>
 						<File
@@ -5078,6 +5086,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\prno-drng.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\prno.tst"
 							>
 						</File>
@@ -5095,6 +5107,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\semipriv.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sha3.tst"
 							>
 						</File>
 						<File

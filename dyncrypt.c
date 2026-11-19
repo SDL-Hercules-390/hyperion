@@ -43,6 +43,8 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #define OPTION_KIMD_DEBUG
 #define OPTION_KLMD_DEBUG
 #define OPTION_KM_DEBUG
+#define OPTION_KDSA_DEBUG
+#define OPTION_KMA_DEBUG
 #define OPTION_KMAC_DEBUG
 #define OPTION_KMC_DEBUG
 #define OPTION_KMCTR_DEBUG
@@ -96,6 +98,26 @@ static const int kmctr_pblens[32] =
 #define GR0_lcfb(regs)  ((regs)->GR_L(0) >> 24)
 #define GR0_wrap(egs)   (((regs)->GR_L(0) & 0x08) ? TRUE : FALSE)
 #define GR0_tfc(regs)   (GR0_fc(regs) & 0x77)
+
+/*----------------------------------------------------------------------------*/
+/* KMA specific GR0 bits                                                      */
+/*----------------------------------------------------------------------------*/
+/* hs   : Hash-subkey supplied                (bit 53)                        */
+/* laad : Last additional authenticated data  (bit 54)                        */
+/* lpc  : Last plaintext/ciphertext           (bit 55)                        */
+/*----------------------------------------------------------------------------*/
+#define GR0_kma_hs(regs)    (((regs)->GR_L(0) & 0x00000400) ? TRUE : FALSE)
+#define GR0_kma_laad(regs)  (((regs)->GR_L(0) & 0x00000200) ? TRUE : FALSE)
+#define GR0_kma_lpc(regs)   (((regs)->GR_L(0) & 0x00000100) ? TRUE : FALSE)
+
+/*----------------------------------------------------------------------------*/
+/* KLMD specific GR0 bits                                                     */
+/*----------------------------------------------------------------------------*/
+/* ps   : Padding state for SHAKE (bit 55), one when the padding has already  */
+/*        been processed and only further output is to be squeezed           */
+/*----------------------------------------------------------------------------*/
+#define GR0_klmd_ps(regs)   (((regs)->GR_L(0) & 0x00000100) ? TRUE : FALSE)
+#define SET_GR0_klmd_ps(regs) ((regs)->GR_L(0) |= 0x00000100)
 
 /*----------------------------------------------------------------------------*/
 /* Write bytes on one line                                                    */
@@ -693,6 +715,65 @@ static void wrap_dea(BYTE *key, int keylen)
 }
 #endif // defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 
+#if defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Wrap and unwrap ECC private keys (PCKMO FC 32-34, 40, 41 and the KDSA      */
+/* encrypted-key functions) with the AES wrapping key.                        */
+/*----------------------------------------------------------------------------*/
+/* The wrapping method of real hardware is not documented, and the wrapping   */
+/* key is random per Hercules instance anyway. Hercules uses AES-256 in CBC   */
+/* mode with a zero IV over the whole key field (32, 48, 64 or 80 bytes, all  */
+/* multiples of the block size); for a 32-byte field this is the same method  */
+/* as wrap_aes() uses for AES-256 keys. The key field is followed by the      */
+/* 32-byte AES wrapping key verification pattern.                             */
+/*----------------------------------------------------------------------------*/
+static void wrap_ecc(BYTE *key, int keylen)
+{
+  rijndael_ctx context;
+  int i;
+  int j;
+
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
+  for(i = 0; i < keylen; i += 16)
+  {
+    if(i)
+    {
+      for(j = 0; j < 16; j++)
+        key[i + j] ^= key[i + j - 16];
+    }
+    rijndael_encrypt(&context, &key[i], &key[i]);
+  }
+  memcpy(&key[keylen], sysblk.wkvpaes_reg, 32);
+  crypto_secure0(&context, sizeof(context));
+}
+
+/* Returns 1 if the verification pattern does not match (cc 1) */
+static int unwrap_ecc(BYTE *key, int keylen)
+{
+  rijndael_ctx context;
+  BYTE cv[16];
+  BYTE next[16];
+  int i;
+  int j;
+
+  if(unlikely(memcmp(&key[keylen], sysblk.wkvpaes_reg, 32)))
+    return(1);
+
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
+  memset(cv, 0, 16);
+  for(i = 0; i < keylen; i += 16)
+  {
+    memcpy(next, &key[i], 16);
+    rijndael_decrypt(&context, &key[i], &key[i]);
+    for(j = 0; j < 16; j++)
+      key[i + j] ^= cv[j];
+    memcpy(cv, next, 16);
+  }
+  crypto_secure0(&context, sizeof(context));
+  return(0);
+}
+#endif // defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+
 /*----------------------------------------------------------------------------*/
 /* 2^m table with GF multiplication entries 127, 126, 125, ...                */
 /* 2                  2^b1                                                    */
@@ -832,6 +913,112 @@ static BYTE exp_table[128][16] =
   { 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
   { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
+
+/*----------------------------------------------------------------------------*/
+/* Keccak-f[1600] permutation (FIPS 202) used by SHA-3 and SHAKE (MSA 6)      */
+/*----------------------------------------------------------------------------*/
+/* The 200-byte state is kept in the format of the KIMD/KLMD parameter block, */
+/* which is the byte order of FIPS 202: lane x+5y occupies the bytes          */
+/* 8*(x+5y) to 8*(x+5y)+7 in little-endian order. Message bytes are XORed     */
+/* into the state bytes directly and the digest is the leftmost part of the   */
+/* state.                                                                     */
+/*----------------------------------------------------------------------------*/
+#define KECCAK_ROTL64(x, n)  (((x) << (n)) | ((x) >> (64 - (n))))
+
+static void keccak_f1600(BYTE state[200])
+{
+  static const U64 round_constants[24] =
+  {
+    0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808AULL, 0x8000000080008000ULL,
+    0x000000000000808BULL, 0x0000000080000001ULL, 0x8000000080008081ULL, 0x8000000000008009ULL,
+    0x000000000000008AULL, 0x0000000000000088ULL, 0x0000000080008009ULL, 0x000000008000000AULL,
+    0x000000008000808BULL, 0x800000000000008BULL, 0x8000000000008089ULL, 0x8000000000008003ULL,
+    0x8000000000008002ULL, 0x8000000000000080ULL, 0x000000000000800AULL, 0x800000008000000AULL,
+    0x8000000080008081ULL, 0x8000000000008080ULL, 0x0000000080000001ULL, 0x8000000080008008ULL
+  };
+  /* Rotation offsets and lane order of the combined rho and pi steps */
+  static const int rho[24] =
+  {
+     1,  3,  6, 10, 15, 21, 28, 36, 45, 55,  2, 14, 27, 41, 56,  8, 25, 43, 62, 18, 39, 61, 20, 44
+  };
+  static const int pi[24] =
+  {
+    10,  7, 11, 17, 18,  3,  5, 16,  8, 21, 24,  4, 15, 23, 19, 13, 12,  2, 20, 14, 22,  9,  6,  1
+  };
+  U64 a[25];
+  U64 c[5];
+  U64 t;
+  int round;
+  int i;
+  int j;
+
+  /* Load the lanes (little-endian) */
+  for(i = 0; i < 25; i++)
+  {
+    a[i] = 0;
+    for(j = 7; j >= 0; j--)
+      a[i] = (a[i] << 8) | state[i * 8 + j];
+  }
+
+  for(round = 0; round < 24; round++)
+  {
+    /* Theta */
+    for(i = 0; i < 5; i++)
+      c[i] = a[i] ^ a[i + 5] ^ a[i + 10] ^ a[i + 15] ^ a[i + 20];
+    for(i = 0; i < 5; i++)
+    {
+      t = c[(i + 4) % 5] ^ KECCAK_ROTL64(c[(i + 1) % 5], 1);
+      for(j = 0; j < 25; j += 5)
+        a[j + i] ^= t;
+    }
+
+    /* Rho and pi */
+    t = a[1];
+    for(i = 0; i < 24; i++)
+    {
+      j = pi[i];
+      c[0] = a[j];
+      a[j] = KECCAK_ROTL64(t, rho[i]);
+      t = c[0];
+    }
+
+    /* Chi */
+    for(j = 0; j < 25; j += 5)
+    {
+      for(i = 0; i < 5; i++)
+        c[i] = a[j + i];
+      for(i = 0; i < 5; i++)
+        a[j + i] ^= (~c[(i + 1) % 5]) & c[(i + 2) % 5];
+    }
+
+    /* Iota */
+    a[0] ^= round_constants[round];
+  }
+
+  /* Store the lanes (little-endian) */
+  for(i = 0; i < 25; i++)
+  {
+    for(j = 0; j < 8; j++)
+      state[i * 8 + j] = (BYTE)(a[i] >> (8 * j));
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* SHA-3 and SHAKE block size (rate) in bytes for KIMD/KLMD FC 32-37          */
+/*----------------------------------------------------------------------------*/
+static int sha3_rate(int fc)
+{
+  static const int rates[6] = { 144, 136, 104, 72, 168, 136 };
+
+  return(rates[fc - 32]);
+}
+
+#if defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Elliptic curve support for KDSA and PCC (MSA 9), including LibTomMath      */
+/*----------------------------------------------------------------------------*/
+#include "dyncrypt_ecc.h"
+#endif /* defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
 #endif /* #ifndef __STATIC_FUNCTIONS__ */
 
 /*----------------------------------------------------------------------------*/
@@ -1325,6 +1512,228 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   /* Set condition code */
   regs->psw.cc = 0;
 }
+
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+/*----------------------------------------------------------------------------*/
+/* Compute intermediate message digest (KIMD) FC 32-37                        */
+/*----------------------------------------------------------------------------*/
+/* SHA3-224, SHA3-256, SHA3-384, SHA3-512, SHAKE-128 and SHAKE-256 (MSA 6).   */
+/* Message-Security-Assist Extension 6 has no facility bit of its own; like   */
+/* extension 7 it is provided together with extension 5.                      */
+/*                                                                            */
+/* The parameter block is the 200-byte Keccak state. The second operand       */
+/* length must be a multiple of the block size (rate) of the function.        */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kimd_sha3)(int r1, int r2, REGS *regs)
+{
+  int crypted;
+  int i;
+  BYTE message_block[168];
+  int rate;
+  BYTE state[200];
+
+  UNREFERENCED(r1);
+
+  /* Initialize values */
+  rate = sha3_rate(GR0_fc(regs));
+
+  /* Check special conditions */
+  if(unlikely(GR_A(r2 + 1, regs) % rate))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(unlikely(!GR_A(r2 + 1, regs)))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Test writeability of the state */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 199, ACCTYPE_WRITE, regs);
+
+  /* Fetch the state */
+  ARCH_DEP(vfetchc)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+  LOGBYTE("icv   :", state, 32);
+#endif /* #ifdef OPTION_KIMD_DEBUG */
+
+  /* Try to process the CPU-determined amount of data */
+  for(crypted = 0; crypted < PROCESS_MAX; crypted += rate)
+  {
+    /* Fetch and absorb a block of data */
+    ARCH_DEP(vfetchc)(message_block, rate - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    for(i = 0; i < rate; i++)
+      state[i] ^= message_block[i];
+    keccak_f1600(state);
+
+    /* Store the state */
+    ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KIMD_DEBUG
+    LOGBYTE("ocv   :", state, 32);
+#endif /* #ifdef OPTION_KIMD_DEBUG */
+
+    /* Update the registers */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + rate);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - rate);
+
+#ifdef OPTION_KIMD_DEBUG
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif /* #ifdef OPTION_KIMD_DEBUG */
+
+    /* check for end of data */
+    if(unlikely(!GR_A(r2 + 1, regs)))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* Compute last message digest (KLMD) FC 32-37                                */
+/*----------------------------------------------------------------------------*/
+/* SHA3-224, SHA3-256, SHA3-384, SHA3-512, SHAKE-128 and SHAKE-256 (MSA 6).   */
+/*                                                                            */
+/* The parameter block is the 200-byte Keccak state. Full blocks of the       */
+/* second operand are absorbed, then the remaining bytes (possibly none) are  */
+/* padded (SHA-3: 0x06...0x80, SHAKE: 0x1F...0x80) and absorbed. For SHA-3    */
+/* the digest is the leftmost part of the resulting state.                    */
+/*                                                                            */
+/* For SHAKE the output is squeezed into the first operand (R1, R1+1). The    */
+/* first output block is taken from the state after the padded block has     */
+/* been absorbed, every further block after another permutation. When the    */
+/* padding has been processed, the padding state (PS) bit 55 of GR0 is set    */
+/* to one, so that a resumed execution (cc 3) or a later execution with PS    */
+/* set by the program only squeezes: permute, then output the next block.     */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(klmd_sha3)(int r1, int r2, REGS *regs)
+{
+  int i;
+  BYTE message_block[168];
+  int n;
+  int processed;
+  int rate;
+  int shake;
+  BYTE state[200];
+
+  /* Initialize values */
+  rate = sha3_rate(GR0_fc(regs));
+  shake = GR0_fc(regs) >= 36;
+
+  /* Check special conditions */
+  if(unlikely(shake && (!r1 || r1 & 0x01)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Test writeability of the state */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 199, ACCTYPE_WRITE, regs);
+
+  /* Fetch the state */
+  ARCH_DEP(vfetchc)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KLMD_DEBUG
+  LOGBYTE("icv   :", state, 32);
+#endif /* #ifdef OPTION_KLMD_DEBUG */
+
+  processed = 0;
+  if(!shake || !GR0_klmd_ps(regs))
+  {
+    /* Absorb the full blocks */
+    while(GR_A(r2 + 1, regs) >= (U64) rate)
+    {
+      /* CPU-determined amount of data processed */
+      if(processed >= PROCESS_MAX)
+      {
+        regs->psw.cc = 3;
+        return;
+      }
+
+      ARCH_DEP(vfetchc)(message_block, rate - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+      for(i = 0; i < rate; i++)
+        state[i] ^= message_block[i];
+      keccak_f1600(state);
+      ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+      SET_GR_A(r2, regs, GR_A(r2, regs) + rate);
+      SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - rate);
+      processed += rate;
+    }
+
+    /* Pad and absorb the last (partial or empty) block */
+    n = (int) GR_A(r2 + 1, regs);
+    memset(message_block, 0, rate);
+    if(n)
+      ARCH_DEP(vfetchc)(message_block, n - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+    message_block[n] ^= shake ? 0x1F : 0x06;
+    message_block[rate - 1] ^= 0x80;
+    for(i = 0; i < rate; i++)
+      state[i] ^= message_block[i];
+    keccak_f1600(state);
+
+    if(shake)
+    {
+      /* Output the first block taken from the current state */
+      n = (int) min((U64) rate, GR_A(r1 + 1, regs));
+      if(n)
+        ARCH_DEP(vstorec)(state, n - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
+    }
+
+    /* Store the state */
+    ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KLMD_DEBUG
+    LOGBYTE("ocv   :", state, 32);
+#endif /* #ifdef OPTION_KLMD_DEBUG */
+
+    /* Update the registers */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+    SET_GR_A(r2 + 1, regs, 0);
+    if(!shake)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    SET_GR_A(r1, regs, GR_A(r1, regs) + n);
+    SET_GR_A(r1 + 1, regs, GR_A(r1 + 1, regs) - n);
+    SET_GR0_klmd_ps(regs);
+    processed += rate;
+  }
+
+  /* Squeeze further output blocks (SHAKE only) */
+  while(GR_A(r1 + 1, regs))
+  {
+    /* CPU-determined amount of data processed */
+    if(processed >= PROCESS_MAX)
+    {
+      regs->psw.cc = 3;
+      return;
+    }
+
+    keccak_f1600(state);
+    n = (int) min((U64) rate, GR_A(r1 + 1, regs));
+    ARCH_DEP(vstorec)(state, n - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
+    ARCH_DEP(vstorec)(state, 199, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    SET_GR_A(r1, regs, GR_A(r1, regs) + n);
+    SET_GR_A(r1 + 1, regs, GR_A(r1 + 1, regs) - n);
+    processed += rate;
+  }
+
+#ifdef OPTION_KLMD_DEBUG
+  WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+  WRMSG(HHC90108, "D", r1 + 1, (regs)->GR(r1 + 1));
+  WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+  WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif /* #ifdef OPTION_KLMD_DEBUG */
+
+  regs->psw.cc = 0;
+}
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
 /*----------------------------------------------------------------------------*/
 /* Cipher message (KM) FC 1-3 and 9-11                                        */
@@ -2766,7 +3175,14 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;
   r1_is_not_r3 = r1 != r3;
-  r2_is_not_r3 = r1 != r2;
+  /* The original assignment (kept below as a comment) compared R1 with R2 */
+  /* a second time instead of R2 with R3. With R1 = R2 (in-place operation */
+  /* using the same register) the third operand address in R3 was never    */
+  /* advanced, so every block was processed with the first counter block   */
+  /* and the output was wrong from the second block on. With R2 = R3 that  */
+  /* register was advanced twice per block. kmctr_dea() was always right.  */
+  // r2_is_not_r3 = r1 != r2;
+  r2_is_not_r3 = r2 != r3;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
     /* Fetch a block of data and counter-value */
@@ -3983,6 +4399,255 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
 }
 #endif /* defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
 
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+/*----------------------------------------------------------------------------*/
+/* Cipher message with authentication (KMA) FC 18-20 and 26-28                */
+/*----------------------------------------------------------------------------*/
+/* Galois/Counter Mode (GCM) with AES as specified in NIST SP 800-38D.        */
+/*                                                                            */
+/* Parameter block:                                                           */
+/*                                                                            */
+/*   offset  len  field                                                       */
+/*   ------  ---  ---------------------------------------------------------   */
+/*      0     12  reserved                                                    */
+/*     12      4  CV     32-bit counter value of the last counter block used  */
+/*     16     16  T      tag (intermediate GHASH value until LPC processing)  */
+/*     32     16  H      hash subkey (computed and stored when HS is zero)    */
+/*     48      8  TAADL  total AAD length in bits (used when LPC is one)      */
+/*     56      8  TPCL   total plaintext/ciphertext length in bits (LPC)      */
+/*     64     16  J0     pre-counter block                                    */
+/*     80  16-32  K      cryptographic key                                    */
+/*  80+kl     32  WKaVP  AES wrapping key verification pattern (FC 26-28)     */
+/*                                                                            */
+/* The third operand (AAD) is authenticated first. Then the second operand    */
+/* is encrypted (M=0) or decrypted (M=1) into the first operand location and  */
+/* the ciphertext is authenticated. The counter block for each 16-byte block  */
+/* is formed from bytes 0-11 of J0 and the incremented counter value. When    */
+/* LPC is one and all data has been processed, the length block (TAADL ||     */
+/* TPCL) is authenticated and the final tag E(K,J0) xor GHASH replaces T.     */
+/* Comparing the tag after decryption is the responsibility of the program.   */
+/*                                                                            */
+/* A partial last block is only allowed for the AAD when LAAD is one and for  */
+/* the plaintext/ciphertext when LPC is one.                                  */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kma_gcm_aes)(int r1, int r2, int r3, REGS *regs)
+{
+  rijndael_ctx context;
+  BYTE counter_block[16];
+  U32 cv;
+  BYTE ghash_block[16];
+  BYTE *h;
+  int i;
+  BYTE *j0;
+  BYTE *key;
+  int keylen;
+  BYTE message_block[16];
+  int modifier_bit;
+  int n;
+  int processed;
+  BYTE parameter_block[80 + 32 + 32];
+  int parameter_blocklen;
+  int r1_is_not_r2;
+  BYTE *t;
+  int tfc;
+  int wrap;
+
+  /* Check special conditions */
+  if(unlikely(!GR0_kma_laad(regs) && (GR_A(r3 + 1, regs) % 16)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+  if(unlikely(!GR0_kma_lpc(regs) && (GR_A(r2 + 1, regs) % 16)))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Initialize values */
+  tfc = GR0_tfc(regs);
+  wrap = GR0_wrap(regs);
+  modifier_bit = GR0_m(regs);
+  keylen = (tfc - 16) * 8;
+  parameter_blocklen = 80 + keylen;
+  if(wrap)
+    parameter_blocklen += 32;
+  t = &parameter_block[16];
+  h = &parameter_block[32];
+  j0 = &parameter_block[64];
+  key = &parameter_block[80];
+
+  /* Test writeability of the counter value, tag and hash subkey fields */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 47, ACCTYPE_WRITE, regs);
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KMA_DEBUG
+  LOGBYTE("cv    :", &parameter_block[12], 4);
+  LOGBYTE("t     :", t, 16);
+  LOGBYTE("h     :", h, 16);
+  LOGBYTE("taadl :", &parameter_block[48], 8);
+  LOGBYTE("tpcl  :", &parameter_block[56], 8);
+  LOGBYTE("j0    :", j0, 16);
+  LOGBYTE("k     :", key, keylen);
+  if(wrap)
+    LOGBYTE("wkvp  :", &key[keylen], 32);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  /* Verify and unwrap the key */
+  if(wrap && unwrap_aes(key, keylen))
+  {
+
+#ifdef OPTION_KMA_DEBUG
+    WRMSG(HHC90111, "D");
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    regs->psw.cc = 1;
+    return;
+  }
+
+  /* Set the cryptographic key */
+  rijndael_set_key(&context, key, keylen * 8);
+
+  /* Compute and store the hash subkey if it is not supplied */
+  if(!GR0_kma_hs(regs))
+  {
+    memset(h, 0, 16);
+    rijndael_encrypt(&context, h, h);
+    ARCH_DEP(vstorec)(h, 15, (GR_A(1, regs) + 32) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("h out :", h, 16);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  }
+
+  cv = fetch_fw(&parameter_block[12]);
+  processed = 0;
+
+  /* Authenticate the additional authenticated data (third operand) */
+  while(GR_A(r3 + 1, regs) && processed < PROCESS_MAX)
+  {
+    n = (int) min(16, GR_A(r3 + 1, regs));
+
+    /* Fetch a block of data, a partial block is padded with zeros */
+    memset(message_block, 0, 16);
+    ARCH_DEP(vfetchc)(message_block, n - 1, GR_A(r3, regs) & ADDRESS_MAXWRAP(regs), r3, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("aad   :", message_block, n);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    /* XOR and multiply */
+    for(i = 0; i < 16; i++)
+      t[i] ^= message_block[i];
+    gcm_gf_mult(t, h, t);
+
+    /* Store the intermediate tag */
+    ARCH_DEP(vstorec)(t, 15, (GR_A(1, regs) + 16) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    /* Update the registers */
+    SET_GR_A(r3, regs, GR_A(r3, regs) + n);
+    SET_GR_A(r3 + 1, regs, GR_A(r3 + 1, regs) - n);
+    processed += 16;
+
+#ifdef OPTION_KMA_DEBUG
+    WRMSG(HHC90108, "D", r3, (regs)->GR(r3));
+    WRMSG(HHC90108, "D", r3 + 1, (regs)->GR(r3 + 1));
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  }
+
+  /* Encrypt or decrypt the second operand and authenticate the ciphertext */
+  r1_is_not_r2 = r1 != r2;
+  while(GR_A(r2 + 1, regs) && processed < PROCESS_MAX)
+  {
+    n = (int) min(16, GR_A(r2 + 1, regs));
+
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(message_block, n - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("input :", message_block, n);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    /* Compute the key stream from the next counter block */
+    cv++;
+    memcpy(counter_block, j0, 12);
+    store_fw(&counter_block[12], cv);
+    rijndael_encrypt(&context, counter_block, counter_block);
+
+    /* XOR, the ciphertext is the input for decryption and the output for */
+    /* encryption. A partial block is padded with zeros for the GHASH.     */
+    memset(ghash_block, 0, 16);
+    for(i = 0; i < n; i++)
+    {
+      if(modifier_bit)
+        ghash_block[i] = message_block[i];
+      message_block[i] ^= counter_block[i];
+      if(!modifier_bit)
+        ghash_block[i] = message_block[i];
+    }
+
+    /* XOR and multiply */
+    for(i = 0; i < 16; i++)
+      t[i] ^= ghash_block[i];
+    gcm_gf_mult(t, h, t);
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(message_block, n - 1, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
+
+#ifdef OPTION_KMA_DEBUG
+    LOGBYTE("output:", message_block, n);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+    /* Store the counter value and the intermediate tag */
+    store_fw(&parameter_block[12], cv);
+    ARCH_DEP(vstorec)(&parameter_block[12], 19, (GR_A(1, regs) + 12) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    /* Update the registers */
+    SET_GR_A(r1, regs, GR_A(r1, regs) + n);
+    if(likely(r1_is_not_r2))
+      SET_GR_A(r2, regs, GR_A(r2, regs) + n);
+    SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - n);
+    processed += 16;
+
+#ifdef OPTION_KMA_DEBUG
+    WRMSG(HHC90108, "D", r1, (regs)->GR(r1));
+    WRMSG(HHC90108, "D", r2, (regs)->GR(r2));
+    WRMSG(HHC90108, "D", r2 + 1, (regs)->GR(r2 + 1));
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  }
+
+  /* CPU-determined amount of data processed */
+  if(GR_A(r3 + 1, regs) || GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 3;
+    return;
+  }
+
+  /* Compute the final tag after the last plaintext/ciphertext */
+  if(GR0_kma_lpc(regs))
+  {
+    /* Authenticate the length block TAADL || TPCL */
+    for(i = 0; i < 16; i++)
+      t[i] ^= parameter_block[48 + i];
+    gcm_gf_mult(t, h, t);
+
+    /* XOR with the encrypted pre-counter block */
+    rijndael_encrypt(&context, j0, counter_block);
+    for(i = 0; i < 16; i++)
+      t[i] ^= counter_block[i];
+
+    /* Store the tag */
+    ARCH_DEP(vstorec)(t, 15, (GR_A(1, regs) + 16) & ADDRESS_MAXWRAP(regs), 1, regs);
+  }
+
+#ifdef OPTION_KMA_DEBUG
+  LOGBYTE("cv out:", &parameter_block[12], 4);
+  LOGBYTE("t out :", t, 16);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  regs->psw.cc = 0;
+}
+#endif /* defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -4029,6 +4694,12 @@ DEF_INST(dyn_compute_intermediate_message_digest)
   {
     case 0: /* Query */
     {
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+      /* SHA-3 and SHAKE (MSA 6) are provided together with MSA 5 */
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        query_bits[msa][4] |= 0xFC;
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
+
       /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -4078,6 +4749,22 @@ DEF_INST(dyn_compute_intermediate_message_digest)
       break;
     }
 #endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
+
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+    case 32: /* sha3-224 */
+    case 33: /* sha3-256 */
+    case 34: /* sha3-384 */
+    case 35: /* sha3-512 */
+    case 36: /* shake-128 */
+    case 37: /* shake-256 */
+    {
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        ARCH_DEP(kimd_sha3)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
     default:
     {
@@ -4141,6 +4828,12 @@ DEF_INST(dyn_compute_last_message_digest)
   {
     case 0: /* Query */
     {
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+      /* SHA-3 and SHAKE (MSA 6) are provided together with MSA 5 */
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        query_bits[msa][4] |= 0xFC;
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
+
       /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -4178,6 +4871,22 @@ DEF_INST(dyn_compute_last_message_digest)
       break;
     }
 #endif /* defined( FEATURE_MSA_EXTENSION_FACILITY_2 ) */
+
+#if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+    case 32: /* sha3-224 */
+    case 33: /* sha3-256 */
+    case 34: /* sha3-384 */
+    case 35: /* sha3-512 */
+    case 36: /* shake-128 */
+    case 37: /* shake-256 */
+    {
+      if(FACILITY_ENABLED( 057_MSA_EXTENSION_5, regs ))
+        ARCH_DEP(klmd_sha3)(r1, r2, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 ) */
 
     default:
     {
@@ -4575,66 +5284,480 @@ DEF_INST(dyn_cipher_message_with_chaining)
 /*----------------------------------------------------------------------------*/
 /* B929 KMA   - Cipher message with authentication                    [RRF-b] */
 /*----------------------------------------------------------------------------*/
+/* The GCM-AES functions require Message-Security-Assist Extension 8          */
+/* (facility 146). When the facility is disabled with the FACILITY command,   */
+/* the facility support removes this instruction (operation exception), just */
+/* like on a machine without MSA 8. If the instruction is reached without     */
+/* MSA 8 nevertheless (e.g. a build without FEATURE_146), only the query      */
+/* function is provided, which reports no function besides query itself.     */
+/* This compatibility support exists because z/OS ICSF issues the KMA query   */
+/* regardless of facility 146 (SDL-Hercules-390/hyperion issue #890).         */
+/*----------------------------------------------------------------------------*/
 DEF_INST(dyn_cipher_message_with_authentication)
 {
-  static const BYTE query_bits[16] = { 0x80 };
-  int r1, r2, r3;
+  static const BYTE query_bits[16] =
+  {
+    0x80, 0x00, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+  static const BYTE query_bits_no_msa8[16] = { 0x80 };
+  int msa8 = FALSE;
+  int r1;
+  int r2;
+  int r3;
 
   RRF_M(inst, regs, r1, r2, r3);
   PER_ZEROADDR_CHECK( regs, 1 );
+  PER_ZEROADDR_LCHECK2( regs, r1, r2 + 1, r2, r2 + 1 );
+  PER_ZEROADDR_LCHECK( regs, r3, r3 + 1 );
   TXFC_INSTR_CHECK( regs );
 
-  /* Query-only compatibility support; do not require or advertise MSA 8. */
+  /* The query function is available with any MSA level, see above */
   FACILITY_CHECK( 017_MSA, regs );
 
-  /* Register designators must be valid even for Query. */
-  if(unlikely(!r1 || (r1 & 1) || !r2 || (r2 & 1) ||
-              !r3 || (r3 & 1) || r3 == r1 || r3 == r2))
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+  msa8 = FACILITY_ENABLED( 146_MSA_EXTENSION_8, regs );
+#endif /* defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) */
+
+#ifdef OPTION_KMA_DEBUG
+  WRMSG(HHC90100, "D", "KMA: cipher message with authentication");
+  WRMSG(HHC90101, "D", 1, r1);
+  WRMSG(HHC90102, "D", regs->GR(r1));
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90101, "D", 3, r3);
+  WRMSG(HHC90102, "D", regs->GR(r3));
+  WRMSG(HHC90103, "D", regs->GR(r3 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+  /* Register designators must be valid even for query */
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || !r3 || r3 & 0x01 || r3 == r1 || r3 == r2))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-  /* No encryption or authentication functions are implemented. */
-  if(unlikely(GR0_fc(regs) != 0))
+  switch(GR0_fc(regs))
   {
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-    return;
-  }
+    case 0: /* Query */
+    {
+      /* Store the parameter block */
+      ARCH_DEP(vstorec)(msa8 ? query_bits : query_bits_no_msa8, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
-  /* Bit 0 denotes Query; all other function bits remain clear. */
-  ARCH_DEP(vstorec)(query_bits, 15,
-    GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-  regs->psw.cc = 0;
+#ifdef OPTION_KMA_DEBUG
+      LOGBYTE("output:", msa8 ? query_bits : query_bits_no_msa8, 16);
+#endif /* #ifdef OPTION_KMA_DEBUG */
+
+      /* Set condition code 0 */
+      regs->psw.cc = 0;
+      return;
+    }
+
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+    case 18: /* gcm-aes-128 */
+    case 19: /* gcm-aes-192 */
+    case 20: /* gcm-aes-256 */
+    case 26: /* gcm-encrypted-aes-128 */
+    case 27: /* gcm-encrypted-aes-192 */
+    case 28: /* gcm-encrypted-aes-256 */
+    {
+      if(msa8)
+        ARCH_DEP(kma_gcm_aes)(r1, r2, r3, regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) */
+
+    default:
+    {
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+  }
 }
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Fetch and store parameter blocks longer than 256 bytes (MSA 9)             */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(fetch_parameter_block)(BYTE *dst, int len, REGS *regs)
+{
+  int done;
+  int n;
+
+  for(done = 0; done < len; done += n)
+  {
+    n = min(256, len - done);
+    ARCH_DEP(vfetchc)(dst + done, n - 1, (GR_A(1, regs) + done) & ADDRESS_MAXWRAP(regs), 1, regs);
+  }
+}
+
+static void ARCH_DEP(store_parameter_block)(const BYTE *src, int len, REGS *regs)
+{
+  int done;
+  int n;
+
+  for(done = 0; done < len; done += n)
+  {
+    n = min(256, len - done);
+    ARCH_DEP(vstorec)(src + done, n - 1, (GR_A(1, regs) + done) & ADDRESS_MAXWRAP(regs), 1, regs);
+  }
+}
+
+static void ARCH_DEP(validate_parameter_block)(int len, REGS *regs)
+{
+  int done;
+  int n;
+
+  for(done = 0; done < len; done += n)
+  {
+    n = min(256, len - done);
+    ARCH_DEP(validate_operand)((GR_A(1, regs) + done) & ADDRESS_MAXWRAP(regs), 1, n - 1, ACCTYPE_WRITE, regs);
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* Hash the second operand (the message of KDSA EdDSA) from guest storage.    */
+/* The registers are not updated here, an access exception leaves the        */
+/* instruction restartable.                                                   */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kdsa_hash_message)(ECC_HASH *h, int r2, REGS *regs)
+{
+  BYTE buf[256];
+  U64 done;
+  U64 len;
+  int n;
+
+  len = GR_A(r2 + 1, regs);
+  for(done = 0; done < len; done += n)
+  {
+    n = (int) min((U64) 256, len - done);
+    ARCH_DEP(vfetchc)(buf, n - 1, (GR_A(r2, regs) + done) & ADDRESS_MAXWRAP(regs), r2, regs);
+    ecc_hash_update(h, buf, n);
+  }
+}
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
 
 /*----------------------------------------------------------------------------*/
 /* B93A KDSA  - Compute digital signature authentication                [RRE] */
 /*----------------------------------------------------------------------------*/
+/* The digital signature functions require Message-Security-Assist           */
+/* Extension 9 (facility 155). Without it only the query function is         */
+/* provided, which reports no function besides query itself. This            */
+/* compatibility support exists because z/OS ICSF issues the KDSA query      */
+/* regardless of facility 155 (SDL-Hercules-390/hyperion issue #890); for    */
+/* the same reason disabling facility 155 does not remove the instruction.   */
+/*                                                                            */
+/* Functions:                                                                 */
+/*                                                                            */
+/*   1-3   ECDSA-Verify-P256, -P384, -P521                                    */
+/*   9-11  ECDSA-Sign-P256, -P384, -P521                                      */
+/*   17-19 Encrypted-ECDSA-Sign-P256, -P384, -P521                            */
+/*   32    EdDSA-Verify-Ed25519            36   EdDSA-Verify-Ed448            */
+/*   40    EdDSA-Sign-Ed25519              44   EdDSA-Sign-Ed448              */
+/*   48    Encrypted-EdDSA-Sign-Ed25519    52   Encrypted-EdDSA-Sign-Ed448    */
+/*                                                                            */
+/* The encrypted-key functions take the private key wrapped by PCKMO          */
+/* (FC 32-34, 40, 41) followed by the 32-byte AES wrapping key verification   */
+/* pattern: for ECDSA after the random number field, for EdDSA after the key  */
+/* field. A mismatching verification pattern gives condition code 1.         */
+/*                                                                            */
+/* EdDSA (pure, RFC 8032) takes the message from the second operand (R2,      */
+/* R2+1), which is processed completely; R2 and R2+1 are updated at the end.  */
+/* The parameter block has fields of 32 (Ed25519) or 64 (Ed448) bytes, the    */
+/* encodings of R, S and the public key are stored byte-reversed (right-      */
+/* aligned big-endian), the private key seed as is, right-aligned:            */
+/*                                                                            */
+/*   verify:  R, S, public key                                                */
+/*   sign:    R, S (both output), private key                                 */
+/*                                                                            */
+/* ECDSA parameter blocks consist of 5 fields of 32 (P-256), 48 (P-384) or    */
+/* 80 (P-521) bytes, each a right-aligned big-endian integer:                 */
+/*                                                                            */
+/*   verify:  r, s, hash, public key x, public key y                          */
+/*   sign:    r, s (both output), hash, private key, random number            */
+/*                                                                            */
+/* Bit 56 of GR0 is the deterministic bit for ECDSA sign: when one, the       */
+/* random number in the parameter block is used, otherwise the CPU generates  */
+/* its own.                                                                   */
+/*                                                                            */
+/* Condition codes: 0 verified / signed, 1 invalid parameter (hash zero,      */
+/* private key out of range, public key not on the curve or not a valid      */
+/* encoding), 2 signature invalid (verify) or random number unusable (ECDSA  */
+/* sign, the program should retry).                                           */
+/*----------------------------------------------------------------------------*/
 DEF_INST(dyn_compute_digital_signature_authentication)
 {
-  static const BYTE query_bits[16] = { 0x80 };
-  int r1, r2;
+  BYTE query_bits[16] = { 0x80 };
+  int msa9 = FALSE;
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+  BYTE parameter_block[5 * ECC_MAX_FIELD + 32];
+  BYTE random_number[ECC_MAX_FIELD];
+  BYTE enc[ECC_MAX_ENC];
+  BYTE rhash[ECC_MAX_HASH];
+  BYTE khash[ECC_MAX_HASH];
+  BYTE wrapped[ECC_MAX_FIELD + 32];
+  ECC_HASH hash;
+  ECC_EDDSA_SIGN sign;
+  int cc;
+  int curve;
+  int encrypted;
+  int fc;
+  int i;
+  int len;
+  int mask_bits;
+  int n;
+  int tries;
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+  int r1;
+  int r2;
 
   RRE(inst, regs, r1, r2);
   PER_ZEROADDR_CHECK( regs, 1 );
+  PER_ZEROADDR_LCHECK( regs, r2, r2 + 1 );
   TXFC_INSTR_CHECK( regs );
 
-  /* Query-only compatibility support; do not require or advertise MSA 9. */
+  /* The query function is available with any MSA level, see above */
   FACILITY_CHECK( 017_MSA, regs );
 
-  /* Register designators must be valid even for Query. */
-  if(unlikely(r1 || !r2 || (r2 & 1)))
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+  msa9 = FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs );
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
+#ifdef OPTION_KDSA_DEBUG
+  WRMSG(HHC90100, "D", "KDSA: compute digital signature authentication");
+  WRMSG(HHC90101, "D", 2, r2);
+  WRMSG(HHC90102, "D", regs->GR(r2));
+  WRMSG(HHC90103, "D", regs->GR(r2 + 1));
+  WRMSG(HHC90104, "D", 0, regs->GR(0));
+  WRMSG(HHC90105, "D", TRUEFALSE(GR0_m(regs)));
+  WRMSG(HHC90106, "D", GR0_fc(regs));
+  WRMSG(HHC90104, "D", 1, regs->GR(1));
+#endif /* #ifdef OPTION_KDSA_DEBUG */
+
+  /* Register designators must be valid even for query. The R1 field   */
+  /* is not used by KDSA and is ignored; programs may issue the query   */
+  /* with a nonzero R1, e.g. KDSA 14,14 (B93A00EE).                     */
+  if(unlikely(!r2 || (r2 & 1)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-  /* No digital signature functions are implemented. */
-  if(unlikely(GR0_fc(regs) != 0))
+  switch(GR0_fc(regs))
   {
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-    return;
-  }
+    case 0: /* Query */
+    {
+      if(msa9)
+      {
+        query_bits[0] = 0xF0;   /* query, ecdsa-verify-p256/p384/p521 */
+        query_bits[1] = 0x70;   /* ecdsa-sign-p256/p384/p521          */
+        query_bits[2] = 0x70;   /* encrypted-ecdsa-sign-p256/p384/p521 */
+        query_bits[4] = 0x88;   /* eddsa-verify-ed25519/ed448         */
+        query_bits[5] = 0x88;   /* eddsa-sign-ed25519/ed448           */
+        query_bits[6] = 0x88;   /* encrypted-eddsa-sign-ed25519/ed448 */
+      }
 
-  /* Bit 0 denotes Query; all other function bits remain clear. */
-  ARCH_DEP(vstorec)(query_bits, 15,
-    GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-  regs->psw.cc = 0;
+      /* Store the parameter block */
+      ARCH_DEP(vstorec)(query_bits, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_KDSA_DEBUG
+      LOGBYTE("output:", query_bits, 16);
+#endif /* #ifdef OPTION_KDSA_DEBUG */
+
+      regs->psw.cc = 0;
+      return;
+    }
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+    case 1: /* ecdsa-verify-p256 */
+    case 2: /* ecdsa-verify-p384 */
+    case 3: /* ecdsa-verify-p521 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      fc = GR0_fc(regs);
+      curve = fc - 1;
+      len = ecc_wcurve_len(curve);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 5 * len, regs);
+      regs->psw.cc = ecc_ecdsa_verify(curve, parameter_block);
+      return;
+    }
+    case 9: /* ecdsa-sign-p256 */
+    case 10: /* ecdsa-sign-p384 */
+    case 11: /* ecdsa-sign-p521 */
+    case 17: /* encrypted-ecdsa-sign-p256 */
+    case 18: /* encrypted-ecdsa-sign-p384 */
+    case 19: /* encrypted-ecdsa-sign-p521 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      fc = GR0_fc(regs);
+      encrypted = fc >= 17;
+      curve = (fc & 0x07) - 1;
+      len = ecc_wcurve_len(curve);
+
+      /* The signature is stored into the first two fields. With an     */
+      /* encrypted key the wrapping key verification pattern follows    */
+      /* the random number.                                             */
+      ARCH_DEP(validate_parameter_block)(2 * len, regs);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 5 * len + (encrypted ? 32 : 0), regs);
+
+      if(encrypted)
+      {
+        memcpy(wrapped, parameter_block + 3 * len, len);
+        memcpy(wrapped + len, parameter_block + 5 * len, 32);
+        if(unwrap_ecc(wrapped, len))
+        {
+          /* Verification pattern mismatch */
+          crypto_secure0(parameter_block, sizeof(parameter_block));
+          regs->psw.cc = 1;
+          return;
+        }
+        memcpy(parameter_block + 3 * len, wrapped, len);
+        crypto_secure0(wrapped, sizeof(wrapped));
+      }
+
+      if(GR0_m(regs))
+      {
+        /* Deterministic: use the random number of the parameter block */
+        cc = ecc_ecdsa_sign(curve, parameter_block, parameter_block + 4 * len);
+      }
+      else
+      {
+        /* Generate the random number, with the leading bits beyond the  */
+        /* bit length of the order cleared, until it is usable           */
+        if(!sysblk.PRNOrandhand)
+          VERIFY( hopen_CSRNG( &sysblk.PRNOrandhand ) );
+        mask_bits = 8 * len - ecc_wcurve_order_bits(curve);
+        cc = ECC_CC_FAILED;
+        for(tries = 0; tries < 64 && cc == ECC_CC_FAILED; tries++)
+        {
+          VERIFY( hget_random_bytes( random_number, len, &sysblk.PRNOrandhand ) );
+          for(i = 0; i < mask_bits / 8; i++)
+            random_number[i] = 0;
+          if(mask_bits % 8)
+            random_number[mask_bits / 8] &= 0xFF >> (mask_bits % 8);
+          cc = ecc_ecdsa_sign(curve, parameter_block, random_number);
+        }
+        crypto_secure0(random_number, sizeof(random_number));
+      }
+
+      if(cc == ECC_CC_OK)
+        ARCH_DEP(store_parameter_block)(parameter_block, 2 * len, regs);
+
+      /* Do not leave the private key and random number behind */
+      crypto_secure0(parameter_block, sizeof(parameter_block));
+
+      regs->psw.cc = cc;
+      return;
+    }
+    case 32: /* eddsa-verify-ed25519 */
+    case 36: /* eddsa-verify-ed448 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      curve = GR0_fc(regs) == 32 ? ECC_ED25519 : ECC_ED448;
+      len = ecc_ecurve_fld(curve);
+      n = ecc_ecurve_enclen(curve);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 3 * len, regs);
+
+      /* k = H(R || A || M) */
+      ecc_hash_init(&hash, curve);
+      ecc_eddsa_field_to_enc(curve, enc, parameter_block);
+      ecc_hash_update(&hash, enc, n);
+      ecc_eddsa_field_to_enc(curve, enc, parameter_block + 2 * len);
+      ecc_hash_update(&hash, enc, n);
+      ARCH_DEP(kdsa_hash_message)(&hash, r2, regs);
+      ecc_hash_final(&hash, khash);
+
+      cc = ecc_eddsa_verify(curve, parameter_block, khash);
+
+      /* The message has been processed completely */
+      SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+      SET_GR_A(r2 + 1, regs, 0);
+
+      regs->psw.cc = cc;
+      return;
+    }
+    case 40: /* eddsa-sign-ed25519 */
+    case 44: /* eddsa-sign-ed448 */
+    case 48: /* encrypted-eddsa-sign-ed25519 */
+    case 52: /* encrypted-eddsa-sign-ed448 */
+    {
+      if(!msa9)
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+      fc = GR0_fc(regs);
+      encrypted = fc >= 48;
+      curve = (fc == 40 || fc == 48) ? ECC_ED25519 : ECC_ED448;
+      len = ecc_ecurve_fld(curve);
+      n = ecc_ecurve_enclen(curve);
+
+      /* The signature is stored into the first two fields. With an     */
+      /* encrypted key the wrapping key verification pattern follows    */
+      /* the key.                                                       */
+      ARCH_DEP(validate_parameter_block)(2 * len, regs);
+      ARCH_DEP(fetch_parameter_block)(parameter_block, 3 * len + (encrypted ? 32 : 0), regs);
+
+      if(encrypted && unwrap_ecc(parameter_block + 2 * len, len))
+      {
+        /* Verification pattern mismatch */
+        crypto_secure0(parameter_block, sizeof(parameter_block));
+        regs->psw.cc = 1;
+        return;
+      }
+
+      /* Secret scalar, prefix and public key from the seed, which is */
+      /* right-aligned in the third field                             */
+      cc = ECC_CC_INVALID;
+      if(ecc_eddsa_sign_start(curve, &sign, parameter_block + 3 * len - n))
+      {
+        /* r = H(prefix || M) mod L, R = rB */
+        ecc_hash_init(&hash, curve);
+        ecc_hash_update(&hash, sign.prefix, n);
+        ARCH_DEP(kdsa_hash_message)(&hash, r2, regs);
+        ecc_hash_final(&hash, rhash);
+        if(ecc_eddsa_sign_r(curve, &sign, rhash))
+        {
+          /* k = H(R || A || M), S = r + k*s mod L */
+          ecc_hash_init(&hash, curve);
+          ecc_hash_update(&hash, sign.r_enc, n);
+          ecc_hash_update(&hash, sign.a_enc, n);
+          ARCH_DEP(kdsa_hash_message)(&hash, r2, regs);
+          ecc_hash_final(&hash, khash);
+          if(ecc_eddsa_sign_finish(curve, &sign, khash, parameter_block))
+            cc = ECC_CC_OK;
+        }
+      }
+
+      if(cc == ECC_CC_OK)
+      {
+        ARCH_DEP(store_parameter_block)(parameter_block, 2 * len, regs);
+
+        /* The message has been processed completely */
+        SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+        SET_GR_A(r2 + 1, regs, 0);
+      }
+
+      /* Do not leave the private key and derived secrets behind */
+      crypto_secure0(&sign, sizeof(sign));
+      crypto_secure0(rhash, sizeof(rhash));
+      crypto_secure0(parameter_block, sizeof(parameter_block));
+
+      regs->psw.cc = cc;
+      return;
+    }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
+    default:
+    {
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+  }
 }
 
 #if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
@@ -4932,6 +6055,72 @@ DEF_INST(dyn_cipher_message_with_output_feedback)
   }
 }
 
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Perform cryptographic computation (PCC) FC 64-66, 72-73 and 80-81          */
+/*----------------------------------------------------------------------------*/
+/* Scalar multiply (MSA 9). All values are right-aligned big-endian integers  */
+/* in fields of 32 (P-256, Ed25519, X25519), 48 (P-384), 64 (Ed448, X448) or  */
+/* 80 (P-521) bytes:                                                          */
+/*                                                                            */
+/*   64-66  P-256, P-384, P-521    result x, result y, source x, source y,    */
+/*   72-73  Ed25519, Ed448         scalar (affine coordinates)                */
+/*   80-81  X25519, X448           result u, source u, scalar                 */
+/*                                                                            */
+/* The scalar is used as given (X25519/X448 clamping is done by the program). */
+/* Condition code 2 for an invalid source point or the point at infinity      */
+/* (neutral element) as the result.                                           */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(pcc_scalar_multiply)(REGS *regs)
+{
+  BYTE parameter_block[5 * ECC_MAX_FIELD];
+  int cc;
+  int fc;
+  int len;
+  int fields;
+  int results;
+
+  fc = GR0_fc(regs);
+  if(fc <= 66)
+  {
+    len = ecc_wcurve_len(fc - 64);
+    fields = 5;
+    results = 2;
+  }
+  else if(fc <= 73)
+  {
+    len = ecc_ecurve_fld(fc - 72);
+    fields = 5;
+    results = 2;
+  }
+  else
+  {
+    len = ecc_ecurve_fld(fc - 80);
+    fields = 3;
+    results = 1;
+  }
+
+  /* The result is stored into the first field(s) */
+  ARCH_DEP(validate_parameter_block)(results * len, regs);
+  ARCH_DEP(fetch_parameter_block)(parameter_block, fields * len, regs);
+
+  if(fc <= 66)
+    cc = ecc_w_scalar_multiply(fc - 64, parameter_block);
+  else if(fc <= 73)
+    cc = ecc_e_scalar_multiply(fc - 72, parameter_block);
+  else
+    cc = ecc_x_scalar_multiply(fc - 80, parameter_block);
+
+  if(cc == ECC_CC_OK)
+    ARCH_DEP(store_parameter_block)(parameter_block, results * len, regs);
+
+  /* The scalar may be a private key */
+  crypto_secure0(parameter_block, sizeof(parameter_block));
+
+  regs->psw.cc = cc;
+}
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B92C PCC   - Perform cryptographic computation                       [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -4942,6 +6131,7 @@ DEF_INST(dyn_perform_cryptographic_computation)
   {
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
   };
+  BYTE bits[16];
 
   UNREFERENCED(inst);              /* This operation has no operands */
   INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
@@ -4962,11 +6152,23 @@ DEF_INST(dyn_perform_cryptographic_computation)
   switch(GR0_fc(regs))
   {
     case 0: /* Query */
+      memcpy(bits, query_bits[msa - 4], 16);
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+      /* Scalar multiply P-256, P-384, P-521, Ed25519, Ed448, X25519, X448 (MSA 9) */
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+      {
+        bits[8] |= 0xE0;
+        bits[9] |= 0xC0;
+        bits[10] |= 0xC0;
+      }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
       /* Store the parameter block */
-      ARCH_DEP(vstorec)(query_bits[msa - 4], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+      ARCH_DEP(vstorec)(bits, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
 #ifdef OPTION_PCC_DEBUG
-      LOGBYTE("output:", query_bits[msa - 4], 16);
+      LOGBYTE("output:", bits, 16);
 #endif /* #ifdef OPTION_PCC_DEBUG */
 
       /* Set condition code 0 */
@@ -4994,6 +6196,22 @@ DEF_INST(dyn_perform_cryptographic_computation)
     case 60: /* encrypted aes-256 */
       ARCH_DEP(pcc_xts_aes)(regs);
       break;
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+    case 64: /* scalar-multiply-p256 */
+    case 65: /* scalar-multiply-p384 */
+    case 66: /* scalar-multiply-p521 */
+    case 72: /* scalar-multiply-ed25519 */
+    case 73: /* scalar-multiply-ed448 */
+    case 80: /* scalar-multiply-x25519 */
+    case 81: /* scalar-multiply-x448 */
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+        ARCH_DEP(pcc_scalar_multiply)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
@@ -5002,6 +6220,52 @@ DEF_INST(dyn_perform_cryptographic_computation)
 #endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
 
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+/*----------------------------------------------------------------------------*/
+/* Perform cryptographic key management operation (PCKMO) FC 32-34, 40-41     */
+/*----------------------------------------------------------------------------*/
+/* Encrypt-ECC-P256/P384/P521-Key and Encrypt-ECC-Ed25519/Ed448-Key (MSA 9).  */
+/* The parameter block holds the clear private key in the format of the KDSA  */
+/* sign parameter block (32, 48, 80, 32 or 64 bytes, right-aligned) followed  */
+/* by 32 bytes for the AES wrapping key verification pattern. The key is      */
+/* replaced by the wrapped key and the verification pattern is stored.        */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(pckmo_ecc)(REGS *regs)
+{
+  BYTE parameter_block[ECC_MAX_FIELD + 32];
+  int keylen;
+
+  switch(GR0_fc(regs))
+  {
+    case 32: keylen = 32; break;        /* P-256   */
+    case 33: keylen = 48; break;        /* P-384   */
+    case 34: keylen = 80; break;        /* P-521   */
+    case 40: keylen = 32; break;        /* Ed25519 */
+    default: keylen = 64; break;        /* Ed448   */
+  }
+
+  /* Test writeability */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, keylen + 31, ACCTYPE_WRITE, regs);
+
+  /* Fetch the key, wrap it and store the parameter block */
+  ARCH_DEP(vfetchc)(parameter_block, keylen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key in : ", parameter_block, keylen > 32 ? 32 : keylen);
+#endif /* #ifdef OPTION_PCKMO_DEBUG */
+
+  wrap_ecc(parameter_block, keylen);
+  ARCH_DEP(vstorec)(parameter_block, keylen + 31, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+#ifdef OPTION_PCKMO_DEBUG
+  LOGBYTE("key out: ", parameter_block, keylen > 32 ? 32 : keylen);
+  LOGBYTE("wkvp   : ", &parameter_block[keylen], 32);
+#endif /* #ifdef OPTION_PCKMO_DEBUG */
+
+  crypto_secure0(parameter_block, sizeof(parameter_block));
+}
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -5050,6 +6314,15 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
   {
     case 0: /* Query */
     {
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+      /* Encrypt-ECC-P256/P384/P521-Key, -Ed25519/Ed448-Key (MSA 9) */
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+      {
+        query_bits[msa][4] |= 0xE0;
+        query_bits[msa][5] |= 0xC0;
+      }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
       /* Store the parameter block */
       ARCH_DEP(vstorec)(query_bits[msa], 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
 
@@ -5079,6 +6352,22 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
+
+#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+    case 32: /* encrypt-ecc-p256-key */
+    case 33: /* encrypt-ecc-p384-key */
+    case 34: /* encrypt-ecc-p521-key */
+    case 40: /* encrypt-ecc-ed25519-key */
+    case 41: /* encrypt-ecc-ed448-key */
+    {
+      if(FACILITY_ENABLED( 155_MSA_EXTENSION_9, regs ))
+        ARCH_DEP(pckmo_ecc)(regs);
+      else
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+    }
+#endif /* defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) */
+
     default:
     {
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5090,78 +6379,221 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
 
 #if defined( FEATURE_057_MSA_EXTENSION_FACILITY_5 )
 /*----------------------------------------------------------------------------*/
+/* PRNO SHA-512-DRNG: Hash_DRBG of NIST SP 800-90A with SHA-512               */
+/*----------------------------------------------------------------------------*/
+/* Parameter block (240 bytes):                                               */
+/*                                                                            */
+/*   offset  len  field                                                       */
+/*   ------  ---  ---------------------------------------------------------   */
+/*      0      4  reserved                                                    */
+/*      4      4  reseed counter (zero before the first seed operation)      */
+/*      8      8  stream bytes (number of bytes generated)                    */
+/*     16      1  reserved                                                    */
+/*     17    111  V (seedlen 888 bits)                                        */
+/*    128      1  reserved                                                    */
+/*    129    111  C                                                           */
+/*                                                                            */
+/* Seed (GR0 bit 56 one): the second operand is the seed material. With a     */
+/* reseed counter of zero the DRBG is instantiated, V = Hash_df(material)     */
+/* and the stream bytes are cleared, otherwise it is reseeded, V =            */
+/* Hash_df(0x01 || V || material). Then C = Hash_df(0x00 || V) and the        */
+/* reseed counter is set to one. The second operand is consumed.             */
+/*                                                                            */
+/* Generate (GR0 bit 56 zero): the first operand is filled with Hashgen(V),   */
+/* then V = V + Hash(0x03 || V) + C + reseed counter (mod 2^888), the reseed  */
+/* counter is incremented and the stream bytes are increased. A generate      */
+/* request produces at most 64 KB (the SP 800-90A limit per request); for a  */
+/* longer first operand condition code 3 is set and the program repeats the  */
+/* instruction, which continues with the next request.                        */
+/*                                                                            */
+/* Verified against the NIST Hash_DRBG SHA-512 test vector (Count #0) of the  */
+/* Linux s390 prng self test. This replaces a placeholder which recognized    */
+/* one known-answer test and otherwise returned plain random bytes.           */
+/*----------------------------------------------------------------------------*/
+#define DRBG_SEEDLEN    111           /* 888 bits                          */
+#define DRBG_MAX_GEN    65536         /* bytes per generate request        */
+
+/* v = v + a (mod 2^888), a is a big-endian number of alen bytes */
+static void ARCH_DEP(drbg_add)(BYTE *v, const BYTE *a, int alen)
+{
+  int carry = 0;
+  int i;
+  int k;
+
+  for(i = DRBG_SEEDLEN - 1, k = alen - 1; i >= 0; i--, k--)
+  {
+    carry += v[i] + (k >= 0 ? a[k] : 0);
+    v[i] = (BYTE) carry;
+    carry >>= 8;
+  }
+}
+
+/* out = Hash_df(prefix || second operand, 888 bits). The second operand is */
+/* only included when r2 is not negative.                                   */
+static void ARCH_DEP(drbg_hash_df)(BYTE *out, const BYTE *prefix, int prefixlen, int r2, REGS *regs)
+{
+  SHA2_CTX ctx;
+  BYTE buf[256];
+  BYTE digest[SHA512_DIGEST_LENGTH];
+  BYTE hdr[5];
+  U64 done;
+  U64 len;
+  int i;
+  int n;
+
+  for(i = 0; i * SHA512_DIGEST_LENGTH < DRBG_SEEDLEN; i++)
+  {
+    hdr[0] = (BYTE)(i + 1);                     /* counter                  */
+    store_fw(&hdr[1], DRBG_SEEDLEN * 8);        /* number of bits to return */
+    SHA512Init(&ctx);
+    SHA512Update(&ctx, hdr, sizeof(hdr));
+    if(prefixlen)
+      SHA512Update(&ctx, prefix, prefixlen);
+    if(r2 >= 0)
+    {
+      len = GR_A(r2 + 1, regs);
+      for(done = 0; done < len; done += n)
+      {
+        n = (int) min((U64) sizeof(buf), len - done);
+        ARCH_DEP(vfetchc)(buf, n - 1, (GR_A(r2, regs) + done) & ADDRESS_MAXWRAP(regs), r2, regs);
+        SHA512Update(&ctx, buf, n);
+      }
+    }
+    SHA512Final(digest, &ctx);
+    memcpy(out + i * SHA512_DIGEST_LENGTH, digest,
+           min(SHA512_DIGEST_LENGTH, DRBG_SEEDLEN - i * SHA512_DIGEST_LENGTH));
+  }
+  crypto_secure0(&ctx, sizeof(ctx));
+  crypto_secure0(buf, sizeof(buf));
+  crypto_secure0(digest, sizeof(digest));
+}
+
+static void ARCH_DEP(prno_sha512_drng)(int r1, int r2, REGS *regs)
+{
+  SHA2_CTX ctx;
+  BYTE parameter_block[240];
+  BYTE prefix[1 + DRBG_SEEDLEN];
+  BYTE data[DRBG_SEEDLEN];
+  BYTE out[256];
+  BYTE digest[SHA512_DIGEST_LENGTH];
+  BYTE counter[4];
+  static const BYTE one[1] = { 1 };
+  BYTE *v = &parameter_block[17];
+  BYTE *c = &parameter_block[129];
+  U32 rc;
+  U64 sb;
+  U64 done;
+  U64 len;
+  int k;
+  int n;
+
+  /* The parameter block is updated */
+  ARCH_DEP(validate_operand)(GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, 239, ACCTYPE_WRITE, regs);
+  ARCH_DEP(vfetchc)(parameter_block, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+  rc = fetch_fw(&parameter_block[4]);
+  sb = fetch_dw(&parameter_block[8]);
+
+#ifdef OPTION_PRNO_DEBUG
+  LOGBYTE("V in  :", v, 32);
+  LOGBYTE("C in  :", c, 32);
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+  if(GR0_m(regs))
+  {
+    /* Seed: instantiate or reseed */
+    if(!rc)
+    {
+      ARCH_DEP(drbg_hash_df)(v, NULL, 0, r2, regs);
+      sb = 0;
+    }
+    else
+    {
+      prefix[0] = 0x01;
+      memcpy(&prefix[1], v, DRBG_SEEDLEN);
+      ARCH_DEP(drbg_hash_df)(v, prefix, sizeof(prefix), r2, regs);
+    }
+    prefix[0] = 0x00;
+    memcpy(&prefix[1], v, DRBG_SEEDLEN);
+    ARCH_DEP(drbg_hash_df)(c, prefix, sizeof(prefix), -1, regs);
+    store_fw(&parameter_block[4], 1);
+    store_dw(&parameter_block[8], sb);
+    ARCH_DEP(vstorec)(parameter_block, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    /* The seed material has been consumed */
+    SET_GR_A(r2, regs, GR_A(r2, regs) + GR_A(r2 + 1, regs));
+    SET_GR_A(r2 + 1, regs, 0);
+    regs->psw.cc = 0;
+  }
+  else
+  {
+    /* Generate: Hashgen output, stored in chunks of up to 256 bytes. An */
+    /* access exception leaves the state unchanged (restartable).        */
+    len = min((U64) GR_A(r1 + 1, regs), (U64) DRBG_MAX_GEN);
+    memcpy(data, v, DRBG_SEEDLEN);
+    for(done = 0; done < len; done += n)
+    {
+      n = (int) min((U64) sizeof(out), len - done);
+      for(k = 0; k < n; k += SHA512_DIGEST_LENGTH)
+      {
+        SHA512Init(&ctx);
+        SHA512Update(&ctx, data, DRBG_SEEDLEN);
+        SHA512Final(digest, &ctx);
+        memcpy(&out[k], digest, min(SHA512_DIGEST_LENGTH, n - k));
+        ARCH_DEP(drbg_add)(data, one, sizeof(one));
+      }
+      ARCH_DEP(vstorec)(out, n - 1, (GR_A(r1, regs) + done) & ADDRESS_MAXWRAP(regs), r1, regs);
+    }
+
+    /* V = V + Hash(0x03 || V) + C + reseed counter */
+    prefix[0] = 0x03;
+    memcpy(&prefix[1], v, DRBG_SEEDLEN);
+    SHA512Init(&ctx);
+    SHA512Update(&ctx, prefix, sizeof(prefix));
+    SHA512Final(digest, &ctx);
+    store_fw(counter, rc);
+    ARCH_DEP(drbg_add)(v, digest, sizeof(digest));
+    ARCH_DEP(drbg_add)(v, c, DRBG_SEEDLEN);
+    ARCH_DEP(drbg_add)(v, counter, sizeof(counter));
+    store_fw(&parameter_block[4], rc + 1);
+    store_dw(&parameter_block[8], sb + len);
+    ARCH_DEP(vstorec)(parameter_block, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    SET_GR_A(r1, regs, GR_A(r1, regs) + len);
+    SET_GR_A(r1 + 1, regs, GR_A(r1 + 1, regs) - len);
+    regs->psw.cc = GR_A(r1 + 1, regs) ? 3 : 0;
+  }
+
+#ifdef OPTION_PRNO_DEBUG
+  LOGBYTE("V out :", v, 32);
+  LOGBYTE("C out :", c, 32);
+#endif /* #ifdef OPTION_PRNO_DEBUG */
+
+  /* Do not leave the DRBG state behind */
+  crypto_secure0(&ctx, sizeof(ctx));
+  crypto_secure0(parameter_block, sizeof(parameter_block));
+  crypto_secure0(prefix, sizeof(prefix));
+  crypto_secure0(data, sizeof(data));
+  crypto_secure0(out, sizeof(out));
+  crypto_secure0(digest, sizeof(digest));
+}
+
+/*----------------------------------------------------------------------------*/
 /* B93C PRNO - Perform random number operation                          [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(dyn_perform_random_number_operation)
 {
   int fc;
-  int modifier_bit;
   int msa;
-#ifdef OPTION_PRNO_DEBUG
-  U64 n;
-#endif
   U64 randbytes;
   U64 randnum;
   U64 randaddr;
-  BYTE entropy_input[512];
 #define         RAND_CHUNK_SIZE     256
   BYTE randbuf[ RAND_CHUNK_SIZE ] = {0};
-  struct DRNG_parmblock {
-    BYTE rsvd1[4];
-    U32  rc;
-    U64  sb;
-    BYTE rsvd2[1];
-    BYTE V[111];
-    BYTE rsvd3[1];
-    BYTE C[111];};
-  union DRNG {
-    struct DRNG_parmblock drng;
-    BYTE drng_parmblock[240];};
-  union DRNG DRNG;
   BYTE query_bits[16] = { 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa0, 0x00 };
   int r1;
   int r2;
   /* TRNG Query Raw to Conditioned Ratio -- hardcoded for now */
   BYTE trng_query_bits[8] = { 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x20 };
-  /* FIPS-140 known answer test data -- hardcoded for now */
-  BYTE entropy[64] =              { 0x32, 0x95, 0x11, 0x7f, 0x02, 0x37, 0x12, 0x70, 0x10, 0x5a, 0x37, 0x83, 0xcf, 0xe0, 0xbf, 0x5a,
-                                    0xc1, 0x40, 0x8e, 0x6c, 0xea, 0xc5, 0xae, 0xeb, 0xd6, 0xd8, 0x14, 0xbc, 0x82, 0x7d, 0xc0, 0x4d,
-                                    0x21, 0xa1, 0xe4, 0x80, 0xe3, 0xd5, 0xf2, 0xe3, 0x78, 0x31, 0x9a, 0xde, 0x9b, 0xdd, 0xda, 0x4c,
-                                    0x2e, 0x93, 0xb7, 0x4e, 0x34, 0x8d, 0x5e, 0xe3, 0x2e, 0xd4, 0x6a, 0x1a, 0xe6, 0x25, 0x66, 0xe0 };
-  BYTE generated[64] =            { 0xf1, 0xdf, 0xe8, 0x33, 0x08, 0x11, 0xec, 0xd1, 0x0a, 0xeb, 0x68, 0x72, 0x8f, 0xac, 0x57, 0xb0,
-                                    0x5d, 0xc8, 0xb4, 0x11, 0x6d, 0xfc, 0xc0, 0x66, 0xc4, 0xfb, 0xb6, 0x54, 0xb3, 0x17, 0xfb, 0x0e,
-                                    0x01, 0x12, 0x65, 0x74, 0x8f, 0x79, 0x29, 0xb0, 0x18, 0x03, 0x66, 0x62, 0x5d, 0xe0, 0x66, 0x5b,
-                                    0x11, 0x6c, 0x87, 0x8b, 0x0f, 0x05, 0xba, 0xd8, 0x31, 0x94, 0x16, 0x25, 0x88, 0x24, 0xdf, 0xdc };
-  BYTE parmblock_seeded[240] =    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                    0x00, 0x41, 0xf5, 0x9e, 0xd5, 0x80, 0x25, 0xaa, 0x04, 0x0e, 0x42, 0x04, 0x3c, 0xa5, 0xd1, 0x21,
-                                    0xb4, 0x94, 0x20, 0x25, 0xe6, 0x16, 0xb0, 0x95, 0xb7, 0xfb, 0x26, 0x6d, 0xdb, 0x63, 0x65, 0xb6,
-                                    0x9b, 0xa6, 0x09, 0xc0, 0xbb, 0x9f, 0xfe, 0x2c, 0xb7, 0xdc, 0x31, 0x33, 0x87, 0xb0, 0x0c, 0x09,
-                                    0x5f, 0xbb, 0x2d, 0x2b, 0x80, 0x1a, 0xff, 0xfb, 0x12, 0x97, 0x9f, 0xbf, 0x42, 0x1b, 0x3a, 0x4d,
-                                    0xbc, 0x7b, 0x21, 0x41, 0x9e, 0x7c, 0x62, 0x20, 0xd5, 0x08, 0xfe, 0x94, 0xf8, 0xa2, 0x5f, 0xee,
-                                    0xbe, 0x07, 0x9c, 0x1d, 0x02, 0xc0, 0xcd, 0x96, 0x5b, 0x3e, 0x51, 0x84, 0x4e, 0x5b, 0xfb, 0x22,
-                                    0xf4, 0xd1, 0x90, 0xfd, 0x57, 0x73, 0x86, 0xd1, 0x96, 0xac, 0x1b, 0xba, 0x14, 0xda, 0x99, 0x64,
-                                    0x00, 0x4b, 0xf2, 0x22, 0x39, 0xf6, 0xeb, 0xf3, 0xc2, 0xe4, 0xed, 0xf6, 0xa5, 0x3a, 0x7d, 0x82,
-                                    0x14, 0xda, 0x99, 0x64, 0x7c, 0xc1, 0xfc, 0x3b, 0xd9, 0x0d, 0xb2, 0x49, 0xcf, 0x0b, 0x82, 0x53,
-                                    0x1c, 0x30, 0xe5, 0x2d, 0x5e, 0xd3, 0x11, 0xb5, 0xaa, 0xc5, 0x2c, 0xf9, 0xe7, 0x67, 0x81, 0xc8,
-                                    0x84, 0x14, 0xb2, 0x36, 0x59, 0xf5, 0x5f, 0x54, 0xfa, 0x28, 0xa9, 0x08, 0x81, 0x46, 0xcd, 0x2d,
-                                    0x37, 0xaa, 0x9c, 0x0e, 0xa3, 0xfd, 0x06, 0xce, 0x26, 0x75, 0xf8, 0x95, 0x49, 0xb2, 0xa4, 0xcb,
-                                    0xb0, 0xd8, 0x53, 0xc3, 0xc6, 0xa0, 0x09, 0xf7, 0x33, 0xc5, 0xb3, 0xd2, 0xb3, 0x29, 0xd8, 0x9c,
-                                    0x60, 0xef, 0x29, 0xb9, 0x02, 0xf1, 0x39, 0x42, 0x49, 0xb1, 0x94, 0x18, 0xcd, 0xab, 0xf6, 0x28 };
-  BYTE parmblock_generated[240] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
-                                    0x00, 0x8d, 0xe7, 0xc1, 0x0f, 0x77, 0x11, 0x9d, 0xc6, 0xf3, 0x2f, 0xfa, 0xe1, 0xe0, 0x4e, 0xa3,
-                                    0xf1, 0x41, 0xc2, 0xfc, 0x62, 0xd8, 0xac, 0xd1, 0x91, 0x08, 0xd8, 0xb7, 0xaa, 0x6e, 0xe8, 0x09,
-                                    0xb7, 0xd6, 0xee, 0xee, 0x1a, 0x73, 0x0f, 0xe2, 0x62, 0xa1, 0x5e, 0x2d, 0x6f, 0x17, 0x8d, 0xd1,
-                                    0xf4, 0x09, 0xa9, 0x0e, 0x43, 0x50, 0x71, 0xd4, 0x7f, 0xa4, 0x7c, 0x5f, 0x67, 0x0f, 0x03, 0x14,
-                                    0x42, 0xbb, 0x6b, 0x11, 0x69, 0xf7, 0xdf, 0xb2, 0xf0, 0x36, 0xed, 0x5a, 0x15, 0x71, 0x9f, 0x08,
-                                    0xef, 0xd4, 0x94, 0x42, 0xf5, 0x49, 0x91, 0x93, 0x51, 0x1b, 0x92, 0x4f, 0xc1, 0x96, 0xaa, 0xb3,
-                                    0xa7, 0xc2, 0xbb, 0x8c, 0xaa, 0x8b, 0xae, 0xd2, 0x0f, 0x45, 0xd0, 0x3d, 0xff, 0xb8, 0x74, 0x6e,
-                                    0x00, 0x4b, 0xf2, 0x22, 0x39, 0xf6, 0xeb, 0xf3, 0xc2, 0xe4, 0xed, 0xf6, 0xa5, 0x3a, 0x7d, 0x82,
-                                    0xff, 0xb8, 0x74, 0x6e, 0x7c, 0xc1, 0xfc, 0x3b, 0xd9, 0x0d, 0xb2, 0x49, 0xcf, 0x0b, 0x82, 0x53,
-                                    0x1c, 0x30, 0xe5, 0x2d, 0x5e, 0xd3, 0x11, 0xb5, 0xaa, 0xc5, 0x2c, 0xf9, 0xe7, 0x67, 0x81, 0xc8,
-                                    0x84, 0x14, 0xb2, 0x36, 0x59, 0xf5, 0x5f, 0x54, 0xfa, 0x28, 0xa9, 0x08, 0x81, 0x46, 0xcd, 0x2d,
-                                    0x37, 0xaa, 0x9c, 0x0e, 0xa3, 0xfd, 0x06, 0xce, 0x26, 0x75, 0xf8, 0x95, 0x49, 0xb2, 0xa4, 0xcb,
-                                    0xb0, 0xd8, 0x53, 0xc3, 0xc6, 0xa0, 0x09, 0xf7, 0x33, 0xc5, 0xb3, 0xd2, 0xb3, 0x29, 0xd8, 0x9c,
-                                    0x60, 0xef, 0x29, 0xb9, 0x02, 0xf1, 0x39, 0x42, 0x49, 0xb1, 0x94, 0x18, 0xcd, 0xab, 0xf6, 0x28 };
 
   RRE(inst, regs, r1, r2);
   PER_ZEROADDR_CHECK( regs, 1 );
@@ -5190,7 +6622,6 @@ DEF_INST(dyn_perform_random_number_operation)
 
   /* Initialize values */
   fc = GR0_fc(regs);
-  modifier_bit = GR0_m(regs);
   switch(fc)
   {
     case 0: /* Query */
@@ -5200,101 +6631,9 @@ DEF_INST(dyn_perform_random_number_operation)
       regs->psw.cc = 0;
       return;
     }
-    case 3: /* DRNG */
+    case 3: /* SHA-512-DRNG */
     {
-      /* Fetch the parameter block */
-      ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-      /*      */
-      /* seed */
-      /*      */
-      if (GR0_m(regs))
-      {
-        randbytes = GR_A( r2 + 1, regs );
-        randaddr  = GR_A( r2,     regs );
-        randnum   = min( RAND_CHUNK_SIZE, randbytes );
-        ARCH_DEP(vfetchc)(entropy_input, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-        if (randbytes > RAND_CHUNK_SIZE)
-            ARCH_DEP(vfetchc)(entropy_input + RAND_CHUNK_SIZE, randbytes - (RAND_CHUNK_SIZE+1), randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-
-#ifdef OPTION_PRNO_DEBUG
-        logmsg("DRNG Seed: Input Parmblock = ");
-        for(n=0; n < 240; n++)
-          logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
-        logmsg("\n");
-        logmsg("DRNG Seed: Entropy Size = %"PRIu64"\n", (U64) (GR_A( r2 + 1, regs )));
-        logmsg("DRNG Seed: Entropy Data = ");
-        for(n=0; n < randbytes; n++)
-          logmsg("%02x",entropy_input[n]);
-        logmsg("\n");
-#endif
-        /* known answer test */
-        if ((randbytes == 64) && (!memcmp(entropy, entropy_input, 64)))
-        {
-          ARCH_DEP(vstorec)(parmblock_seeded, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-          ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-        else
-        /* pseudo seed */
-        {
-          if (!DRNG.drng.rc) DRNG.drng.sb = 0;
-          DRNG.drng.rc = CSWAP32( 1 );
-          VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
-          VERIFY( hget_random_bytes( DRNG.drng.C, 111, &sysblk.PRNOrandhand ) );
-          ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-
-#ifdef OPTION_PRNO_DEBUG
-      logmsg("DRNG Seed: Output Parmblock = ");
-      for(n=0; n < 240; n++)
-        logmsg("%02x",(unsigned char) DRNG.drng_parmblock[n]);
-      logmsg("\n");
-#endif
-      }
-      else
-      /*          */
-      /* generate */
-      /*          */
-      {
-        randaddr  = GR_A( r1,     regs );
-        randbytes = GR_A( r1 + 1, regs );
-#ifdef OPTION_PRNO_DEBUG
-        LOGMSG("+++ %s mode DRNG Generate: r1+1 randbytes = %"PRIu64"\n", regs->psw.amode64 ? "64" : regs->psw.amode ? "31" : "24",  randbytes );
-#endif
-
-        /* known answer test */
-        if ((randbytes == 64) && (!memcmp(parmblock_seeded, DRNG.drng_parmblock, 240)))
-        {
-          ARCH_DEP(vstorec)(generated, 63, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-          ARCH_DEP(vstorec)(parmblock_generated, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-          ARCH_DEP(vfetchc)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-        else
-        /* real generate */
-        {
-          do
-          {
-            randnum = min( RAND_CHUNK_SIZE, randbytes );
-            VERIFY( hget_random_bytes( randbuf, randnum, &sysblk.PRNOrandhand ));
-            ARCH_DEP(vstorec)(randbuf, randnum - 1, randaddr & ADDRESS_MAXWRAP(regs), 1, regs);
-            if (randbytes > RAND_CHUNK_SIZE)
-            {
-              randbytes -=  RAND_CHUNK_SIZE;
-              randaddr  +=  RAND_CHUNK_SIZE;
-            }
-            else randbytes = 0;
-          }
-          while (randbytes);
-          DRNG.drng.rc = ARCH_DEP(vfetch4) ( regs->GR( 1 ) + 4, 1, regs ) + 1;
-          DRNG.drng.rc = CSWAP32( DRNG.drng.rc );
-          DRNG.drng.sb = ARCH_DEP(vfetch8) ( regs->GR( 1 ) + 8, 1, regs ) + GR_A( r1 + 1, regs );
-          DRNG.drng.sb = CSWAP64( DRNG.drng.sb );
-          VERIFY( hget_random_bytes( DRNG.drng.V, 111, &sysblk.PRNOrandhand ) );
-          ARCH_DEP(vstorec)(DRNG.drng_parmblock, 239, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
-        }
-        SET_GR_A( r1 + 1, regs, 0 );
-      }
-      /* Set condition code 0 */
-      regs->psw.cc = 0;
+      ARCH_DEP(prno_sha512_drng)(r1, r2, regs);
       return;
     }
     case 112: /* TRNG-Query-Raw-to-Conditioned-Ratio */
@@ -5505,8 +6844,12 @@ HDL_REGISTER_SECTION;
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");
 
-#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5 and 7");
+#if defined( _FEATURE_155_MSA_EXTENSION_FACILITY_9 ) && defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6, 7, 8 and 9");
+#elif defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6, 7 and 8");
+#elif defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3, 4, 5, 6 and 7");
 #else
   #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
     WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4");
