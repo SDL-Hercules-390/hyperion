@@ -76,8 +76,23 @@ char         buf[32];                   /* Work buffer                      */
         }
         cckd->cckd_maxsize = CCKD64_MAXSIZE;
 
-        /* call the chkdsk function */
-        if (cckd64_chkdsk (dev, 0) < 0)
+        /* Uncompressed CKD64 base image (only reached with shadow
+           files): it is opened read-only for the CCKD code, so that
+           every update goes to a shadow file (one is created by
+           cckd64_sf_init if none exists yet). */
+        {
+            CKD_DEVHDR  devhdr;
+            if (cckd64_read( dev, 0, 0, &devhdr, CKD_DEVHDR_SIZE ) < 0)
+                return -1;
+            if (is_dh_devid_typ( devhdr.dh_devid, CKD_P064_TYP ))
+            {
+                cckd->rawbase = 1;
+                cckd->open[0] = CCKD_OPEN_RO;
+            }
+        }
+
+        /* call the chkdsk function (not for an uncompressed base) */
+        if (!cckd->rawbase && cckd64_chkdsk (dev, 0) < 0)
             return -1;
 
         /* Perform initial read */
@@ -2047,6 +2062,56 @@ U64             off;                    /* Offset to l1 entry        */
 } /* end function cckd64_write_l1ent */
 
 /*-------------------------------------------------------------------*/
+/* Initial read of an uncompressed CKD64 base image                  */
+/*                                                                   */
+/* An uncompressed base has no compressed header and no lookup       */
+/* tables: they are built in storage.  Every L1 entry points to an   */
+/* L2 table that cckd64_read_l2 builds on the fly, with each track   */
+/* at its fixed offset in the file.  An uncompressed track starts    */
+/* with its home address, whose first byte is zero: it is read as an */
+/* uncompressed (CCKD_COMPRESS_NONE) track image.                    */
+/*-------------------------------------------------------------------*/
+static int cckd64_read_init_rawbase( DEVBLK* dev )
+{
+    CCKD64_EXT*     cckd = dev->cckd_ext;
+    CCKD64_DEVHDR*  chdr = &cckd->cdevhdr[0];
+    S32             numl1;              /* Number of L1 entries      */
+    int             i;                  /* Index                     */
+
+    CCKD_TRACE( "file[0] read_init uncompressed base, %d tracks", dev->ckdtrks );
+
+    cckd->ckddasd    = 1;
+    cckd->swapend[0] = 0;
+    numl1 = (dev->ckdtrks + 255) / 256;
+
+    memset( chdr, 0, CCKD64_DEVHDR_SIZE );
+    chdr->cdh_vrm[0]  = CCKD_VERSION;
+    chdr->cdh_vrm[1]  = CCKD_RELEASE;
+    chdr->cdh_vrm[2]  = CCKD_MODLVL;
+    chdr->cdh_opts    = cckd_def_opt_bigend();
+    chdr->num_L1tab   = numl1;
+    chdr->num_L2tab   = 256;
+    STORE_LE_FW( chdr->cdh_cyls, dev->ckdcyls );
+    chdr->cdh_size    =
+    chdr->cdh_used    = CKD_DEVHDR_SIZE + (U64)dev->ckdtrks * dev->ckdtrksz;
+    chdr->cdh_nullfmt = (dev->oslinux && dev->devtype == 0x3390)
+                      ? CKD_NULLTRK_FMT2 : 0;
+    chdr->cmp_algo    = CCKD_COMPRESS_ZLIB;   /* for the shadow files */
+    chdr->cmp_parm    = -1;
+
+    cckd->L1tab[0] = cckd_free( dev, "l1", cckd->L1tab[0] );
+    if ((cckd->L1tab[0] = cckd_malloc( dev, "l1", numl1 * CCKD64_L1ENT_SIZE )) == NULL)
+        return -1;
+
+    /* Any value other than 0 (null table) and CCKD64_MAXSIZE (table
+       in a lower file): the L2 tables are built by cckd64_read_l2 */
+    for (i = 0; i < numl1; i++)
+        cckd->L1tab[0][i] = CCKD64_L1TAB_POS;
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* Initial read                                                      */
 /*-------------------------------------------------------------------*/
 int cckd64_read_init (DEVBLK *dev)
@@ -2061,6 +2126,9 @@ int cckd64_read_init (DEVBLK *dev)
 
     cckd = dev->cckd_ext;
     sfx  = cckd->sfn;
+
+    if (!sfx && cckd->rawbase)
+        return cckd64_read_init_rawbase( dev );
 
     CCKD_TRACE( "file[%d] read_init", sfx );
 
@@ -2371,8 +2439,21 @@ BYTE            nullfmt;                /* Null track format         */
     cache_unlock (CACHE_L2);
     if (buf == NULL) return -1;
 
+    /* Uncompressed base: each track at its fixed offset in the file */
+    if (sfx == 0 && cckd->rawbase)
+    {
+        U64 trk0 = (U64)L1idx * 256;
+        memset(buf, 0, CCKD64_L2TAB_SIZE);
+        for (i = 0; i < 256 && trk0 + i < (U64)dev->ckdtrks; i++)
+        {
+            buf[i].L2_trkoff = CKD_DEVHDR_SIZE + (trk0 + i) * dev->ckdtrksz;
+            buf[i].L2_len    =
+            buf[i].L2_size   = (U16)dev->ckdtrksz;
+        }
+        CCKD_TRACE( "l2[%d,%d] cache[%d] uncompressed base", sfx, L1idx, lru);
+    }
     /* Check for null table */
-    if (cckd->L1tab[sfx][L1idx] == 0)
+    else if (cckd->L1tab[sfx][L1idx] == 0)
     {
         memset(buf, 0, CCKD64_L2TAB_SIZE);
         if (nullfmt)
@@ -3547,6 +3628,22 @@ BYTE            buf[64*1024];           /* Buffer                    */
         goto sf_remove_exit;
     }
 
+    /* An uncompressed base image is never written: shadow files
+       cannot be merged into it, and removing the last shadow file
+       without merging discards the updates (an empty one replaces it) */
+    if (cckd->rawbase && to_sfx == 0)
+    {
+        if (merge)
+        {
+            // "%1d:%04X CCKD file[%d] %s: shadow file not merged: file[%d] %s%s"
+            WRMSG( HHC00324, "E", LCSS_DEVNUM, from_sfx, cckd_sf_name( dev, from_sfx ),
+                                 to_sfx, "is an uncompressed base image", "" );
+            goto sf_remove_exit;
+        }
+        add = 1;
+        goto sf_remove_rawbase;
+    }
+
     /* Attempt to re-open the `to' file read-write */
     cckd64_close( dev, to_sfx );
     if (to_sfx > 0 || !dev->ckdrdonly || force)
@@ -3580,6 +3677,8 @@ BYTE            buf[64*1024];           /* Buffer                    */
             goto sf_remove_exit;
         }
     }
+
+sf_remove_rawbase:
 
     cckd->sfn = to_sfx;
 
@@ -3629,9 +3728,17 @@ BYTE            buf[64*1024];           /* Buffer                    */
             for (j = 0; j < 256; j++)
             {
                 trk = i*256 + j;
-                /* Continue if from L2 entry doesn't exist */
+                /* Continue if from L2 entry doesn't exist, or if both
+                   entries are null tracks of the same format (a zero
+                   length means the format in the file's header) */
                 if (from_l2[j].L2_trkoff == CCKD64_MAXSIZE
-                 || (from_l2[j].L2_trkoff == 0 && to_l2[j].L2_trkoff == 0))
+                 || (1
+                     && from_l2[j].L2_trkoff == 0
+                     && to_l2[j].L2_trkoff == 0
+                     && (from_l2[j].L2_len ? from_l2[j].L2_len
+                                           : cckd->cdevhdr[from_sfx].cdh_nullfmt)
+                     == (to_l2[j].L2_len ? to_l2[j].L2_len : fix)
+                    ))
                     continue;
 
                 /* Read the `from' track/blkgrp image */

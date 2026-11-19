@@ -148,6 +148,8 @@ struct CCKD64_EXT {                     /* Ext for compressed ckd    */
 
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
+                         rawbase:1,     /* 1=Base is uncompressed CKD64,
+                                             read-only, under shadows  */
                          cckdioact:1,   /* 1=Channel program active  */
                          bufused:1,     /* 1=newbuf was used         */
                          updated:1,     /* 1=Update occurred         */

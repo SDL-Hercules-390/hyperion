@@ -4929,7 +4929,9 @@ ROUTE  00  172.21.3.32  255.255.255.224
 <a name="shadow"></a>
     <dt><code>sf=<em>shadow-file-filename-template</em></code>
     <dd><p>
-        Shadow files are only supported for compressed dasd images.
+        Shadow files are supported for compressed dasd images, and for uncompressed
+        64-bit CKD64 images, which are then never written: all updates go to the shadow files
+        (see "<a href="cckddasd.html#shadowfiles">Shadow Files</a>").
         <p>
 
         A shadow file contains all the changes made to the emulated dasd since
