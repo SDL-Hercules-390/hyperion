@@ -4667,9 +4667,17 @@ BYTE            buf[64*1024];           /* Buffer                    */
             for (j = 0; j < 256; j++)
             {
                 trk = i*256 + j;
-                /* Continue if from L2 entry doesn't exist */
+                /* Continue if from L2 entry doesn't exist, or if both
+                   entries are null tracks of the same format (a zero
+                   length means the format in the file's header) */
                 if (from_l2[j].L2_trkoff == CCKD_MAXSIZE
-                 || (from_l2[j].L2_trkoff == 0 && to_l2[j].L2_trkoff == 0))
+                 || (1
+                     && from_l2[j].L2_trkoff == 0
+                     && to_l2[j].L2_trkoff == 0
+                     && (from_l2[j].L2_len ? from_l2[j].L2_len
+                                           : cckd->cdevhdr[from_sfx].cdh_nullfmt)
+                     == (to_l2[j].L2_len ? to_l2[j].L2_len : fix)
+                    ))
                     continue;
 
                 /* Read the `from' track/blkgrp image */
