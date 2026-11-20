@@ -1203,7 +1203,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         0
             | IFF_NO_PI
             | IFF_OSOCK
-            | (grp->l3 ? IFF_TUN : IFF_TAP)
+            | (( grp->l3 && !grp->l2tap ) ? IFF_TUN : IFF_TAP )
         ,
         &grp->ttfd,
         grp->ttifname,
@@ -1222,7 +1222,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
                          dev->devnum,
                          dev->typname,
                          grp->ttifname,
-                         (grp->l3 ? "TUN" : "TAP"));
+                         (( grp->l3 && !grp->l2tap ) ? "TUN" : "TAP"));
 
     /* Set NON-Blocking mode by disabling Blocking mode */
     if ((rc = socket_set_blocking_mode(grp->ttfd,0)) != 0)
@@ -1271,7 +1271,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     /* Make sure the interface has a valid MAC address.      */
     /* TUN's of course don't have MAC addresses, only TAP's. */
     if (grp->tthwaddr) {
-        if (!grp->l3)
+        if (!grp->l3 || grp->l2tap)
         {
             if ((rc = TUNTAP_SetMACAddr( grp->ttifname, grp->tthwaddr )) != 0)
             {
@@ -1292,6 +1292,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #if defined( OPTION_W32_CTCI )
         && grp->l3
 #endif
+        && !grp->l2tap
         && grp->ttipaddr
     )
     {
@@ -1320,6 +1321,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #if defined( OPTION_W32_CTCI )
        grp->l3 &&
 #endif
+       !grp->l2tap &&
                   grp->ttnetmask)
     {
         if ((rc = TUNTAP_SetNetMask( grp->ttifname, grp->ttnetmask )) != 0)
@@ -1336,6 +1338,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #if defined( OPTION_W32_CTCI )
        grp->l3 &&
 #endif
+       !grp->l2tap &&
                   grp->ttipaddr6)
     {
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
@@ -1986,6 +1989,10 @@ U16 offph;
                         strcat( dev->dev_data, ": CMD_0008" );         /* Prepare the contentstring */
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
+                    case IPA_SAS_CMD_ARP_QUERY_STATS:  /* 0x0204 */
+                        strcat( dev->dev_data, ": ARP_QUERY_STATS" );  /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
+                        break;
                     default:
                         {
                         char not_supp[12];
@@ -2039,6 +2046,26 @@ U16 offph;
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
                     case IPA_SAS_CMD_0008:       /* 0x0008 */
+                        STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        break;
+
+                    case IPA_SAS_CMD_ARP_QUERY_STATS:  /* 0x0204 */
+                        /* The guest requests the OSA ARP-processing
+                           statistics. IBM does not document the layout of
+                           the counters block, so the request block is
+                           returned unchanged (len + 4 bytes) with a
+                           successful return code. The subcommand is only
+                           honoured when the opt-in TAP transport is in
+                           use, since that is the only mode in which
+                           Hercules implements the ARP assist; otherwise
+                           the historical behaviour (reject the
+                           subcommand) is preserved. */
+                        if (!grp->l2tap)
+                        {
+                            STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                            break;
+                        }
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
@@ -2962,6 +2989,209 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 }
 
 
+/*==================== L2/TAP IPv4 ARP engine (opt-in 'l2tap') =====*/
+/* Emulates what a real OSA-Express does in Layer-3 mode: an IP->MAC */
+/* cache plus ARP request/reply on the Ethernet segment.             */
+static QETH_ARP_ENTRY* arp_lookup( OSA_GRP* grp, BYTE* ip )
+{
+    int i;
+    for (i = 0; i < QETH_ARP_MAX; i++)
+        if (grp->arp[i].valid && memcmp(grp->arp[i].ip, ip, 4) == 0)
+            return &grp->arp[i];
+    return NULL;
+}
+
+static void arp_learn( OSA_GRP* grp, BYTE* ip, BYTE* mac )
+{
+    int i, slot = -1;
+    for (i = 0; i < QETH_ARP_MAX; i++)
+    {
+        if (grp->arp[i].valid && memcmp(grp->arp[i].ip, ip, 4) == 0)
+        {
+            memcpy(grp->arp[i].mac, mac, IFHWADDRLEN);
+            return;
+        }
+        if (!grp->arp[i].valid && slot < 0)
+            slot = i;
+    }
+    if (slot < 0) slot = 0;                    /* table full: reuse    */
+    memcpy(grp->arp[slot].ip,  ip,  4);
+    memcpy(grp->arp[slot].mac, mac, IFHWADDRLEN);
+    grp->arp[slot].valid = 1;
+}
+
+static int is_our_ipv4( OSA_GRP* grp, BYTE* ip )
+{
+    int i;
+    if (memcmp(grp->confipaddr4, ip, 4) == 0)
+        return 1;
+    for (i = 0; i < OSA_MAXIPV4; i++)
+        if (grp->ipaddr4[i].type == IPV4_TYPE_INUSE &&
+            memcmp(grp->ipaddr4[i].addr, ip, 4) == 0)
+            return 1;
+    return 0;
+}
+
+/* 224.0.0.1 (all-hosts) is the multicast group a Layer-3 guest relies
+   on in practice; the OSA filters every other group address away.    */
+static int is_all_hosts( BYTE* ip )
+{
+    return (ip[0] == 224 && ip[1] == 0 && ip[2] == 0 && ip[3] == 1);
+}
+
+static int l2_is_for_us( OSA_GRP* grp, BYTE* mac )
+{
+    BYTE hw[IFHWADDRLEN];
+    if (mac[0] & 0x01)                         /* broadcast/multicast  */
+        return 1;
+    if (memcmp(mac, grp->iMAC, IFHWADDRLEN) == 0)
+        return 1;
+    /* Accept the OSA MAC configured in the .cnf, independent of the
+       tap's kernel MAC, which may not be settable in every build. */
+    if (grp->tthwaddr && ParseMAC( grp->tthwaddr, hw ) == 0 &&
+        memcmp(mac, hw, IFHWADDRLEN) == 0)
+        return 1;
+    /* Also accept any MAC registered by the guest (e.g. SETVMAC). */
+    return validate_mac( mac, MAC_TYPE_ANY, grp ) ? 1 : 0;
+}
+
+static void arp_build_request( DEVBLK* dev, OSA_GRP* grp, BYTE* tgt_ip )
+{
+    BYTE frame[64];
+    ETHFRM* e = (ETHFRM*)frame;
+    BYTE* a = e->bData;
+    memset( frame, 0, sizeof(frame) );
+    memset( e->bDestMAC, 0xFF, IFHWADDRLEN );
+    memcpy( e->bSrcMAC, grp->iMAC, IFHWADDRLEN );
+    STORE_HW( e->hwEthernetType, ETH_TYPE_ARP );
+    a[0] = 0x00; a[1] = 0x01;                  /* htype Ethernet       */
+    a[2] = 0x08; a[3] = 0x00;                  /* ptype IPv4           */
+    a[4] = 6;    a[5] = 4;
+    a[6] = 0x00; a[7] = 0x01;                  /* oper = request       */
+    memcpy( a+8,  grp->iMAC, IFHWADDRLEN );    /* sha                  */
+    memcpy( a+14, grp->confipaddr4, 4 );       /* spa = our IP         */
+    memset( a+18, 0, IFHWADDRLEN );            /* tha = 0              */
+    memcpy( a+24, tgt_ip, 4 );                 /* tpa = target         */
+    write_packet( dev, grp, frame, (int)sizeof(ETHFRM) + 28 );
+}
+
+static void arp_send_reply( DEVBLK* dev, OSA_GRP* grp, ETHFRM* eth )
+{
+    BYTE frame[64];
+    ETHFRM* r = (ETHFRM*)frame;
+    BYTE* a  = eth->bData;
+    BYTE* ra = r->bData;
+    memset( frame, 0, sizeof(frame) );
+    memcpy( r->bDestMAC, a+8, IFHWADDRLEN );   /* requester MAC        */
+    memcpy( r->bSrcMAC,  grp->iMAC, IFHWADDRLEN );
+    STORE_HW( r->hwEthernetType, ETH_TYPE_ARP );
+    ra[0] = 0x00; ra[1] = 0x01;                /* htype Ethernet       */
+    ra[2] = 0x08; ra[3] = 0x00;                /* ptype IPv4           */
+    ra[4] = 6;    ra[5] = 4;
+    ra[6] = 0x00; ra[7] = 0x02;                /* oper = reply         */
+    memcpy( ra+8,  grp->iMAC, IFHWADDRLEN );   /* sha = we             */
+    memcpy( ra+14, a+24, 4 );                  /* spa = our IP asked   */
+    memcpy( ra+18, a+8,  IFHWADDRLEN );        /* tha = requester      */
+    memcpy( ra+24, a+14, 4 );                  /* tpa = requester IP   */
+    write_packet( dev, grp, frame, (int)sizeof(ETHFRM) + 28 );
+}
+
+/* Queue an IP packet while its next-hop MAC is being resolved.
+   Returns 1 when the packet was queued for a new next-hop (the caller
+   must send an ARP request), 2 when the next-hop is already pending and
+   another ARP request should be issued, and 0 when the packet had to be
+   dropped (buffer allocation failure or retry limit reached and the
+   previous entry lost).  The queue is bounded and evicts the oldest
+   entry when full, so a next-hop that never answers can neither lock
+   the queue nor leak its buffers. */
+static int arp_queue_packet( OSA_GRP* grp, BYTE* nh, BYTE* ip, int len )
+{
+    int i, slot = -1, oldest = -1;
+    U32 oldest_seq = 0;
+
+    for (i = 0; i < QETH_ARP_PEND_MAX; i++)
+    {
+        if (grp->arppend[i].ip && memcmp( grp->arppend[i].nh, nh, 4 ) == 0)
+        {
+            if (grp->arppend[i].tries < QETH_ARP_RETRY_MAX)
+            {
+                grp->arppend[i].tries++;
+                return 2;                      /* pending: repeat the ARP */
+            }
+            slot = i;                          /* retries exhausted: reuse */
+            break;
+        }
+    }
+
+    if (slot < 0)
+    {
+        for (i = 0; i < QETH_ARP_PEND_MAX; i++)
+        {
+            if (!grp->arppend[i].ip)
+            {
+                slot = i;
+                break;
+            }
+            if (oldest < 0 || grp->arppend[i].seq < oldest_seq)
+            {
+                oldest = i;
+                oldest_seq = grp->arppend[i].seq;
+            }
+        }
+        if (slot < 0)
+            slot = oldest;                     /* queue full: evict oldest */
+    }
+
+    free( grp->arppend[slot].ip );             /* (may be NULL)            */
+    grp->arppend[slot].ip = (BYTE*) malloc( len );
+    if (!grp->arppend[slot].ip)
+    {
+        grp->arppend[slot].len   = 0;
+        grp->arppend[slot].tries = 0;
+        return 0;
+    }
+    memcpy( grp->arppend[slot].ip, ip, len );
+    memcpy( grp->arppend[slot].nh, nh, 4 );
+    grp->arppend[slot].len   = len;
+    grp->arppend[slot].tries = 0;
+    grp->arppend[slot].seq   = ++grp->arpseq;
+    return 1;
+}
+
+/* Resend buffered packets for a next-hop whose MAC was just learned.  */
+static void arp_flush_pending( DEVBLK* dev, OSA_GRP* grp, BYTE* ip )
+{
+    int i;
+    for (i = 0; i < QETH_ARP_PEND_MAX; i++)
+    {
+        QETH_ARP_ENTRY* ae;
+        if (!grp->arppend[i].ip)
+            continue;
+        if (memcmp( grp->arppend[i].nh, ip, 4 ) != 0)
+            continue;
+        ae = arp_lookup( grp, ip );
+        if (ae)
+        {
+            BYTE  frame[1600];
+            int   flen = (int)sizeof(ETHFRM) + grp->arppend[i].len;
+            ETHFRM *fr = (ETHFRM*)frame;
+            if (flen <= (int)sizeof(frame))
+            {
+                memcpy( fr->bDestMAC, ae->mac, IFHWADDRLEN );
+                memcpy( fr->bSrcMAC,  grp->iMAC, IFHWADDRLEN );
+                STORE_HW( fr->hwEthernetType, ETH_TYPE_IP );
+                memcpy( fr->bData, grp->arppend[i].ip, grp->arppend[i].len );
+                write_packet( dev, grp, frame, flen );
+            }
+        }
+        free( grp->arppend[i].ip );
+        grp->arppend[i].ip    = NULL;
+        grp->arppend[i].len   = 0;
+        grp->arppend[i].tries = 0;
+    }
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Copy data fragment into OSA queue buffer storage.                 */
 /* Uses the entries from the passed Storage Block Address List to    */
@@ -3315,6 +3545,61 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         /* Read another packet into the device buffer */
         if ((qrc = read_packet( dev, grp )) != 0)
             return qrc; /*(probably EOF)*/
+
+        if (grp->l2tap)
+        {
+            ETHFRM *eth = (ETHFRM*)dev->buf;
+            U16 et;
+            FETCH_HW( et, eth->hwEthernetType );
+            if (et == ETH_TYPE_ARP)
+            {
+                BYTE *a = eth->bData;
+                U16 oper = (U16)(((U16)a[6] << 8) | a[7]);
+                if (oper == 0x0002)                        /* reply   */
+                {
+                    arp_learn( grp, a+14, a+8 );           /* spa -> sha (our TX cache) */
+                    arp_flush_pending( dev, grp, a+14 );   /* resend queued packets */
+                }
+                else if (oper == 0x0001)                   /* request */
+                {
+                    if (is_our_ipv4( grp, a+24 ))
+                        arp_send_reply( dev, grp, eth );
+                }
+                /* With the IP assist active the OSA consumes ARP
+                   internally; ARP frames are never passed to a Layer-3
+                   guest (it has no use for them, and passing them up is
+                   counted as an inbound error). */
+                continue;
+            }
+            else if (et == ETH_TYPE_IP)
+            {
+                IP4FRM *ip4;
+                if (!l2_is_for_us( grp, eth->bDestMAC ))
+                    continue;
+                /* Emulate the OSA ingress filtering: a Layer-3 guest only
+                   sees frames for its own unicast addresses plus the
+                   multicast groups it registered (224.0.0.1 in practice).
+                   Other group/broadcast traffic belongs to the segment,
+                   not to the guest. */
+                if (eth->bDestMAC[0] & 0x01)
+                {
+                    ip4 = (IP4FRM*)eth->bData;
+                    if (!is_all_hosts( (BYTE*)&ip4->lDstIP ))
+                    {
+                        dev->qdio.dropcnt++;
+                        continue;
+                    }
+                }
+                /* Learn the sender (IP -> MAC) so replies to this host
+                   can be framed immediately (covers newly-seen peers). */
+                ip4 = (IP4FRM*)eth->bData;
+                arp_learn( grp, (BYTE*)&ip4->lSrcIP, eth->bSrcMAC );
+                dev->buflen -= (int)sizeof(ETHFRM);
+                memmove( dev->buf, dev->buf + sizeof(ETHFRM), dev->buflen );
+            }
+            else
+                continue;
+        }
 
         /* Build the Layer 3 OSA header */
         memset( &o3hdr, 0, sizeof( OSA_HDR3 ));
@@ -3702,6 +3987,14 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                     /* It probably is an L2 Ethernet Frame! */
                     if (hwEthernetType != ETH_TYPE_IP)
                     {
+                        if (grp->l2tap)
+                        {
+                            /* TAP transport: forward the guest's L2 frame
+                               (typically ARP) straight onto the LAN instead
+                               of dropping it. */
+                            qrc = write_packet( dev, grp, pkt, pktlen );
+                            continue;
+                        }
                         /* Can't write L2 Ethernet frame to L3 tun device! */
                         dev->qdio.dropcnt++;
                         if (grp->debugmask & DBGQETHDROP)
@@ -3770,7 +4063,62 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         }
 
         /* Write the packet */
-        qrc = write_packet( dev, grp, pkt, pktlen );
+        if (grp->l2tap && hdr_id == HDR_ID_LAYER3 && pktlen >= 20
+            && (pkt[0] & 0xF0) == 0x40)                    /* IPv4 only */
+        {
+            IP4FRM* ip4 = (IP4FRM*)pkt;
+            BYTE*   dip = (BYTE*)&ip4->lDstIP;             /* final destination   */
+            BYTE*   nh  = dip;                             /* link-layer next hop */
+            QETH_ARP_ENTRY* ae;
+            int     i, onlink = 1;
+
+            /* On-link test against the guest address/prefix; off-link
+               traffic is framed to the configured gateway instead.    */
+            for (i = 0; i < 4; i++)
+            {
+                if ((dip[i] & grp->confpfxmask4[i]) !=
+                    (grp->confipaddr4[i] & grp->confpfxmask4[i]))
+                { onlink = 0; break; }
+            }
+            if (!onlink &&
+                (grp->confgateway4[0] | grp->confgateway4[1] |
+                 grp->confgateway4[2] | grp->confgateway4[3]))
+                nh = grp->confgateway4;
+
+            ae = arp_lookup( grp, nh );
+            if (!ae)
+            {
+                /* 1 = newly queued, 2 = still pending (send another
+                   request), 0 = dropped (no buffer / retries spent). */
+                int qr = arp_queue_packet( grp, nh, pkt, pktlen );
+                if (qr)
+                    arp_build_request( dev, grp, nh );
+                if (qr != 1)
+                    dev->qdio.dropcnt++;
+                qrc = QRC_SUCCESS;
+            }
+            else
+            {
+                BYTE  frame[1600];
+                int   flen = (int)sizeof(ETHFRM) + pktlen;
+                ETHFRM *fr = (ETHFRM*)frame;
+                if (flen <= (int)sizeof(frame))
+                {
+                    memcpy( fr->bDestMAC, ae->mac, IFHWADDRLEN ); /* gw MAC if off-link */
+                    memcpy( fr->bSrcMAC,  grp->iMAC, IFHWADDRLEN );
+                    STORE_HW( fr->hwEthernetType, ETH_TYPE_IP );
+                    memcpy( fr->bData, pkt, pktlen );            /* IP dst stays final */
+                    qrc = write_packet( dev, grp, frame, flen );
+                }
+                else { dev->qdio.dropcnt++; qrc = QRC_SUCCESS; }
+            }
+        }
+        else if (grp->l2tap && hdr_id == HDR_ID_LAYER3)
+        {
+            dev->qdio.dropcnt++; qrc = QRC_SUCCESS;         /* non-IPv4: Stage 3 */
+        }
+        else
+            qrc = write_packet( dev, grp, pkt, pktlen );
 
 #if defined( ENABLE_IPV6 )
 
@@ -4519,6 +4867,12 @@ U32 mask4;
             grp->ttnetmask = strdup(argv[++i]);
             continue;
         }
+        else if(!strcasecmp("gateway",argv[i]) && (i+1) < argc)
+        {
+            free( grp->ttgateway );
+            grp->ttgateway = strdup(argv[++i]);
+            continue;
+        }
 #if defined( ENABLE_IPV6 )
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
@@ -4573,6 +4927,11 @@ U32 mask4;
         else if(!strcasecmp("nodebug",argv[i]))
         {
             grp->debugmask = 0;
+            continue;
+        }
+        else if (!strcasecmp("tap",argv[i]))
+        {
+            grp->l2tap = 1;
             continue;
         }
         else
@@ -4665,6 +5024,51 @@ U32 mask4;
         }
 
         // Validate both netmask and prefix-length...
+
+        /* Optional default gateway for off-subnet traffic (l2tap mode) */
+        if (grp->ttgateway)
+        {
+            memset( &hrb, 0, sizeof(hrb) );
+            hrb.wantafam = AF_INET;
+            hrb.numeric  = TRUE;
+            memcpy( hrb.host, grp->ttgateway, strlen(grp->ttgateway) );
+            work_rc = resolve_host( &hrb );
+            if (work_rc == 0)
+            {
+                (void) hinet_pton( AF_INET, grp->ttgateway, grp->confgateway4 );
+            }
+            else
+            {
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
+                                     "gateway", grp->ttgateway );
+                retcode = -1;
+                free( grp->ttgateway );
+                grp->ttgateway = NULL;
+            }
+        }
+
+        /* The opt-in TAP transport requires a real Ethernet TAP device,
+           which the Windows (CTCI) and macOS (utun) builds cannot
+           provide; reject the option here rather than failing at open
+           time. */
+#if defined( OPTION_W32_CTCI ) || defined( __APPLE__ )
+        if (grp->l2tap)
+        {
+            // HHC00919 "%1d:%04X %s: Option %s is not supported on this platform"
+            WRMSG( HHC00919, "E", LCSS_DEVNUM, dev->typname, "tap" );
+            retcode = -1;
+        }
+#endif
+
+        /* 'gateway' is only meaningful for the TAP transport. */
+        if (grp->ttgateway && !grp->l2tap)
+        {
+            // HHC00918 "%1d:%04X %s: Option %s unknown or specified incorrectly"
+            WRMSG( HHC00918, "W", LCSS_DEVNUM, dev->typname, "gateway" );
+            free( grp->ttgateway );
+            grp->ttgateway = NULL;
+        }
 
         if (1
             && !grp->ttnetmask
@@ -4978,6 +5382,19 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         free( grp->ttpfxlen6 );
         free( grp->ttmtu     );
         free( grp->ttchpid   );
+        free( grp->ttgateway );
+
+        if (grp->l2tap)
+        {
+            int i;
+            for (i = 0; i < QETH_ARP_PEND_MAX; i++)
+            {
+                free( grp->arppend[i].ip );
+                grp->arppend[i].ip    = NULL;
+                grp->arppend[i].len   = 0;
+                grp->arppend[i].tries = 0;
+            }
+        }
 
         PTT_QETH_TRACE( "af clos othr", 0,0,0 );
 
