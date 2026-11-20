@@ -3974,6 +3974,13 @@ FISH TEST...
                     When the option is not specified the behaviour is exactly
                     the historical Layer-3/TUN one.
                     <p>
+                    IPv4 group traffic is filtered the way an OSA filters it:
+                    the guest only receives the all-hosts address
+                    (<code>224.0.0.1</code>); other multicast and broadcast
+                    frames stay on the segment and are not passed up, since a
+                    Layer-3 guest has no use for them.  ARP frames are consumed
+                    by Hercules and are never delivered to the guest.
+                    <p>
                     <i>
                     <b>Note:</b> The <code>ipaddr</code> option (with either a
                     prefix length or <code>netmask</code>) should be specified:

@@ -3032,6 +3032,13 @@ static int is_our_ipv4( OSA_GRP* grp, BYTE* ip )
     return 0;
 }
 
+/* 224.0.0.1 (all-hosts) is the multicast group a Layer-3 guest relies
+   on in practice; the OSA filters every other group address away.    */
+static int is_all_hosts( BYTE* ip )
+{
+    return (ip[0] == 224 && ip[1] == 0 && ip[2] == 0 && ip[3] == 1);
+}
+
 static int l2_is_for_us( OSA_GRP* grp, BYTE* mac )
 {
     BYTE hw[IFHWADDRLEN];
@@ -3552,21 +3559,16 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
                 {
                     arp_learn( grp, a+14, a+8 );           /* spa -> sha (our TX cache) */
                     arp_flush_pending( dev, grp, a+14 );   /* resend queued packets */
-                    /* Deliver the ARP reply to the guest as an L3 passthru
-                       frame so z/OS completes its own next-hop resolution. */
-                    memset( &o3hdr, 0, sizeof(OSA_HDR3) );
-                    STORE_HW( o3hdr.length, dev->buflen );
-                    o3hdr.id    = HDR_ID_LAYER3;
-                    o3hdr.flags = HDR3_FLAGS_PASSTHRU;
-                    qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
-                                                  (BYTE*)&o3hdr, sizeof(o3hdr),
-                                                  dev->buf, dev->buflen );
                 }
                 else if (oper == 0x0001)                   /* request */
                 {
                     if (is_our_ipv4( grp, a+24 ))
                         arp_send_reply( dev, grp, eth );
                 }
+                /* With the IP assist active the OSA consumes ARP
+                   internally; ARP frames are never passed to a Layer-3
+                   guest (it has no use for them, and passing them up is
+                   counted as an inbound error). */
                 continue;
             }
             else if (et == ETH_TYPE_IP)
@@ -3574,6 +3576,20 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
                 IP4FRM *ip4;
                 if (!l2_is_for_us( grp, eth->bDestMAC ))
                     continue;
+                /* Emulate the OSA ingress filtering: a Layer-3 guest only
+                   sees frames for its own unicast addresses plus the
+                   multicast groups it registered (224.0.0.1 in practice).
+                   Other group/broadcast traffic belongs to the segment,
+                   not to the guest. */
+                if (eth->bDestMAC[0] & 0x01)
+                {
+                    ip4 = (IP4FRM*)eth->bData;
+                    if (!is_all_hosts( (BYTE*)&ip4->lDstIP ))
+                    {
+                        dev->qdio.dropcnt++;
+                        continue;
+                    }
+                }
                 /* Learn the sender (IP -> MAC) so replies to this host
                    can be framed immediately (covers newly-seen peers). */
                 ip4 = (IP4FRM*)eth->bData;
