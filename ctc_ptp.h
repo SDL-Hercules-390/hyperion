@@ -9,20 +9,6 @@
 #define __CTC_PTP_H_
 
 /* ----------------------------------------------------------------- */
-/* Pack all structures to byte boundary...                           */
-/* ----------------------------------------------------------------- */
-
-#undef ATTRIBUTE_PACKED
-#if defined(_MSVC_)
- #pragma pack(push)
- #pragma pack(1)
- #define ATTRIBUTE_PACKED
-#else
- #define ATTRIBUTE_PACKED __attribute__((packed))
-#endif
-
-
-/* ----------------------------------------------------------------- */
 /* PTP group size and relative device numbers                        */
 /* ----------------------------------------------------------------- */
 #define PTP_GROUP_SIZE         2
@@ -278,19 +264,14 @@ struct _PTPINT                             // PTP Unsolicited Interrupt
 /* PTP Message Buffer Header                                         */
 /* ----------------------------------------------------------------- */
 
-struct _PTPHDR                             // PTP Message Buffer Header
+PACKED(struct _PTPHDR                      // PTP Message Buffer Header
 {
     PPTPHDR   pNextPTPHDR;                 // Pointer to next PTPHDR
     int       iAreaLen;                    // Data area length
     int       iDataLen;                    // Data length
                                            // End of the PTPHDR (or, if you
                                            // prefer, the start of the data).
-} ATTRIBUTE_PACKED;
+});
 #define SIZE_HDR  sizeof(PTPHDR)           // Size of PTPHDR
-
-
-#if defined(_MSVC_)
- #pragma pack(pop)
-#endif
 
 #endif // __CTC_PTP_H_

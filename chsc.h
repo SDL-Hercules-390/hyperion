@@ -21,29 +21,15 @@
       _CHSC_AI((_array), (_bitno)) |= _CHSC_BI((_bitno));             \
   } while (0)
 
-
-/*-------------------------------------------------------------------*/
-/* Pack all structures to byte boundary...                           */
-/*-------------------------------------------------------------------*/
-
-#undef ATTRIBUTE_PACKED
-#if defined(_MSVC_)
- #pragma pack(push)
- #pragma pack(1)
- #define ATTRIBUTE_PACKED
-#else
- #define ATTRIBUTE_PACKED __attribute__((packed))
-#endif
-
-
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ: Generic Channel Subsystem Call request                  */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ;
-typedef struct _CHSC_REQ CHSC_REQ;
-struct _CHSC_REQ {
+PACKED(struct _CHSC_REQ {
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
+/*004*/ FWORD   resv[3];
+/*010*/ });
+
 /* The following request codes are in use, but the request name      */
 /* isn't known for the majority of the codes.                        */
 // fine CHSC_REQ_RESETCU        0x0001  /* Reset Control Unit        */
@@ -93,18 +79,17 @@ struct _CHSC_REQ {
 // fine CHSC_REQ_DCOATLI                /* Store Domain Configuration Attributes List */
 // fine CHSC_REQ_MEACHAT                /* Store Channel Measurement Attributes */
 // fine CHSC_REQ_EXTCHME                /* Set Extended Channel Measurement */
-/*004*/ FWORD   resv[3];
-/*010*/ } ATTRIBUTE_PACKED;
-
+typedef struct _CHSC_REQ CHSC_REQ;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP: Generic Channel Subsystem Call response                 */
 /*-------------------------------------------------------------------*/
-struct _CHSC_RSP;
-typedef struct _CHSC_RSP CHSC_RSP;
-struct _CHSC_RSP {
+PACKED(struct _CHSC_RSP {
 /*000*/ HWORD   length;                 /* Length of response field  */
 /*002*/ HWORD   rsp;                    /* Response code             */
+/*004*/ FWORD   info;
+/*008*/ });
+
 #define CHSC_REQ_OK             0x0001  /* No error                  */
 #define CHSC_REQ_INVALID        0x0002  /* Invalid request           */
 #define CHSC_REQ_ERRREQ         0x0003  /* Error in request block    */
@@ -115,9 +100,7 @@ struct _CHSC_RSP {
                                         /* Configuration requests,   */
                                         /* the precise meaning is    */
                                         /* dependant on the request. */
-/*004*/ FWORD   info;
-/*008*/ } ATTRIBUTE_PACKED;
-
+typedef struct _CHSC_RSP CHSC_RSP;
 
 /*-------------------------------------------------------------------*/
 /* PROGRAMMING NOTE: as far as we know the maximum size of a CHSC    */
@@ -176,37 +159,30 @@ static INLINE int chsc_req_errreq( CHSC_RSP *chsc_rsp, U32 info )
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ2: Store Channel Path Description request                 */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ2;
-typedef struct _CHSC_REQ2 CHSC_REQ2;
-struct _CHSC_REQ2 {                     /* Store Channel Path Desc   */
-/*000*/ HWORD   length;                 /* Offset to response field  */
-/*002*/ HWORD   req;                    /* Request code              */
-/*004*/ BYTE    flags1;
 #define CHSC_REQ2_F1_M          0x20
 #define CHSC_REQ2_F1_C          0x10
 #define CHSC_REQ2_F1_FMT        0x0F
+#define CHSC_REQ2_RFMT_MSK      0x0F
+
+PACKED(struct _CHSC_REQ2 {              /* Store Channel Path Desc   */
+/*000*/ HWORD   length;                 /* Offset to response field  */
+/*002*/ HWORD   req;                    /* Request code              */
+/*004*/ BYTE    flags1;
 /*005*/ BYTE    cssid;
 /*006*/ BYTE    rfmt;
-#define CHSC_REQ2_RFMT_MSK      0x0F
 /*007*/ BYTE    first_chpid;
 /*008*/ BYTE    resv1[3];
 /*00B*/ BYTE    last_chpid;
 /*00C*/ FWORD   resv2;
-/*010*/ } ATTRIBUTE_PACKED;
-
+/*010*/ });
+typedef struct _CHSC_REQ2 CHSC_REQ2;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP2: Store Channel Path Description format 0 response       */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by one or more CHSC_RSP2 */
-struct _CHSC_RSP2;
-typedef struct _CHSC_RSP2 CHSC_RSP2;
-struct _CHSC_RSP2 {                     /* Store Channel Path Desc   */
+PACKED(struct _CHSC_RSP2 {              /* Store Channel Path Desc   */
 /*000*/ BYTE    flags1;                 /* Flags                     */
-#define CHSC_RSP2_F1_CHPID_VALID  0x80  /*                           */
-#define CHSC_RSP2_F1_CHLA_VALID   0x40  /*                           */
-#define CHSC_RSP2_F1_LSN_VALID    0x20  /*                           */
-#define CHSC_RSP2_F1_SWLA_VALID   0x10  /*                           */
 /*001*/ BYTE    lsn;                    /* Logical Switch Number     */
 /*002*/ BYTE    chp_type;               /* Channel path description  */
 /*003*/ BYTE    chpid;                  /* CHPID                     */
@@ -214,19 +190,20 @@ struct _CHSC_RSP2 {                     /* Store Channel Path Desc   */
 /*005*/ BYTE    resv5;
 /*006*/ BYTE    chla;                   /* Channel Link Address      */
 /*007*/ BYTE    resv7;
-/*008*/ } ATTRIBUTE_PACKED;
+/*008*/ });
 
+#define CHSC_RSP2_F1_CHPID_VALID  0x80  /*                           */
+#define CHSC_RSP2_F1_CHLA_VALID   0x40  /*                           */
+#define CHSC_RSP2_F1_LSN_VALID    0x20  /*                           */
+#define CHSC_RSP2_F1_SWLA_VALID   0x10  /*                           */
+typedef struct _CHSC_RSP2 CHSC_RSP2;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP2F1: Store Channel Path Description format 1 response     */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by one or more CHSC_RSP2F1 */
-struct _CHSC_RSP2F1;
-typedef struct _CHSC_RSP2F1 CHSC_RSP2F1;
-struct _CHSC_RSP2F1 {                   /* Store Channel Path Desc   */
+PACKED(struct _CHSC_RSP2F1 {            /* Store Channel Path Desc   */
 /*000*/ BYTE    flags1;                 /* Flags                     */
-#define CHSC_RSP2F1_F1_CHPID_VALID 0x80 /*                           */
-#define CHSC_RSP2F1_F1_LSN_VALID   0x20 /*                           */
 /*001*/ BYTE    lsn;                    /* Logical Switch Number     */
 /*002*/ BYTE    chp_type;               /* Channel path description  */
 /*003*/ BYTE    chpid;                  /* CHPID                     */
@@ -235,39 +212,47 @@ struct _CHSC_RSP2F1 {                   /* Store Channel Path Desc   */
 /*008*/ FWORD   resv2[3];
 /*00C*/ HWORD   mdc;
 /*00E*/ HWORD   flags2;
+/*010*/ FWORD   resv3[2];
+/*018*/ });
+
+#define CHSC_RSP2F1_F1_CHPID_VALID 0x80 /*                           */
+#define CHSC_RSP2F1_F1_LSN_VALID   0x20 /*                           */
 #define CHSC_RSP2F1_F2_R        0x0004
 #define CHSC_RSP2F1_F2_S        0x0002
 #define CHSC_RSP2F1_F2_F        0x0001
-/*010*/ FWORD   resv3[2];
-/*018*/ } ATTRIBUTE_PACKED;
-
+typedef struct _CHSC_RSP2F1 CHSC_RSP2F1;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ4: Store Subchannel Description Data request              */
-/*-------------------------------------------------------------------*/
-struct _CHSC_REQ4;
-typedef struct _CHSC_REQ4 CHSC_REQ4;
-struct _CHSC_REQ4 {                     /* Store Subchann Descr Data */
+PACKED(struct _CHSC_REQ4 {              /* Store Subchann Descr Data */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   ssidfmt;
-#define CHSC_REQ4_SSID          0x0030
-#define CHSC_REQ4_FMT           0x000f
 /*006*/ HWORD   f_sch;                  /* First subchannel          */
 /*008*/ HWORD   resv2;
 /*00A*/ HWORD   l_sch;                  /* Last subchannel           */
 /*00C*/ FWORD   resv3;
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
 
+#define CHSC_REQ4_SSID          0x0030
+#define CHSC_REQ4_FMT           0x000f
+typedef struct _CHSC_REQ4 CHSC_REQ4;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP4: Store Subchannel Description Data response             */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by zero, one or more CHSC_RSP4 */
-struct _CHSC_RSP4;
-typedef struct _CHSC_RSP4 CHSC_RSP4;
-struct _CHSC_RSP4 {                     /* Store Subchann Descr Data */
+PACKED(struct _CHSC_RSP4 {              /* Store Subchann Descr Data */
 /*000*/ BYTE    flags1;                 /* Flags                     */
+/*001*/ BYTE    unit_addr;              /* Unit address              */
+/*002*/ HWORD   devno;                  /* Device number             */
+/*004*/ BYTE    path_mask;              /* Valid path mask           */
+/*005*/ BYTE    fla_valid_mask;         /* Valid link mask           */
+/*006*/ HWORD   sch;                    /* Subchannel number         */
+/*008*/ BYTE    chpid[8];               /* Channel path array        */
+/*010*/ HWORD   fla[8];                 /* Full link address array   */
+/*020*/ });
+
 #define CHSC_RSP4_F1_SCH_VALID    0x80  /* Subchannel valid          */
 #define CHSC_RSP4_F1_DEV_VALID    0x40  /* Device number valid       */
 #define CHSC_RSP4_F1_ST           0x38  /* Subchannel type           */
@@ -280,44 +265,41 @@ struct _CHSC_RSP4 {                     /* Store Subchann Descr Data */
                                            meaning                   */
 #define CHSC_RPS4_F1_ST_ADM       0x18  /* ADM Subchannel; Only sch_val
                                            st and sch have a meaning */
-/*001*/ BYTE    unit_addr;              /* Unit address              */
-/*002*/ HWORD   devno;                  /* Device number             */
-/*004*/ BYTE    path_mask;              /* Valid path mask           */
-/*005*/ BYTE    fla_valid_mask;         /* Valid link mask           */
-/*006*/ HWORD   sch;                    /* Subchannel number         */
-/*008*/ BYTE    chpid[8];               /* Channel path array        */
-/*010*/ HWORD   fla[8];                 /* Full link address array   */
-/*020*/ } ATTRIBUTE_PACKED;
-
+typedef struct _CHSC_RSP4 CHSC_RSP4;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ6: Store Subchannel Control-Unit Data request             */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ6;
-typedef struct _CHSC_REQ6 CHSC_REQ6;
-struct _CHSC_REQ6 {                     /* Store Subchann. CU Data   */
+PACKED(struct _CHSC_REQ6 {              /* Store Subchann. CU Data   */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   ssidfmt;
-#define CHSC_REQ6_M             0x2000
-#define CHSC_REQ6_FMT           0x00f0
-#define CHSC_REQ6_SSID          0x0003
 /*006*/ HWORD   f_sch;                  /* First subchannel          */
 /*008*/ BYTE    resv2;
 /*009*/ BYTE    cssid;
 /*00A*/ HWORD   l_sch;                  /* Last subchannel           */
 /*00C*/ FWORD   resv3;
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
 
+#define CHSC_REQ6_M             0x2000
+#define CHSC_REQ6_FMT           0x00f0
+#define CHSC_REQ6_SSID          0x0003
+typedef struct _CHSC_REQ6 CHSC_REQ6;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP6: Store Subchannel Control-Unit Data response            */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by zero, one or more CHSC_RSP6 */
-struct _CHSC_RSP6;
-typedef struct _CHSC_RSP6 CHSC_RSP6;
-struct _CHSC_RSP6 {                     /* Store Subchann. CU Data   */
+PACKED(struct _CHSC_RSP6 {              /* Store Subchann. CU Data   */
 /*000*/ BYTE    flags1;                 /* Flags                     */
+/*001*/ BYTE    path_mask;              /* Path mask                 */
+/*002*/ HWORD   devnum;                 /* Device number             */
+/*004*/ HWORD   lcucb;                  /* LCUCB queue number        */
+/*006*/ HWORD   sch;                    /* Subchannel number         */
+/*007*/ BYTE    chpid[8];               /* Channel path array        */
+/*010*/ HWORD   cun[8];                 /* Control unit number array */
+/*020*/ });
+
 #define CHSC_RSP6_F1_SCH_VALID    0x80  /* Subchannel valid          */
 #define CHSC_RSP6_F1_DEV_VALID    0x40  /* Device number valid       */
 #define CHSC_RSP6_F1_ST           0x38  /* Subchannel type           */
@@ -330,34 +312,23 @@ struct _CHSC_RSP6 {                     /* Store Subchann. CU Data   */
                                            meaning                   */
 #define CHSC_RPS6_F1_ST_ADM       0x18  /* ADM Subchannel; Only sch_val
                                            st and sch have a meaning */
-/*001*/ BYTE    path_mask;              /* Path mask                 */
-/*002*/ HWORD   devnum;                 /* Device number             */
-/*004*/ HWORD   lcucb;                  /* LCUCB queue number        */
-/*006*/ HWORD   sch;                    /* Subchannel number         */
-/*007*/ BYTE    chpid[8];               /* Channel path array        */
-/*010*/ HWORD   cun[8];                 /* Control unit number array */
-/*020*/ } ATTRIBUTE_PACKED;
-
+typedef struct _CHSC_RSP6 CHSC_RSP6;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ10: Store Channel-Subsystem Characteristics request       */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ10;
-typedef struct _CHSC_REQ10 CHSC_REQ10;
-struct _CHSC_REQ10 {                    /* Store Channel-Subsystem Characteristics */
+PACKED(struct _CHSC_REQ10 {             /* Store Channel-Subsystem Characteristics */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ FWORD   resv[3];                /* Must be zero              */
-/*010*/ } ATTRIBUTE_PACKED;
-
+/*010*/ });
+typedef struct _CHSC_REQ10 CHSC_REQ10;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP10: Store Channel-Subsystem Characteristics response      */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by CHSC_RSP10 */
-struct _CHSC_RSP10;
-typedef struct _CHSC_RSP10 CHSC_RSP10;
-struct _CHSC_RSP10 {                    /* Store Channel-Subsystem Characteristics */
+PACKED(struct _CHSC_RSP10 {             /* Store Channel-Subsystem Characteristics */
 /*000*/ FWORD   general_char[510];
 /*7F8*/ FWORD   chsc_char[508];         /* ZZ: Linux/390 code indicates
                                            this field has a length of
@@ -366,42 +337,34 @@ struct _CHSC_RSP10 {                    /* Store Channel-Subsystem Characteristi
                                            request would be 4K + 16
                                            in length which is probably
                                            an error -    *JJ/10/10/04*/
-/*FE8*/ } ATTRIBUTE_PACKED;
-
+/*FE8*/ });
+typedef struct _CHSC_RSP10 CHSC_RSP10;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ12: Store Configuration Information request               */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ12;
-typedef struct _CHSC_REQ12 CHSC_REQ12;
-struct _CHSC_REQ12 {                    /* Store Config. Information */
+PACKED(struct _CHSC_REQ12 {             /* Store Config. Information */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ BYTE    flags;
-#define CHSC_REQ12_FLAGS_M      0x20
-#define CHSC_REQ12_FLAGS_FMT    0x0F
 /*005*/ BYTE    cssid;
 /*006*/ BYTE    ssid;
-#define CHSC_REQ12_SSID_MASK    0x03
 /*007*/ BYTE    resv007;
 /*008*/ DBLWRD  resv008;
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
 
+#define CHSC_REQ12_FLAGS_M      0x20
+#define CHSC_REQ12_FLAGS_FMT    0x0F
+#define CHSC_REQ12_SSID_MASK    0x03
+typedef struct _CHSC_REQ12 CHSC_REQ12;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP12: Store Configuration Information response              */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by CHSC_RSP12 */
-struct _CHSC_RSP12;
-typedef struct _CHSC_RSP12 CHSC_RSP12;
-struct _CHSC_RSP12 {                     /* Store Config. Information */
+PACKED(struct _CHSC_RSP12 {             /* Store Config. Information */
 /*000*/ BYTE    resv008;
 /*001*/ BYTE    flags;                  /* Flags                     */
-#define CHSC_RSP12_F1_CM   0x80         /* Configuration Mode        */
-#define CHSC_RSP12_F1_CV   0x40         /* Configuration Valid       */
-#define CHSC_RSP12_F1_CC   0x20         /* Configuration Changed     */
-#define CHSC_RSP12_F1_TP   0x10         /* Token Present             */
-#define CHSC_RSP12_F1_PPV  0x08         /* Program-Parameter Valid   */
 /*002*/ BYTE    unknow00A;              /* ???                       */
 /*003*/ BYTE    pnum;                   /* Partition Number          */
 /*004*/ FWORD   pp[4];                  /* Program Parameter         */
@@ -417,15 +380,19 @@ struct _CHSC_RSP12 {                     /* Store Config. Information */
 /*0AE*/ HWORD   resv0B6;
 /*0B0*/ DBLWRD  pn[16];                 /* Partition Names           */
 /*130*/ FWORD   unknow138[488];
-/*8D0*/ } ATTRIBUTE_PACKED;
+/*8D0*/ });
 
+#define CHSC_RSP12_F1_CM   0x80         /* Configuration Mode        */
+#define CHSC_RSP12_F1_CV   0x40         /* Configuration Valid       */
+#define CHSC_RSP12_F1_CC   0x20         /* Configuration Changed     */
+#define CHSC_RSP12_F1_TP   0x10         /* Token Present             */
+#define CHSC_RSP12_F1_PPV  0x08         /* Program-Parameter Valid   */
+typedef struct _CHSC_RSP12 CHSC_RSP12;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ21: Set Subchannel Indicator.  Response is CHSC_RSP.      */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ21;
-typedef struct _CHSC_REQ21 CHSC_REQ21;
-struct _CHSC_REQ21 {                    /* Set Subchannel Indicator  */
+PACKED(struct _CHSC_REQ21 {             /* Set Subchannel Indicator  */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   opcode;                 /* Operation Code            */
@@ -435,62 +402,49 @@ struct _CHSC_REQ21 {                    /* Set Subchannel Indicator  */
 /*010*/ DBLWRD  alsi;                   /* Adapter Summary Indicator */
 /*018*/ DBLWRD  dsci;                   /* Device State Change Ind   */
 /*020*/ BYTE    sk;                     /* Storage keys: alsi, dsci  */
-#define CHSC_REQ21_KS         0xF0      /* Storage key alsi          */
-#define CHSC_REQ21_KC         0x0F      /* Storage key dsci          */
 /*021*/ BYTE    resv4[2];
 /*023*/ BYTE    isc;                    /* Interrupt SubClass        */
-#define CHSC_REQ21_VISC_MASK  0x70
-#define CHSC_REQ21_ISC_MASK   0x07
 /*024*/ FWORD   flags;                  /* Flags                     */
-#define CHSC_REQ21_FLAGS_D 0x10000000   /* Time Delay Enablement     */
 /*028*/ FWORD   resv5;
 /*02C*/ FWORD   ssid;                   /* Subchannel Id             */
 /*030*/ FWORD   resvx[1004];
-/*FE0*/ } ATTRIBUTE_PACKED;
+/*FE0*/ });
 
+#define CHSC_REQ21_KS         0xF0      /* Storage key alsi          */
+#define CHSC_REQ21_KC         0x0F      /* Storage key dsci          */
+#define CHSC_REQ21_VISC_MASK  0x70
+#define CHSC_REQ21_ISC_MASK   0x07
+#define CHSC_REQ21_FLAGS_D 0x10000000   /* Time Delay Enablement     */
+typedef struct _CHSC_REQ21 CHSC_REQ21;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ24: Store Subchannel QDIO Data request                    */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ24;
-typedef struct _CHSC_REQ24 CHSC_REQ24;
-struct _CHSC_REQ24 {                    /* Store Subchann. QDIO Data */
+PACKED(struct _CHSC_REQ24 {             /* Store Subchann. QDIO Data */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   ssidfmt;
-#define CHSC_REQ24_SSID         0x0030
-#define CHSC_REQ24_FMT          0x000f
 /*006*/ HWORD   f_sch;                  /* First subchannel number   */
 /*008*/ HWORD   resv1;
 /*00A*/ HWORD   l_sch;                  /* Last subchannel number    */
 /*00C*/ FWORD   resv2;
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
 
+#define CHSC_REQ24_SSID         0x0030
+#define CHSC_REQ24_FMT          0x000f
+typedef struct _CHSC_REQ24 CHSC_REQ24;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP24: Store Subchannel QDIO Data response                   */
 /*-------------------------------------------------------------------*/
 /* CHSC_RSP followed by zero, one or more CHSC_RSP24 */
-struct _CHSC_RSP24;
-typedef struct _CHSC_RSP24 CHSC_RSP24;
-struct _CHSC_RSP24 {                    /* Store Subchann. QDIO Data */
+PACKED(struct _CHSC_RSP24 {             /* Store Subchann. QDIO Data */
 /*000*/ BYTE flags;                     /* Flags for st QDIO Sch Data */
-#define CHSC_FLAG_QDIO_CAPABILITY       0x80
-#define CHSC_FLAG_VALIDITY              0x40
-#define CHSC_FLAG_UNKNOWN20             0x20    /* ??? */
 /*001*/ BYTE    resv1;
 /*002*/ HWORD   sch;
 /*004*/ BYTE    qfmt;
 /*005*/ BYTE    parm;
 /*006*/ BYTE    qdioac1;                        /* QDIO adapter-characteristics-1 flag */
-#define AC1_UNKNOWN80                   0x80    /* ??? */
-#define AC1_SIGA_INPUT_NEEDED           0x40    /* Process input queues */
-#define AC1_SIGA_OUTPUT_NEEDED          0x20    /* Process output queues */
-#define AC1_SIGA_SYNC_NEEDED            0x10    /* Ask hypervisor to sync */
-#define AC1_AUTOMATIC_SYNC_ON_THININT   0x08    /* Set by hypervisor */
-#define AC1_AUTOMATIC_SYNC_ON_OUT_PCI   0x04    /* Set by hypervisor */
-#define AC1_SC_QEBSM_AVAILABLE          0x02    /* Available for subchannel */
-#define AC1_SC_QEBSM_ENABLED            0x01    /* Enabled for subchannel */
 /*007*/ BYTE    sch_class;
 /*008*/ BYTE    pcnt;
 /*009*/ BYTE    icnt;
@@ -499,47 +453,55 @@ struct _CHSC_RSP24 {                    /* Store Subchann. QDIO Data */
 /*00C*/ BYTE    resv3;
 /*00D*/ BYTE    mbccnt;
 /*00E*/ HWORD   qdioac2;                        /* QDIO adapter-characteristics-2 flag */
+/*010*/ DBLWRD  sch_token;
+/*018*/ BYTE    mro;
+/*019*/ BYTE    mri;
+/*01A*/ HWORD   qdioac3;
+/*01C*/ HWORD   resv5;
+/*01E*/ BYTE    resv6;
+/*01F*/ BYTE    mmwc;
+/*020*/ });
+
+#define CHSC_FLAG_QDIO_CAPABILITY       0x80
+#define CHSC_FLAG_VALIDITY              0x40
+#define CHSC_FLAG_UNKNOWN20             0x20    /* ??? */
+#define AC1_UNKNOWN80                   0x80    /* ??? */
+#define AC1_SIGA_INPUT_NEEDED           0x40    /* Process input queues */
+#define AC1_SIGA_OUTPUT_NEEDED          0x20    /* Process output queues */
+#define AC1_SIGA_SYNC_NEEDED            0x10    /* Ask hypervisor to sync */
+#define AC1_AUTOMATIC_SYNC_ON_THININT   0x08    /* Set by hypervisor */
+#define AC1_AUTOMATIC_SYNC_ON_OUT_PCI   0x04    /* Set by hypervisor */
+#define AC1_SC_QEBSM_AVAILABLE          0x02    /* Available for subchannel */
+#define AC1_SC_QEBSM_ENABLED            0x01    /* Enabled for subchannel */
 #define QETH_AC2_UNKNOWN4000            0x4000  /* ??? */
 #define QETH_AC2_UNKNOWN2000            0x2000  /* ??? */
 #define QETH_SNIFF_AVAIL                0x0008  /* Promisc mode avail */
 #define QETH_AC2_DATA_DIV_AVAILABLE     0x0010
 #define QETH_AC2_DATA_DIV_ENABLED       0x0002
-/*010*/ DBLWRD  sch_token;
-/*018*/ BYTE    mro;
-/*019*/ BYTE    mri;
-/*01A*/ HWORD   qdioac3;
 #define QETH_AC3_FORMAT2_CQ_AVAILABLE   0x8000
-/*01C*/ HWORD   resv5;
-/*01E*/ BYTE    resv6;
-/*01F*/ BYTE    mmwc;
-/*020*/ } ATTRIBUTE_PACKED;
-
+typedef struct _CHSC_RSP24 CHSC_RSP24;
 
 /*-------------------------------------------------------------------*/
 /* CHSC_REQ31: Enable Facility request. The response is a CHSC_RSP.  */
 /*-------------------------------------------------------------------*/
-struct _CHSC_REQ31;
-typedef struct _CHSC_REQ31 CHSC_REQ31;
-struct _CHSC_REQ31 {                    /* Enable Facility           */
+PACKED(struct _CHSC_REQ31 {             /* Enable Facility           */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   resv1;
 /*006*/ HWORD   facility;               /* Operation Code            */
-#define CHSC_REQ31_MSS          0x0002  /* MSS Facility              */
 /*008*/ FWORD   resv2;
 /*00C*/ FWORD   resv3;
 /*010*/ FWORD   opdata[252];            /* Operation Code Data       */
-/*400*/ } ATTRIBUTE_PACKED;
+/*400*/ });
 
+#define CHSC_REQ31_MSS          0x0002  /* MSS Facility              */
+typedef struct _CHSC_REQ31 CHSC_REQ31;
 
 /*-------------------------------------------------------------------*/
 /* Some requests that aren't supported yet.                          */
 /*-------------------------------------------------------------------*/
-
 /* Reset Control Unit request. The response is a CHSC_RSP            */
-struct _CHSC_REQ1;
-typedef struct _CHSC_REQ1  CHSC_REQ1;
-struct _CHSC_REQ1 {                     /* Reset Control Unit        */
+PACKED(struct _CHSC_REQ1 {              /* Reset Control Unit        */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ BYTE    resv1[3];
@@ -547,19 +509,17 @@ struct _CHSC_REQ1 {                     /* Reset Control Unit        */
 /*008*/ HWORD   resv2;
 /*00A*/ HWORD   sch;                    /* Subchannel number         */
 /*00C*/ FWORD   resv3;
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
+typedef struct _CHSC_REQ1  CHSC_REQ1;
 
-struct _CHSC_REQC;
-typedef struct _CHSC_REQC  CHSC_REQC;
-struct _CHSC_REQC  {
+PACKED(struct _CHSC_REQC  {
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ FWORD   unknown4[3];
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
+typedef struct _CHSC_REQC  CHSC_REQC;
 
-struct _CHSC_REQ26;
-typedef struct _CHSC_REQ26 CHSC_REQ26;
-struct _CHSC_REQ26 {
+PACKED(struct _CHSC_REQ26 {
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ HWORD   unknown4;
@@ -567,28 +527,26 @@ struct _CHSC_REQ26 {
 /*008*/ HWORD   unknown8;
 /*00A*/ HWORD   last_cun;               /* Last control unit number  */
 /*00C*/ FWORD   unknownc;
-/*010*/ } ATTRIBUTE_PACKED;
+/*010*/ });
+typedef struct _CHSC_REQ26 CHSC_REQ26;
 
-struct _CHSC_REQ30;
-typedef struct _CHSC_REQ30 CHSC_REQ30;
-struct _CHSC_REQ30 {
+PACKED(struct _CHSC_REQ30 {
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ BYTE    unknown4;
 /*005*/ BYTE    unknown5[3];
 /*008*/ FWORD   unknown8[6];
-/*020*/ } ATTRIBUTE_PACKED;
+/*020*/ });
+typedef struct _CHSC_REQ30 CHSC_REQ30;
 
-struct _CHSC_REQ32;
-typedef struct _CHSC_REQ32 CHSC_REQ32;
-struct _CHSC_REQ32 {                    /* Store Configur. Component */
+PACKED(struct _CHSC_REQ32 {             /* Store Configur. Component */
 /*000*/ HWORD   length;                 /* Offset to response field  */
 /*002*/ HWORD   req;                    /* Request code              */
 /*004*/ BYTE    ctype;
 /*005*/ BYTE    unknown5[3];
 /*008*/ FWORD   unknown8[6];
-/*020*/ } ATTRIBUTE_PACKED;
-
+/*020*/ });
+typedef struct _CHSC_REQ32 CHSC_REQ32;
 
 
 /*-------------------------------------------------------------------*/
@@ -631,9 +589,5 @@ struct _CHSC_REQ32 {                    /* Store Configur. Component */
 #define CHP_TYPE_FCP   0x25  /* FCP Channel                          */
 #define CHP_TYPE_CIB   0x26  /* Coupling over Infiniband             */
 
-
-#if defined(_MSVC_)
- #pragma pack(pop)
-#endif
 
 #endif /* _CHSC_H */

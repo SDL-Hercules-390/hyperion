@@ -289,25 +289,19 @@ typedef struct _OSA_GRP {
 
 
 /*-------------------------------------------------------------------*/
-/* Pack below OSA Layer headers to byte boundary...                  */
-/*-------------------------------------------------------------------*/
-
-#undef ATTRIBUTE_PACKED
-#if defined(_MSVC_)
- #pragma pack(push)
- #pragma pack(1)
- #define ATTRIBUTE_PACKED
-#else
- #define ATTRIBUTE_PACKED __attribute__((packed))
-#endif
-
-
-/*-------------------------------------------------------------------*/
 /* OSA Layer 2 Header                                                */
 /*-------------------------------------------------------------------*/
-struct OSA_HDR2 {
+PACKED(struct _OSA_HDR2 {
 /*000*/ BYTE    id;             /* Packet Id                         */
 /*001*/ BYTE    flags[3];       /*                                   */
+/*004*/ BYTE    portno;         /*                                   */
+/*005*/ BYTE    hdrlen;         /*                                   */
+/*006*/ HWORD   pktlen;         /*                                   */
+/*008*/ HWORD   seqno;          /*                                   */
+/*00A*/ HWORD   vlanid;         /*                                   */
+/*00C*/ FWORD   resv00c[5];     /*                                   */
+/*020*/ });
+
 #define HDR2_FLAGS0_PASSTHRU    0x10
 #define HDR2_FLAGS0_IPV6        0x80
 #define HDR2_FLAGS0_CASTMASK    0x07
@@ -320,23 +314,25 @@ struct OSA_HDR2 {
 #define HDR2_FLAGS2_BROADCAST   0x02
 #define HDR2_FLAGS2_UNICAST     0x03
 #define HDR2_FLAGS2_VLAN        0x04
-/*004*/ BYTE    portno;         /*                                   */
-/*005*/ BYTE    hdrlen;         /*                                   */
-/*006*/ HWORD   pktlen;         /*                                   */
-/*008*/ HWORD   seqno;          /*                                   */
-/*00A*/ HWORD   vlanid;         /*                                   */
-/*00C*/ FWORD   resv00c[5];     /*                                   */
-/*020*/ } ATTRIBUTE_PACKED;
-
-typedef struct OSA_HDR2 OSA_HDR2;
+typedef struct _OSA_HDR2 OSA_HDR2;
 
 
 /*-------------------------------------------------------------------*/
 /* OSA Layer 3 Header                                                */
 /*-------------------------------------------------------------------*/
-struct OSA_HDR3 {
+PACKED(struct _OSA_HDR3 {
 /*000*/ BYTE    id;             /* Packet Id                         */
 /*001*/ BYTE    flags;          /* Flags                             */
+/*002*/ HWORD   in_cksum;       /* Inbound checksum (TSO: sequence#) */
+/*004*/ FWORD   token;          /* Token  ????      (TSO: reserved)  */
+/*008*/ HWORD   length;         /* Packet size (not including HDR)   */
+/*00A*/ BYTE    vlan_prio;      /* (not used)                        */
+/*00B*/ BYTE    ext_flags;      /* Extended Buffer flags             */
+/*00C*/ HWORD   vlan_id;        /* VLAN ID (if HDR3_EXFLAG_VLANID)   */
+/*00E*/ HWORD   frame_offset;   /* Frame offset (TSO only?)          */
+/*010*/ BYTE    dest_addr[16];  /* Destination address: IPv4[12-15]
+                                   HDR3_EXFLAG_VLANTAG: VTag[12-13]  */
+/*020*/ });                     /* Total length: 32 bytes            */
 
 #define HDR3_FLAGS_IPV6       0x80  /* 1=IPv6, 0=IPv4                */
 #define HDR3_FLAGS_PASSTHRU   0x10  /* Pass through packet (IPv6)    */
@@ -348,13 +344,6 @@ struct OSA_HDR3 {
 #define HDR3_FLAGS_UNICAST    0x06  /* Unicast                       */
 #define HDR3_FLAGS_ANYCAST    0x07  /* Anycast                       */
 #define HDR3_FLAGS_UNUSED     0x68  /* Unused bits; must be zero     */
-
-/*002*/ HWORD   in_cksum;       /* Inbound checksum (TSO: sequence#) */
-/*004*/ FWORD   token;          /* Token  ????      (TSO: reserved)  */
-/*008*/ HWORD   length;         /* Packet size (not including HDR)   */
-/*00A*/ BYTE    vlan_prio;      /* (not used)                        */
-/*00B*/ BYTE    ext_flags;      /* Extended Buffer flags             */
-
 #define HDR3_EXFLAG_UNUSED    0x80  /* Unused; must be zero          */
 #define HDR3_EXFLAG_UDP       0x40  /* 1=UDP packet; 0=TCP           */
 #define HDR3_EXFLAG_TPCKSUM   0x20  /* Trnspt cksum; 1=chked, 0=not  */
@@ -363,14 +352,7 @@ struct OSA_HDR3 {
 #define HDR3_EXFLAG_VLANTAG   0x04  /* VLAN Tag in dest_addr 12-13   */
 #define HDR3_EXFLAG_TOKENID   0x02  /* Token Id present              */
 #define HDR3_EXFLAG_VLANID    0x01  /* vlan_id field present         */
-
-/*00C*/ HWORD   vlan_id;        /* VLAN ID (if HDR3_EXFLAG_VLANID)   */
-/*00E*/ HWORD   frame_offset;   /* Frame offset (TSO only?)          */
-/*010*/ BYTE    dest_addr[16];  /* Destination address: IPv4[12-15]
-                                   HDR3_EXFLAG_VLANTAG: VTag[12-13]  */
-/*020*/ } ATTRIBUTE_PACKED;     /* Total length: 32 bytes            */
-
-typedef struct OSA_HDR3 OSA_HDR3;
+typedef struct _OSA_HDR3 OSA_HDR3;
 
 
 /*-------------------------------------------------------------------*/
@@ -385,11 +367,6 @@ struct OSA_PIME {                       /* OSA Pipe Message          */
 };                                      /*                           */
 
 typedef struct OSA_PIME OSA_PIME;
-
-
-#if defined(_MSVC_)
- #pragma pack(pop)
-#endif
 
 
 #if !defined( OPTION_W32_CTCI )
