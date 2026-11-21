@@ -39,6 +39,24 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* PACKED(...): define a struct with no inter-member padding by      */
+/* wrapping an entire definition so packing is applied only to that  */
+/* struct and can never leak into the rest of the header:            */
+/*                                                                   */
+/*     PACKED(struct _FOO {                                          */
+/*         BYTE    a, b;                                             */
+/*         INT     c;                                                */
+/*     });                                                           */
+/*     typedef struct _FOO FOO;                                      */
+/*-------------------------------------------------------------------*/
+
+#if defined(_MSC_VER)
+  #define PACKED(...)    __pragma(pack(push, 1)) __VA_ARGS__ __pragma(pack(pop))
+#else
+  #define PACKED(...)    __VA_ARGS__ __attribute__((__packed__))
+#endif
+
+/*-------------------------------------------------------------------*/
 /*              Define THREAD_LOCAL attributes by compiler           */
 /*-------------------------------------------------------------------*/
 
