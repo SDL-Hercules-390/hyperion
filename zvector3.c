@@ -14,101 +14,10 @@
  * Chapter 24. Vector Floating-Point Instructions
  */
 
-/*-------------------------------------------------------------------*/
-/* This module implements ESA/390 Binary Floating-Point (IEEE 754)   */
-/* instructions as described in SA22-7201-05 ESA/390 Principles of   */
-/* Operation and SA22-7832-10 z/Architecture Principles of Operation.*/
-/*-------------------------------------------------------------------*/
-/* This module also implements z/Architecture Vector Floating-Point  */
-/* Instructions as described in SA22-7932-10 and later versions of   */
-/* z/Architecture Principles of Operation.                           */
-/*-------------------------------------------------------------------*/
 /*
- * Hercules System/370, ESA/390, z/Architecture emulator zvector3.c
- * Binary (IEEE) Floating Point Instructions
- * Copyright (c) 2001-2009 Willem Konynenberg <wfk@xos.nl>
- * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
- * THDER,THDR by Roger Bowler, 19 July 2003.
- * Additional instructions by Roger Bowler, November 2004:
- *  LXDBR,LXDB,LXEBR,LXEB,LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR,
- *  MXDBR,MXDB,MDEBR,MDEB,MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,
- *  MSEBR,MSEB,DIEBR,DIDBR,TBEDR,TBDR.
- * Based very loosely on float.c by Peter Kuschnerus, (c) 2000-2006.
- * All instructions (except convert to/from HFP/BFP format THDR, THDER,
- *  TBDR and TBEDR) completely updated by "Fish" (David B. Trout)
- *  Aug 2011 to use SoftFloat Floating-Point package by John R. Hauser
- *  (http://www.jhauser.us/arithmetic/SoftFloat.html).
- * June 2016: All instructions (except convert to/from HFP/BFP and
- *  Load Positive/Negative/Complement) completely updated by Stephen
- *  R. Orso to use the updated Softfloat 3a library by John R. Hauser
- *  (link above).  Added interpretation of M3 and M4 operands for
- *  those instructions that support same, conditioned on
- *  FEATURE_037_FP_EXTENSION_FACILITY.  All changes are based
- *  on the -10 edition of the z/Architecture Principles of Operation,
- *  SA22-7832.
- * Spring 2024: z/Architecture Vector Floating-Point Instructions
- *  added based on the -13 edition of the z/Architecture
- *  Principles of Operation, SA22-7832.
+ * See ieee.c for comments regarding SoftFloat and
+ * Binary Floating-Point (IEEE 754)
  */
-/*--------------------------------------------------------------------------*/
-/* Modifications to the Softfloat interface enable use of a separately-     */
-/* packaged Softfloat Library with minimal modifications.                   */
-/*                                                                          */
-/* Modifications required to Softfloat:  (so far)                           */
-/* - Change NaN propagation in the following routines to conform to IBM     */
-/*   NaN propagation rules:                                                 */
-/*      softfloat_propagateNaNF32UI()                                       */
-/*      softfloat_propagateNaNF64UI()                                       */
-/*      softfloat_propagateNaNF128UI()                                      */
-/* - Change the default NaNs defined in softfloat-specialize.h from         */
-/*   negative NaNs to positive NaNs.                                        */
-/*   Change init_detectTininess from softfloat_tininess_afterRounding       */
-/*   to softfloat_tininess_beforeRounding in softfloat-specialize.h, as     */
-/*   required by SA22-7832-10 page 9-22.                                    */
-/* - Change the following Softfloat global state variables in               */
-/*   softfloat-state.c to include the __thread attribute to enable          */
-/*   state separation when multiple CPU threads are running.  Make the      */
-/*   same change for these variables in softfloat.h                         */
-/*      softfloat_roundingMode                                              */
-/*      softfloat_detectTininess                                            */
-/*      softfloat_exceptionFlags                                            */
-/* - Expose the "unbounded exponent results" during round and pack          */
-/*   operations within Softfloat as part of the global state variables.     */
-/*   This enables correct scaling of results on trappable overflow and      */
-/*   underflow operations.  Affected routines:                              */
-/*       softfloat_roundPackToF32()                                         */
-/*       softfloat_roundPackToF64()                                         */
-/*       softfloat_roundPackToF128()                                        */
-/* - Add flags softfloat_flag_incremented and softfloat_flag_tiny.  Raise   */
-/*   incremented when rounding increases the value of the rounded result.   */
-/*   Raise tiny whenever the result is tiny, whether exact or inexact.      */
-/*   Affected routines:                                                     */
-/*       softfloat_roundPackToF32()                                         */
-/*       softfloat_roundPackToF64()                                         */
-/*       softfloat_roundPackToF128()                                        */
-/*   Enable rounding mode "softfloat_round_stickybit" which corresponds     */
-/*   to the IBM rounding mode Round For Shorter Precision.  The following   */
-/*   routines are affected:                                                 */
-/*      softfloat_roundPackToF32()                                          */
-/*      softfloat_roundPackToF64()                                          */
-/*      softfloat_roundPackToF128()                                         */
-/*      softfloat_roundPackToI32()                                          */
-/*      softfloat_roundPackToI64()                                          */
-/*      softfloat_roundPackToUI32()                                         */
-/*      softfloat_roundPackToUI64()                                         */
-/*      f32_roundToInt()                                                    */
-/*      f64_roundToInt()                                                    */
-/*      f128_roundToInt()                                                   */
-/*      softfloat.h  (header)                                               */
-/*   Return 0 instead of max uint-32 (or max uint-64) in fxxx_to_uixx()     */
-/*   IBM requires zero returned per Table 19-19 in SA22-7832-10 p. 19-26.   */
-/*   Affected routines:                                                     */
-/*      softfloat_roundPackToUI32()                                         */
-/*      softfloat_roundPackToUI64()                                         */
-/*                                                                          */
-/*   These modifications, and the unmodified Softfloat 3a source, are       */
-/*   maintained in a separate public repository                             */
-/*--------------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -537,7 +446,7 @@ static INLINE BYTE ARCH_DEP( float32_compare )( float32_t op1, float32_t op2 )
 
 #if !defined( _IEEE_NONARCHDEP_ )
 
-//  #if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
 /*
  * Calculate result for a pair of data classes
  */
@@ -2088,7 +1997,7 @@ static int convert_result_fmin_abs( int result_in )
     return result_out;
 }
 
-//  #endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
+#endif /* defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) */
 
 #endif /* !defined( _IEEE_NONARCHDEP_ ) */
 
