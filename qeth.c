@@ -1110,6 +1110,10 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
             | (grp->debugmask ? IFF_DEBUG : 0)
 #endif
             | (grp->promisc ? IFF_PROMISC : 0)
+            /* In l2tap mode the device's own MAC intentionally differs from
+               the emulated OSA MAC, so the TAP needs promiscuous mode to see
+               the frames addressed to it. */
+            | (grp->l2tap ? IFF_PROMISC : 0)
             );
 
 #if !defined( HAVE_NET_IF_UTUN_H )
@@ -1271,7 +1275,12 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     /* Make sure the interface has a valid MAC address.      */
     /* TUN's of course don't have MAC addresses, only TAP's. */
     if (grp->tthwaddr) {
-        if (!grp->l3 || grp->l2tap)
+        /* NOTE: in the opt-in l2tap mode the OSA MAC is only used inside
+           the emulated frames; it must NOT be assigned to the TAP device.
+           A bridge keeps a "local" FDB entry for each port's own MAC and
+           would consume the frames addressed to the OSA MAC instead of
+           forwarding them to the TAP, so nothing would ever be received. */
+        if (!grp->l3)
         {
             if ((rc = TUNTAP_SetMACAddr( grp->ttifname, grp->tthwaddr )) != 0)
             {
