@@ -3948,6 +3948,61 @@ FISH TEST...
                     </i>
                     <p>
 
+                <dt><code>tap</code>
+                <dd><p>
+                    <b><i>Only available on Linux</i></b><br>
+                    Opt-in: carries the Layer-3 OSA traffic over a TAP
+                    (Ethernet) device bridged to the host LAN instead of the
+                    default point-to-point TUN device.
+                    <p>
+                    This is what guests which rely on the OSA ARP-processing
+                    assist (IP assist) need in order to resolve next-hop MAC
+                    addresses.  The most notable case is z/OS, which supports
+                    OSA Layer&nbsp;3 only: a real OSA-Express performs the MAC
+                    addressing and ARP processing on its behalf, while a plain
+                    TUN device has no ARP at all.
+                    <p>
+                    In this mode Hercules emulates the OSA Layer-3 IP assist:
+                    it maintains an IP&nbsp;&rarr;&nbsp;MAC cache, answers ARP
+                    requests for the configured addresses, and sends ARP
+                    requests for next hops it does not yet know, holding the
+                    packet until the address is resolved (up to three ARP
+                    attempts per next hop).  The host TAP device must be
+                    bridged to the LAN segment the guest address belongs to.
+                    <p>
+                    IPv4 is supported; IPv6 frames are discarded in this mode.
+                    When the option is not specified the behaviour is exactly
+                    the historical Layer-3/TUN one.
+                    <p>
+                    IPv4 group traffic is filtered the way an OSA filters it:
+                    the guest only receives the all-hosts address
+                    (<code>224.0.0.1</code>); other multicast and broadcast
+                    frames stay on the segment and are not passed up, since a
+                    Layer-3 guest has no use for them.  ARP frames are consumed
+                    by Hercules and are never delivered to the guest.
+                    <p>
+                    <i>
+                    <b>Note:</b> The <code>ipaddr</code> option (with either a
+                    prefix length or <code>netmask</code>) should be specified:
+                    it defines the address Hercules answers ARP requests for,
+                    and the subnet used to decide whether a destination is
+                    on-link or has to go through <code>gateway</code>.
+                    </i>
+                    <p>
+
+                <dt><code>gateway &nbsp;<em>address</em></code>
+                <dd><p>
+                    <b><i>Only valid together with <code>tap</code></i></b><br>
+                    Specifies the IPv4 address of the default gateway used for
+                    off-subnet destinations.  Packets whose destination is not
+                    part of the subnet defined by <code>ipaddr</code> and
+                    <code>netmask</code> (or the prefix length) are framed to
+                    this address instead of being ARPed for directly.
+                    <p>
+                    Specify the same address as the default route in the
+                    guest's TCP/IP profile.
+                    <p>
+
                 <dt><code>mtu &nbsp;<em>bytes</em></code>
                 <dd><p>
                     Specifies the Maximum Transmission Unit to be used.

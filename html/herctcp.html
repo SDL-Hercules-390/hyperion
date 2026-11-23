@@ -398,6 +398,58 @@ route add defaultroute gw 192.168.200.2
 Linux/390 will autodetect the CTC devices E20 and E21
 at startup and will assign the interface name ctc0.
 
+<h2>Connecting a z/OS guest with the OSA (QETH) "tap" transport</h2>
+<p>
+z/OS supports OSA Layer&nbsp;3 only (OSA Layer&nbsp;2 is a z/VM and
+zLinux feature).  In Layer&nbsp;3 the OSA-Express itself performs the MAC
+addressing and the ARP processing on behalf of the guest: the guest
+negotiates what IBM calls the <i>IP assist</i> and then expects the card
+to resolve next-hop MAC addresses for it.  A plain TUN device has no ARP
+whatsoever, which is why a z/OS guest configured on top of it receives
+packets but never transmits any.
+<p>
+The <code>QETH</code> device therefore has an opt-in <code>tap</code>
+keyword which carries the guest traffic over a TAP (Ethernet) device
+bridged to the LAN and makes Hercules emulate the OSA Layer-3 IP assist
+(IP&nbsp;&rarr;&nbsp;MAC cache, ARP request/reply, optional default
+gateway).  See the <a href="hercconf.html#QETH">QETH</a> configuration
+section for the details of the keywords.
+<p>
+A minimal host configuration looks like this:
+<pre>
+1500.4 QETH ipaddr 10.0.2.200/24 hwaddr 02-00-00-11-10-00 mtu 1500
+           tap gateway 10.0.2.1 iface /dev/net/tun
+</pre>
+<p>
+The TAP device created by Hercules must be attached to a Linux bridge
+which is connected to the LAN segment that <code>10.0.2.0/24</code>
+belongs to.  Hercules needs read/write access to <code>/dev/net/tun</code>
+and the <code>CAP_NET_ADMIN</code> capability (or root) to configure the
+interface and the bridge port.
+<p>
+On the z/OS side the interface is defined as usual; just make sure that
+the default route points at the address given with <code>gateway</code>:
+<pre>
+INTERFACE OSA1500
+  DEFINE IPAQENET
+  CHPIDTYPE OSD
+  IPADDR 10.0.2.200/24
+  MTU 1500
+  PORTNAME OSAFE
+PRIMARYINTERFACE OSA1500
+BEGINROUTES
+  ROUTE 10.0.2.0   255.255.255.0 =  OSA1500L MTU 1500
+  ROUTE DEFAULT    10.0.2.1      OSA1500L MTU 1500
+ENDROUTES
+START OSA1500
+</pre>
+<p>
+After the interface is started, <code>NETSTAT DEVLINKS</code> should show
+both <code>BytesIn</code> and <code>BytesOut</code> advancing, and
+<code>ping</code> from the LAN must get replies.  Note that in this mode
+Hercules discards IPv6 frames; use a Layer-2 capable guest (z/VM, Linux)
+if IPv6 connectivity is required.
+
 <h2>What to do if TUN/TAP doesn't work</h2>
 <p>
 Check the following (thanks to Richard Higson for this checklist):

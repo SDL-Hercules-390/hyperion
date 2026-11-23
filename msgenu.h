@@ -825,7 +825,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00916 "%1d:%04X %s: Option %s value %s invalid"
 #define HHC00917 "%1d:%04X %s: Required parameter '%s' missing"
 #define HHC00918 "%1d:%04X %s: Option %s unknown or specified incorrectly"
-//efine HHC00919 (available)
+#define HHC00919 "%1d:%04X %s: Option %s is not supported on this platform"
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
 #define HHC00921 "CTC: lcs device port %2.2X: %s Multicast assist enabled"
 #define HHC00922 "%1d:%04X CTC: lcs command packet received"
