@@ -4905,7 +4905,7 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
     decimal128ToNumber(&x2, &d2);
     decimal128ToNumber(&x3, &d3);
-    decNumberQuantize(&d1, &d2, &d3, &set);
+    decNumberQuantize(&d1, &d3, &d2, &set);
     decimal128FromNumber(&x1, &d1, &set);
 
     /* Check for exception condition */
@@ -4949,7 +4949,7 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
     decimal64ToNumber(&x2, &d2);
     decimal64ToNumber(&x3, &d3);
-    decNumberQuantize(&d1, &d2, &d3, &set);
+    decNumberQuantize(&d1, &d3, &d2, &set);
     decimal64FromNumber(&x1, &d1, &set);
 
     /* Check for exception condition */
