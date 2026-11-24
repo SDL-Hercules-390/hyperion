@@ -224,6 +224,8 @@ char           *cu = NULL;              /* Specified control unit    */
 bool            cckd = false;           /* true if compressed CCKD   */
 char         filename[FILENAME_MAX+3];  /* work area for display     */
 BYTE            serial[12+1] = {0};     /* Dasd serial number        */
+int             blkcyls = 0;            /* cyls= value, 0 if absent  */
+bool            blkdev = false;         /* true if host block device */
 
     dev->rcd = &dasd_build_ckd_config_data;
 
@@ -344,6 +346,19 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
             cu = argv[i]+3;
             continue;
         }
+        if (strlen (argv[i]) > 5
+         && strncasecmp("cyls=", argv[i], 5) == 0)
+        {
+            /* Cylinder count: required for a host block device,
+               whose size is rounded up and so cannot give it */
+            char *endp;
+            long  n = strtol( argv[i]+5, &endp, 10 );
+            if (*endp == 0 && n > 0 && n <= 0xFFFFFF)
+            {
+                blkcyls = (int) n;
+                continue;
+            }
+        }
         if (strlen (argv[i]) > 4
          && memcmp("ser=", argv[i], 4) == 0)
         {
@@ -402,6 +417,24 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
             WRMSG( HHC00404, "E", LCSS_DEVNUM, filename, "fstat()", strerror( errno ));
             return -1;
         }
+
+#if defined( OPTION_CKD_BLKDEVICE ) && defined( BLKGETSIZE64 )
+        /* A host block device (disk partition, LVM logical volume)
+           reports no size through fstat: ask the kernel instead */
+        if (S_ISBLK( statbuf.st_mode ))
+        {
+            U64 blksize;
+
+            if (ioctl( dev->fd, BLKGETSIZE64, &blksize ) < 0)
+            {
+                // "%1d:%04X CKD file %s: error in function %s: %s"
+                WRMSG( HHC00404, "E", LCSS_DEVNUM, filename, "ioctl()", strerror( errno ));
+                return -1;
+            }
+            blkdev = true;
+            statbuf.st_size = (off_t) blksize;
+        }
+#endif // defined( OPTION_CKD_BLKDEVICE ) && defined( BLKGETSIZE64 )
 
         /* Read the device header */
         rc = read (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
@@ -485,6 +518,14 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
                 WRMSG( HHC00403, "I", LCSS_DEVNUM, CKDTYP( cckd, 0 ),
                     filename, dev->ckdfakewr ? " with fake writing" : "" );
 
+        if (blkdev && (cckd || dev->dasdcopy))
+        {
+            // "%1d:%04X %s file %s: %s not supported on a block device"
+            WRMSG( HHC00477, "E", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename,
+                   cckd ? "compressed dasd" : "dasdcopy output" );
+            return -1;
+        }
+
         /* Read the compressed device header */
         if (cckd)
         {
@@ -514,7 +555,40 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
         if (!cckd)
         {
-            if (dev->dasdcopy == 0)
+            if (blkdev)
+            {
+                /* The device is larger than the volume (its size is
+                   rounded up): take the cylinder count from cyls= */
+                if (!blkcyls)
+                {
+                    // "%1d:%04X %s file %s: block device requires the cyls= parameter"
+                    WRMSG( HHC00478, "E", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename );
+                    return -1;
+                }
+                cyls = blkcyls;
+                trks = cyls * heads;
+                if (devhdr.dh_fileseq == 1 && highcyl == cyls)
+                {
+                    devhdr.dh_fileseq = 0;
+                    highcyl = 0;
+                }
+                if (devhdr.dh_fileseq != 0 || highcyl != 0)
+                {
+                    // "%1d:%04X %s file %s: %s not supported on a block device"
+                    WRMSG( HHC00477, "E", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename,
+                           "multiple file volume" );
+                    return -1;
+                }
+                if (((off_t)trks * trksize) + CKD_DEVHDR_SIZE > statbuf.st_size)
+                {
+                    // "%1d:%04X %s file %s: block device size %"PRIu64" is less than the %"PRIu64" bytes needed for %d cylinders"
+                    WRMSG( HHC00479, "E", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename,
+                           (U64) statbuf.st_size,
+                           (U64) trks * trksize + CKD_DEVHDR_SIZE, cyls );
+                    return -1;
+                }
+            }
+            else if (dev->dasdcopy == 0)
             {
                 trks = (int)((statbuf.st_size - CKD_DEVHDR_SIZE) / trksize);
                 cyls = trks / heads;
@@ -583,7 +657,7 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         }
 
         /* Consistency check device header */
-        if (!cckd && dev->dasdcopy == 0 && (cyls * heads != trks
+        if (!cckd && !blkdev && dev->dasdcopy == 0 && (cyls * heads != trks
             || ((off_t)trks * trksize) + CKD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
@@ -634,6 +708,15 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
     /* Restore the last character of the file name */
     *sfxptr = sfxchar;
+
+    /* cyls= is optional for an image file, but must then match it */
+    if (blkcyls && blkcyls != dev->ckdcyls)
+    {
+        // "%1d:%04X %s file %s: cyls=%d does not match the %d cylinders of the image"
+        WRMSG( HHC00473, "E", LCSS_DEVNUM, CKDTYP( cckd, 0 ), filename,
+               blkcyls, dev->ckdcyls );
+        return -1;
+    }
 
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);

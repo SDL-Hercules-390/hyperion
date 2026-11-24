@@ -202,6 +202,7 @@
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported!)          */
 #endif
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
+#undef  OPTION_CKD_BLKDEVICE            /* (no CKD BLKDEVICE support)*/
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #undef  MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" same as "fOo"!!)   */
 
@@ -279,6 +280,7 @@
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
+#undef  OPTION_CKD_BLKDEVICE            /* (no CKD BLKDEVICE support)*/
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
@@ -326,6 +328,7 @@
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
+#define OPTION_CKD_BLKDEVICE            /* CKD block device support  */
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
 
@@ -355,6 +358,7 @@
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
+#undef  OPTION_CKD_BLKDEVICE            /* (no CKD BLKDEVICE support)*/
 #define MAX_DEVICE_THREADS        255   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
 #if defined( HAVE_FORK )
@@ -384,6 +388,7 @@ WARNING( "unknown target platform: defaulting to generic platform settings" )
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
+#undef  OPTION_CKD_BLKDEVICE            /* (no CKD BLKDEVICE support)*/
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
 #if defined( HAVE_FORK )
