@@ -10725,7 +10725,7 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
                 MSGBUF( buf, "Observed MIPS and SIOs rates:"
                             "\n    Current MIPS rate:     %8.2f\t\t     SIOs rate:    %8.2f"
                             "\n    Peak    MIPS rate:     %8.2f\t\tPeak SIOs rate:    %8.2f\n"
-                            "\n    Current MIPS Average:  %8.2f\t\t     SIOs average: %8.2f\t(over last %2lu seconds)"
+                            "\n    Current MIPS Average:  %8.2f\t\t     SIOs average: %8.2f\t(over last %2"PRIu64" seconds)"
                             "\n    Peak    MIPS Average:  %8.2f\t\tPeak SIOs average: %8.2f",
                             sysblk.ic_history_current_mips,
                             sysblk.ic_history_current_sios,
@@ -11068,13 +11068,13 @@ int mips_cmd(int argc, char *argv[],char *cmdline)
                         "\n    ic_history_interval:         %d"
                         "\n    ic_history_avg_over:         %d"
                         "\n    IC_history_next:             %d"
-                        "\n    ic_history_avg_time:         %ld"
-                        "\n    ic_history_last_period:      %ld"
-                        "\n    ic_history_last_period_ic:   %ld"
-                        "\n    ic_history_last_period_sios: %ld"
-                        "\n    ic_history_last_period_time: %ld"
-                        "\n    instcount:                   %ld"
-                        "\n    sioscount:                   %ld",
+                        "\n    ic_history_avg_time:         %"PRIu64""
+                        "\n    ic_history_last_period:      %"PRIu64""
+                        "\n    ic_history_last_period_ic:   %"PRIu64""
+                        "\n    ic_history_last_period_sios: %"PRIu64""
+                        "\n    ic_history_last_period_time: %"PRIu64""
+                        "\n    instcount:                   %"PRIu64""
+                        "\n    sioscount:                   %"PRIu64"",
                         sysblk.ic_history_enabled,
                         sysblk.ic_history_panel_enabled,
                         sysblk.ic_history_empty,
