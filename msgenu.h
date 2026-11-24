@@ -2767,7 +2767,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 // range 17900 - 17999 available
 
 // range 18000 - 18999 available
-// range 19000 - 19999 available
+
+// range 19000 - 19199 reserved for tcpnje.c, which primarily uses logmsg and DBGMSG.
+
+// range 19200 - 18999 available
 
 // range 20000 - 29999 available
 // range 30000 - 39999 available
@@ -2904,6 +2907,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 // range 99000 - 99999 available
 
 #define HHC99998 "FreeBSD: %s %s"   // Dumping all FreeBSD debugging in one spot
-#define HHC99999 "FreeBSD: %s" 	    // Dumping all FreeBSD debugging in one spot
+#define HHC99999 "FreeBSD: %s"      // Dumping all FreeBSD debugging in one spot
 
 #endif // _MSGENU_H_

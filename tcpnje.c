@@ -152,13 +152,13 @@ static void logdump(char *txt, DEVBLK *dev, BYTE *bfr, size_t sz)
         return;
     }
 
-    logmsg("HHCTN101D %4.4X:%s\n",
+    logmsg("HHC19101D %4.4X:%s\n",
             dev->devnum, txt);
-    logmsg("HHCTN102D %4.4X:%s : Dump of %d (%x) byte(s)\n",
+    logmsg("HHC19102D %4.4X:%s : Dump of %d (%x) byte(s)\n",
             dev->devnum, txt, (int)sz, (int)sz);
     for(i = 0; i < sz; i += 16)
     {
-        logmsg("HHCTN103D %4.4X:%s : %4.4X:",
+        logmsg("HHC19103D %4.4X:%s : %4.4X:",
                 dev->devnum, txt, (unsigned int)i);
         for(j = 0; (j < 16) && ((i + j) < sz); j++)
         {
@@ -259,13 +259,13 @@ static void tcpnje_clean_device(DEVBLK *dev)
 
         if (dev->ccwtrace)
         {
-            logmsg("HHCTN104D %4.4X:TCPNJE - control block freed\n",
+            logmsg("HHC19104D %4.4X:TCPNJE - control block freed\n",
                     dev->devnum);
         }
     }
     else
     {
-        logmsg("HHCTN023E %4.4X:TCPNJE - control block not freed : not allocated\n",
+        logmsg("HHC19023E %4.4X:TCPNJE - control block not freed : not allocated\n",
                 dev->devnum);
     }
     return;
@@ -281,7 +281,7 @@ static int tcpnje_alloc_device(DEVBLK *dev)
     dev->commadpt = malloc(sizeof(struct TCPNJE));
     if (dev->commadpt == NULL)
     {
-        logmsg("HHCTN020E %4.4X:TCPNJE - memory allocation failure for main control block\n",
+        logmsg("HHC19020E %4.4X:TCPNJE - memory allocation failure for main control block\n",
                 dev->devnum);
         return -1;
     }
@@ -373,14 +373,14 @@ static int tcpnje_listen(struct TCPNJE *tn)
     tn->lfd = socket(AF_INET, SOCK_STREAM, 0);
     if (tn->lfd < 0)
     {
-        DBGMSG(4, "HHCTN003E %4.4X:TCPNJE - cannot obtain socket for incoming calls : %s\n",
+        DBGMSG(4, "HHC19003E %4.4X:TCPNJE - cannot obtain socket for incoming calls : %s\n",
                 tn->dev->devnum, strerror(HSO_errno));
         return -1;
     }
 
     if (!socket_is_socket(tn->lfd))
     {
-        DBGMSG(4, "HHCTN028E %4.4X:TCPNJE - cannot use socket obtained for incoming calls : %s\n",
+        DBGMSG(4, "HHC19028E %4.4X:TCPNJE - cannot use socket obtained for incoming calls : %s\n",
                 tn->dev->devnum, strerror(HSO_errno));
         close_socket(tn->lfd);
         tn->lfd = -1;
@@ -392,7 +392,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
     rc = socket_set_blocking_mode(tn->lfd, 0);
     if (rc < 0)
     {
-        DBGMSG(4, "HHCTN029E %4.4X:TCPNJE - error setting socket for incoming calls to non-blocking : %s\n",
+        DBGMSG(4, "HHC19029E %4.4X:TCPNJE - error setting socket for incoming calls to non-blocking : %s\n",
                 tn->dev->devnum, strerror(HSO_errno));
         close_socket(tn->lfd);
         tn->lfd = -1;
@@ -405,7 +405,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
     rc = setsockopt(tn->lfd, SOL_SOCKET, SO_REUSEADDR, (GETSET_SOCKOPT_T*)&sockopt, sizeof(sockopt));
     if (rc < 0)
     {
-        DBGMSG(4, "HHCTN030W %4.4X:TCPNJE - unable to set SO_REUSEADDR option on listening socket: %s\n",
+        DBGMSG(4, "HHC19030W %4.4X:TCPNJE - unable to set SO_REUSEADDR option on listening socket: %s\n",
                 tn->dev->devnum, strerror(HSO_errno));
     }
 
@@ -426,7 +426,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
     {
         if (savederrno == HSO_EADDRINUSE)
         {
-            DBGMSG(32, "HHCTN004W %4.4X:TCPNJE - listener: address/port combination %s:%d currently in use\n",
+            DBGMSG(32, "HHC19004W %4.4X:TCPNJE - listener: address/port combination %s:%d currently in use\n",
                         tn->dev->devnum, inet_ntoa(intmp), tn->lport);
             close_socket(tn->lfd);
             tn->lfd = -1;
@@ -439,7 +439,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
                 (savederrno == HSO_EACCES)
 #endif /* __VMS */
         {
-            DBGMSG(32, "HHCTN031W %4.4X:TCPNJE - no permission to bind privileged port %d for listen\n",
+            DBGMSG(32, "HHC19031W %4.4X:TCPNJE - no permission to bind privileged port %d for listen\n",
                         tn->dev->devnum, tn->lport);
             close_socket(tn->lfd);
             tn->lfd = -1;
@@ -447,7 +447,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
         }
         else
         {
-            DBGMSG(4, "HHCTN018W %4.4X:TCPNJE - bind for incoming connections to %s:%d failed: %s\n",
+            DBGMSG(4, "HHC19018W %4.4X:TCPNJE - bind for incoming connections to %s:%d failed: %s\n",
                          tn->dev->devnum, inet_ntoa(intmp), tn->lport, strerror(savederrno));
             close_socket(tn->lfd);
             tn->lfd = -1;
@@ -458,14 +458,14 @@ static int tcpnje_listen(struct TCPNJE *tn)
     /* Start the listen */
     if (listen(tn->lfd, 10))
     {
-        DBGMSG(4, "HHCTN032W %4.4X:TCPNJE - listen on %d:%s for incoming TCP connections failed: %s\n",
+        DBGMSG(4, "HHC19032W %4.4X:TCPNJE - listen on %d:%s for incoming TCP connections failed: %s\n",
                     tn->dev->devnum, tn->lport, inet_ntoa(intmp), strerror(HSO_errno));
         close_socket(tn->lfd);
         tn->lfd = -1;
         rc = -7;
     }
 
-    DBGMSG(128, "HHCTN005I %4.4X:TCPNJE - listening on %s:%d for incoming connections\n",
+    DBGMSG(128, "HHC19005I %4.4X:TCPNJE - listening on %s:%d for incoming connections\n",
             tn->dev->devnum, inet_ntoa(intmp), tn->lport);
 
     if (tn->state < TCPLISTEN) tn->state = TCPLISTEN;
@@ -497,7 +497,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
     /* Are we randomly delaying to avoid colliding with other end's open attempts? */
     if (tn->activeopendelay && tn->listen)
     {
-        DBGMSG(256, "HHCTN033I %4.4X:TCPNJE - delaying link %s - %s active open for %d attempt(s)\n",
+        DBGMSG(256, "HHC19033I %4.4X:TCPNJE - delaying link %s - %s active open for %d attempt(s)\n",
                      tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                                  guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode), tn->activeopendelay);
         if (tn->activeopendelay > 3) USLEEP(1000);
@@ -509,14 +509,14 @@ static int tcpnje_connout(struct TCPNJE *tn)
 
     if (tn->rhost == INADDR_NONE)
     {
-        DBGMSG(2, "HHCTN034W %4.4X:TCPNJE - cannot make outgoing connection.  Remote ip address not specified\n",
+        DBGMSG(2, "HHC19034W %4.4X:TCPNJE - cannot make outgoing connection.  Remote ip address not specified\n",
                 tn->dev->devnum);
         return(-1);
     }
 
     if (socket_is_socket(tn->afd))
     {
-        DBGMSG(1, "HHCTN035W %4.4X:TCPNJE - closing outgoing socket as it is unexpectedly open\n",
+        DBGMSG(1, "HHC19035W %4.4X:TCPNJE - closing outgoing socket as it is unexpectedly open\n",
                 tn->dev->devnum);
         close_socket(tn->afd);
     }
@@ -525,7 +525,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
     rc = socket_set_blocking_mode(tn->afd, 0);
     if (rc < 0)
     {
-        DBGMSG(4, "HHCTN036E %4.4X:TCPNJE - error setting socket for outgoing calls to non-blocking : %s\n",
+        DBGMSG(4, "HHC19036E %4.4X:TCPNJE - error setting socket for outgoing calls to non-blocking : %s\n",
                 tn->dev->devnum, strerror(HSO_errno));
         return(-1);
     }
@@ -533,7 +533,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
     /* Last chance to avoid connecting both ways at the same time */
     if (tn->state < TCPCONACT)
     {
-        DBGMSG(128, "HHCTN037I %4.4X:TCPNJE - connecting out to %s:%d for link %s - %s\n",
+        DBGMSG(128, "HHC19037I %4.4X:TCPNJE - connecting out to %s:%d for link %s - %s\n",
                 tn->dev->devnum, inet_ntoa(intmp), tn->rport,
                 guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
@@ -553,7 +553,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
             else
             {
                 intmp.s_addr = tn->rhost;
-                DBGMSG(32, "HHCTN001W %4.4X:TCPNJE - connect out to %s:%d failed for link %s - %s : %s\n",
+                DBGMSG(32, "HHC19001W %4.4X:TCPNJE - connect out to %s:%d failed for link %s - %s : %s\n",
                         tn->dev->devnum, inet_ntoa(intmp), tn->rport,
                         guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                         guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode), strerror(HSO_errno));
@@ -566,7 +566,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
                 return(-1);
             }
         }
-        DBGMSG(128, "HHCTN038I %4.4X:TCPNJE - connected out to %s:%d for link %s - %s\n",
+        DBGMSG(128, "HHC19038I %4.4X:TCPNJE - connected out to %s:%d for link %s - %s\n",
                 tn->dev->devnum, inet_ntoa(intmp), tn->rport,
                 guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
@@ -603,7 +603,7 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
         {
             /* EON MUST be last data byte */
 
-            DBGMSG(2, "HHCTN039E %4.4X:TCPNJE - found data beyond EON\n",
+            DBGMSG(2, "HHC19039E %4.4X:TCPNJE - found data beyond EON\n",
                     tn->dev->devnum);
 
             incdata = 1;
@@ -618,9 +618,9 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
                     {
                         incdata = 1;
 
-                        DBGMSG(2, "HHCTN040E %4.4X:TCPNJE - found incorrect IP address section at position %d\n",
+                        DBGMSG(2, "HHC19040E %4.4X:TCPNJE - found incorrect IP address section at position %d\n",
                                 tn->dev->devnum, dotcount + 1);
-                        DBGMSG(2, "HHCTN041E %4.4X:TCPNJE - %d greater than 255\n",
+                        DBGMSG(2, "HHC19041E %4.4X:TCPNJE - %d greater than 255\n",
                                 tn->dev->devnum, cur);
                         break;
                     }
@@ -633,7 +633,7 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
                 {
                     incdata = 1;
 
-                    DBGMSG(2, "HHCTN042E %4.4X:TCPNJE - too many separators in dial data\n",
+                    DBGMSG(2, "HHC19042E %4.4X:TCPNJE - too many separators in dial data\n",
                             tn->dev->devnum);
 
                     break;
@@ -650,7 +650,7 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
             case 0x0f:
                 incdata = 1;
 
-                DBGMSG(2, "HHCTN043E %4.4X:TCPNJE - incorrect dial data byte %2.2x\n",
+                DBGMSG(2, "HHC19043E %4.4X:TCPNJE - incorrect dial data byte %2.2x\n",
                         tn->dev->devnum, tn->dialdata[i]);
 
                 break;
@@ -671,7 +671,7 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
     if (dotcount < 4)
     {
 
-        DBGMSG(2, "HHCTN044E %4.4X:TCPNJE - not enough separators (only %d found) in dial data\n",
+        DBGMSG(2, "HHC19044E %4.4X:TCPNJE - not enough separators (only %d found) in dial data\n",
                 tn->dev->devnum, dotcount);
 
         return -1;
@@ -679,7 +679,7 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
     if (cur > 65535)
     {
 
-        DBGMSG(2, "HHCTN045E %4.4X:TCPNJE - destination TCP port %d exceeds maximum of 65535\n",
+        DBGMSG(2, "HHC19045E %4.4X:TCPNJE - destination TCP port %d exceeds maximum of 65535\n",
                 tn->dev->devnum, cur);
 
         return -1;
@@ -776,7 +776,7 @@ static int tcpnje_read(int fd, struct TNBUFFER *buffer, size_t wanted, struct TC
 
     if (wanted > buffer->size)
     {
-        DBGMSG(1, "HHCTN046E %4.4X:TCPNJE - no room in input buffer for %d bytes requested. Stopping link.\n",
+        DBGMSG(1, "HHC19046E %4.4X:TCPNJE - no room in input buffer for %d bytes requested. Stopping link.\n",
                 tn->dev->devnum, (int)wanted);
         tcpnje_close(fd, tn);
     }
@@ -805,12 +805,12 @@ static int tcpnje_read(int fd, struct TNBUFFER *buffer, size_t wanted, struct TC
         {
             if (done == 0)
             {
-                DBGMSG(4, "HHCTN047W %4.4X:TCPNJE - connection unexpectedly closed by remote peer.\n",
+                DBGMSG(4, "HHC19047W %4.4X:TCPNJE - connection unexpectedly closed by remote peer.\n",
                         tn->dev->devnum);
             }
             else
             {
-                DBGMSG(4, "HHCTN048E %4.4X:TCPNJE - error reading from socket: %s\n",
+                DBGMSG(4, "HHC19048E %4.4X:TCPNJE - error reading from socket: %s\n",
                         tn->dev->devnum, strerror(HSO_errno));
             }
             tcpnje_close(fd, tn);
@@ -858,7 +858,7 @@ static int tcpnje_write(int fd, struct TNBUFFER *buffer, struct TCPNJE *tn)
 
     savederrno = HSO_errno;   /* In case logmsg() mangles errno */
 
-    DBGMSG(128, "HHCTN105D %4.4X:TCPNJE - wrote %d out of %d bytes\n",
+    DBGMSG(128, "HHC19105D %4.4X:TCPNJE - wrote %d out of %d bytes\n",
             tn->dev->devnum, count - part, count);
 
     /* Did the whole buffer get written? */
@@ -874,7 +874,7 @@ static int tcpnje_write(int fd, struct TNBUFFER *buffer, struct TCPNJE *tn)
             /* Contending for write on main data socket? */
             if (!tn->holdoutgoing && (fd == tn->sfd))
             {
-                DBGMSG(128, "HHCTN106D %4.4X:TCPNJE - holding outgoing data transmission due to write contention\n",
+                DBGMSG(128, "HHC19106D %4.4X:TCPNJE - holding outgoing data transmission due to write contention\n",
                         tn->dev->devnum);
                 tn->holdoutgoing = 1;
             }
@@ -882,7 +882,7 @@ static int tcpnje_write(int fd, struct TNBUFFER *buffer, struct TCPNJE *tn)
         }
         else
         {
-            DBGMSG(4, "HHCTN049E %4.4X:TCPNJE - Attempt to write %d bytes to output socket only wrote %d bytes. Error: %s\n",
+            DBGMSG(4, "HHC19049E %4.4X:TCPNJE - Attempt to write %d bytes to output socket only wrote %d bytes. Error: %s\n",
                     tn->dev->devnum, count, count - part, strerror(savederrno));
             tcpnje_close(fd, tn);
             return -1;
@@ -893,7 +893,7 @@ static int tcpnje_write(int fd, struct TNBUFFER *buffer, struct TCPNJE *tn)
     /* reason for holding outgoing data on main data socket, resume sending.  */
     if (tn->holdoutgoing && (fd == tn->sfd))
     {
-        DBGMSG(128, "HHCTN107D %4.4X:TCPNJE - resuming outgoing data transmission after successful network write\n",
+        DBGMSG(128, "HHC19107D %4.4X:TCPNJE - resuming outgoing data transmission after successful network write\n",
                 tn->dev->devnum);
 
         tn->holdoutgoing = 0;
@@ -947,7 +947,7 @@ static void tcpnje_ttc(int fd, const BYTE *type, int reason, struct TCPNJE *tn)
                 tn->ttcactbuf.base.ttc->rip = INADDR_ANY;
             }
             intmp.s_addr = tn->ttcactbuf.base.ttc->rip;
-            DBGMSG(4, "HHCTN050W %4.4X:TCPNJE - Error obtaining local ip address for TCPNJE OPEN: %s. Using %s\n",
+            DBGMSG(4, "HHC19050W %4.4X:TCPNJE - Error obtaining local ip address for TCPNJE OPEN: %s. Using %s\n",
                     tn->dev->devnum, strerror(HSO_errno), inet_ntoa(intmp));
         }
 
@@ -970,7 +970,7 @@ static void tcpnje_ttc(int fd, const BYTE *type, int reason, struct TCPNJE *tn)
                 tn->ttcactbuf.base.ttc->oip = INADDR_ANY;
             }
             intmp.s_addr = tn->ttcactbuf.base.ttc->oip;
-            DBGMSG(4, "HHCTN051W %4.4X:TCPNJE - Error obtaining remote ip address for TCPNJE OPEN: %s. Using %s\n",
+            DBGMSG(4, "HHC19051W %4.4X:TCPNJE - Error obtaining remote ip address for TCPNJE OPEN: %s. Using %s\n",
                     tn->dev->devnum, strerror(HSO_errno), inet_ntoa(intmp));
         }
     }
@@ -985,7 +985,7 @@ static void tcpnje_ttc(int fd, const BYTE *type, int reason, struct TCPNJE *tn)
 
     tn->ttcactbuf.base.ttc->r = reason;
 
-    DBGMSG(256, "HHCTN108D %4.4X:TCPNJE - sending TCPNJE %s for link %s - %s",
+    DBGMSG(256, "HHC19108D %4.4X:TCPNJE - sending TCPNJE %s for link %s - %s",
                     tn->dev->devnum, guest_to_host_string(typestring, sizeof(typestring), type),
                     guest_to_host_string(lnodestring, sizeof(lnodestring), tn->ttcactbuf.base.ttc->rhost),
                     guest_to_host_string(rnodestring, sizeof(rnodestring), tn->ttcactbuf.base.ttc->ohost));
@@ -1016,7 +1016,7 @@ static void tcpnje_ttc(int fd, const BYTE *type, int reason, struct TCPNJE *tn)
             }
         }
         text[i] = '\0';
-        DBGMSG(8, "HHCTN052E %4.4X:TCPNJE - Error writing %s TTC to network: %s\n",
+        DBGMSG(8, "HHC19052E %4.4X:TCPNJE - Error writing %s TTC to network: %s\n",
                 tn->dev->devnum, text, strerror(HSO_errno));
     }
 
@@ -1050,7 +1050,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
 {
     char typestring[9], lnodestring[9], rnodestring[9];
 
-    DBGMSG(256, "HHCTN109D %4.4X:TCPNJE - processing TCPNJE %s received for link %s - %s",
+    DBGMSG(256, "HHC19109D %4.4X:TCPNJE - processing TCPNJE %s received for link %s - %s",
                   tn->dev->devnum, guest_to_host_string(typestring, sizeof(typestring), buffer->base.ttc->type),
                               guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                               guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
@@ -1069,7 +1069,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         socklen_t socknamelen;
 #endif /* defined(_MSVC_) */
 
-        DBGMSG(8, "HHCTN123D %4.4X:TCPNJE - unrecognised TCPNJE control statement \"%s\"", tn->dev->devnum,
+        DBGMSG(8, "HHC19123D %4.4X:TCPNJE - unrecognised TCPNJE control statement \"%s\"", tn->dev->devnum,
                       guest_to_host_string(typestring, sizeof(typestring), buffer->base.ttc->type));
 
         /* Get ip address and port of remote end of the connection */
@@ -1097,7 +1097,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         DEVBLK *otherdev;
         int found = 0;
 
-        DBGMSG(256, "HHCTN110D %4.4X:TCPNJE - link %s - %s is not handled by this device. Checking other TCPNJE devices.\n",
+        DBGMSG(256, "HHC19110D %4.4X:TCPNJE - link %s - %s is not handled by this device. Checking other TCPNJE devices.\n",
                       tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                   guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
 
@@ -1126,7 +1126,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         continue;
                     }
 
-                    DBGMSG(256, "HHCTN111D %4.4X:TCPNJE - processing TCPNJE OPEN received for link %s - %s on device %4.4X\n",
+                    DBGMSG(256, "HHC19111D %4.4X:TCPNJE - processing TCPNJE OPEN received for link %s - %s on device %4.4X\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
@@ -1136,7 +1136,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                     /* Is the other device's link already connected? */
                     if (othertn->state >= NJECONPRI)
                     {
-                        DBGMSG(256, "HHCTN112D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s on device %4.4X : already connected\n",
+                        DBGMSG(256, "HHC19112D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s on device %4.4X : already connected\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
@@ -1146,7 +1146,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         tn->pfd = -1;
 
                         /* Also kill the link which is assumed to be already failed but unnoticed */
-                        DBGMSG(256, "HHCTN113D %4.4X:TCPNJE - closing link %s - %s on device %4.4X due to unexpected TCPNJE OPEN received for same\n",
+                        DBGMSG(256, "HHC19113D %4.4X:TCPNJE - closing link %s - %s on device %4.4X due to unexpected TCPNJE OPEN received for same\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
@@ -1164,7 +1164,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         (othertn->state == NJEOPNSNT) || (othertn->state == NJEACKRCD))
                     {
                         release_lock(&othertn->lock);
-                        DBGMSG(256, "HHCTN114D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s on device %4.4X : already doing active open\n",
+                        DBGMSG(256, "HHC19114D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s on device %4.4X : already doing active open\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
@@ -1182,7 +1182,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                     if (othertn->pfd >= 0)
                     {
                         /* Drop it! */
-                        DBGMSG(256, "HHCTN115D %4.4X:TCPNJE - Interrupting incoming connection in progress on device %4.4X\n",
+                        DBGMSG(256, "HHC19115D %4.4X:TCPNJE - Interrupting incoming connection in progress on device %4.4X\n",
                                  tn->dev->devnum, otherdev->devnum);
                         close_socket(othertn->pfd);
                         othertn->pfd = -1;
@@ -1199,7 +1199,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                     /* Prepare to receive the first TTB */
                     othertn->tcpinbuf.inptr.address = othertn->tcpinbuf.base.address;
 
-                    DBGMSG(256, "HHCTN053I %4.4X:TCPNJE - passing TCPNJE OPEN for link %s - %s to device %4.4X\n",
+                    DBGMSG(256, "HHC19053I %4.4X:TCPNJE - passing TCPNJE OPEN for link %s - %s to device %4.4X\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
@@ -1221,7 +1221,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
 
         if (!found)
         {
-            DBGMSG(256, "HHCTN116D %4.4X:TCPNJE - rejecting TCPNJE OPEN for unrecognised or inactive link %s - %s\n",
+            DBGMSG(256, "HHC19116D %4.4X:TCPNJE - rejecting TCPNJE OPEN for unrecognised or inactive link %s - %s\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
 
@@ -1239,7 +1239,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
     /* Is the link already connected? */
     if (tn->state >= NJECONPRI)
     {
-        DBGMSG(256, "HHCTN117D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s : already connected\n",
+        DBGMSG(256, "HHC19117D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s : already connected\n",
                        tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                    guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
 
@@ -1249,7 +1249,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tn->pfd = -1;
 
         /* Also kill the link which is assumed to be already failed but unnoticed */
-        DBGMSG(256, "HHCTN118D %4.4X:TCPNJE - closing link %s - %s due to unexpected TCPNJE OPEN received for same\n",
+        DBGMSG(256, "HHC19118D %4.4X:TCPNJE - closing link %s - %s due to unexpected TCPNJE OPEN received for same\n",
                        tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                    guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
         tcpnje_close(tn->sfd, tn);
@@ -1260,7 +1260,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
     /* Are we already doing an active open? */
     if ((tn->state == TCPCONSNT) || (tn->state == TCPCONACT) || (tn->state == NJEOPNSNT) || (tn->state == NJEACKRCD))
     {
-        DBGMSG(256, "HHCTN119D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s : already doing active open\n",
+        DBGMSG(256, "HHC19119D %4.4X:TCPNJE - rejecting incoming TCPNJE OPEN for link %s - %s : already doing active open\n",
                        tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                    guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
 
@@ -1277,7 +1277,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
     /* Are we expecting a TCPNJE OPEN for this link? */
     if (tn->state != TCPCONPAS)
     {
-        DBGMSG(256, "HHCTN120D %4.4X:TCPNJE - ignoring unexpected TCPNJE OPEN for link %s - %s while in connection state: %s\n",
+        DBGMSG(256, "HHC19120D %4.4X:TCPNJE - ignoring unexpected TCPNJE OPEN for link %s - %s while in connection state: %s\n",
                        tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                    guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                                    tcpnje_state_text[tn->state]);
@@ -1312,7 +1312,7 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
 {
     char typestring[9], lnodestring[9], rnodestring[9];
 
-    DBGMSG(256, "HHCTN109D %4.4X:TCPNJE - processing TCPNJE %s received for link %s - %s",
+    DBGMSG(256, "HHC19109D %4.4X:TCPNJE - processing TCPNJE %s received for link %s - %s",
                   tn->dev->devnum, guest_to_host_string(typestring, sizeof(typestring), buffer->base.ttc->type),
                               guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                               guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
@@ -1330,7 +1330,7 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
     if ((memcmp(tn->rnode, buffer->base.ttc->rhost, sizeof(buffer->base.ttc->rhost))) ||
         (memcmp(tn->lnode, buffer->base.ttc->ohost, sizeof(buffer->base.ttc->ohost))))
     {
-        DBGMSG(256, "HHCTN121D %4.4X:TCPNJE - ignoring TCPNJE %s received for unrecognised link %s - %s\n",
+        DBGMSG(256, "HHC19121D %4.4X:TCPNJE - ignoring TCPNJE %s received for unrecognised link %s - %s\n",
                       tn->dev->devnum, guest_to_host_string(typestring, sizeof(typestring), buffer->base.ttc->type),
                                   guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                   guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
@@ -1343,7 +1343,7 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
     /* Are we expecting a TCPNJE ACK or NAK ie has a TCPNJE OPEN been sent out for this link? */
     if (tn->state != NJEOPNSNT)
     {
-        DBGMSG(256, "HHCTN122D %4.4X:TCPNJE - ignoring unexpected TCPNJE %s received for link %s - %s\n",
+        DBGMSG(256, "HHC19122D %4.4X:TCPNJE - ignoring unexpected TCPNJE %s received for link %s - %s\n",
                       tn->dev->devnum, guest_to_host_string(typestring, sizeof(typestring), buffer->base.ttc->type),
                                   guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                   guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
@@ -1394,7 +1394,7 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
     }
     else
     {
-        DBGMSG(8, "HHCTN123D %4.4X:TCPNJE - unrecognised or unexpected TCPNJE control statement \"%s\" received for link %s - %s\n",
+        DBGMSG(8, "HHC19123D %4.4X:TCPNJE - unrecognised or unexpected TCPNJE control statement \"%s\" received for link %s - %s\n",
                       tn->dev->devnum, guest_to_host_string(typestring, sizeof(typestring), buffer->base.ttc->type),
                                   guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                   guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
@@ -1426,8 +1426,8 @@ static void *tcpnje_thread(void *vtn)
     int init_signaled;          /* Thread initialisation signaled    */
     int TTBlength = 0;          /* Length of TTB in host byte order  */
     int eintrcount = 0;         /* Number of times EINTR occurred    */
-    int errorcount067 = 0;      /* Number of times HHCTN067E issued  */
-    int errorcount100 = 0;      /* Number of times HHCTN100E issued  */
+    int errorcount067 = 0;      /* Number of times HHC19067E issued  */
+    int errorcount100 = 0;      /* Number of times HHC19100E issued  */
     struct sockaddr_in remaddr;                /* For accept()       */
     unsigned int remlength = sizeof(remaddr);  /* also for accept()  */
     struct      in_addr intmp;  /* To print ip address in error msgs */
@@ -1455,7 +1455,7 @@ static void *tcpnje_thread(void *vtn)
 
     init_signaled = 0;
 
-    DBGMSG(1, "HHCTN002I %4.4X:TCPNJE - networking thread "TIDPAT" started for link %s - %s\n",
+    DBGMSG(1, "HHC19002I %4.4X:TCPNJE - networking thread "TIDPAT" started for link %s - %s\n",
             devnum, TID_CAST(thread_id()),
             guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
             guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
@@ -1488,7 +1488,7 @@ static void *tcpnje_thread(void *vtn)
         maxfd = 0;
         seltv = NULL;
 
-        DBGMSG(512, "HHCTN124D %4.4X:TCPNJE - top of loop - Operation = %s\n",
+        DBGMSG(512, "HHC19124D %4.4X:TCPNJE - top of loop - Operation = %s\n",
                 devnum, tcpnje_pendccw_text[tn->curpending]);
 
         switch(tn->curpending)
@@ -1647,7 +1647,7 @@ static void *tcpnje_thread(void *vtn)
                         if (tn->state < TCPCONSNT)
                         {
                             /* Issue a Connect out */
-                            DBGMSG(128, "HHCTN054I %4.4X:TCPNJE - making outgoing leased line connection\n",
+                            DBGMSG(128, "HHC19054I %4.4X:TCPNJE - making outgoing leased line connection\n",
                                     devnum);
                             rc = tcpnje_connout(tn);
                             if (rc == 0)
@@ -1676,7 +1676,7 @@ static void *tcpnje_thread(void *vtn)
                                 }
                                 else
                                 {
-                                    DBGMSG(1, "HHCTN055W %4.4X:TCPNJE - unexpected state after outgoing call: %s\n",
+                                    DBGMSG(1, "HHC19055W %4.4X:TCPNJE - unexpected state after outgoing call: %s\n",
                                             devnum, tcpnje_state_text[tn->state]);
                                 }
 
@@ -1693,7 +1693,7 @@ static void *tcpnje_thread(void *vtn)
                             else
                             {
                                 if (rc != 999)
-                                    DBGMSG(32, "HHCTN007W %4.4X:TCPNJE - outgoing connection for link %s - %s failed or deferred\n",
+                                    DBGMSG(32, "HHC19007W %4.4X:TCPNJE - outgoing connection for link %s - %s failed or deferred\n",
                                             devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                                                     guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
                                 seltv = tcpnje_setto(&tv, tn->cto);
@@ -1728,7 +1728,7 @@ static void *tcpnje_thread(void *vtn)
             case TCPNJE_PEND_DISABLE:
                 if (tn->listening > 1)
                 {
-                    DBGMSG(128, "HHCTN056I %4.4X:TCPNJE - closing listening socket due to DISABLE\n",
+                    DBGMSG(128, "HHC19056I %4.4X:TCPNJE - closing listening socket due to DISABLE\n",
                             devnum);
                     close_socket(tn->lfd);
                     tn->lfd = -1;
@@ -1737,7 +1737,7 @@ static void *tcpnje_thread(void *vtn)
 
                 if (tn->state >= TCPCONSNT)
                 {
-                    DBGMSG(128, "HHCTN057I %4.4X:TCPNJE - closing connection socket due to DISABLE\n",
+                    DBGMSG(128, "HHC19057I %4.4X:TCPNJE - closing connection socket due to DISABLE\n",
                             devnum);
                     close_socket(tn->pfd);
                     tn->pfd = -1;
@@ -1806,7 +1806,7 @@ static void *tcpnje_thread(void *vtn)
         /* The MAX File Desc for Arg 1 of SELECT */
         maxfd++;
 
-        DBGMSG(512, "HHCTN125D %4.4X:TCPNJE - Entering select(). Operation: %s\n",
+        DBGMSG(512, "HHC19125D %4.4X:TCPNJE - Entering select(). Operation: %s\n",
                 devnum, tcpnje_pendccw_text[tn->curpending]);
 
         /* Release the TN Lock before the select - all FDs addressed by the select are only */
@@ -1822,7 +1822,7 @@ static void *tcpnje_thread(void *vtn)
         /* Get the TCPNJE lock back */
         obtain_lock(&tn->lock);
 
-        DBGMSG(512, "HHCTN126D %4.4X:TCPNJE - select() returned %d\n",
+        DBGMSG(512, "HHC19126D %4.4X:TCPNJE - select() returned %d\n",
                 devnum, selectcount);
 
         if (selectcount == -1)
@@ -1832,12 +1832,12 @@ static void *tcpnje_thread(void *vtn)
                 eintrcount++;
                 if ((eintrcount % 1000) == 0)
                 {
-                    DBGMSG(1, "HHCTN058W %4.4X:TCPNJE - select() unexpectedly interrupted %d times in a row\n",
+                    DBGMSG(1, "HHC19058W %4.4X:TCPNJE - select() unexpectedly interrupted %d times in a row\n",
                               devnum, eintrcount);
                 }
                 continue;
             }
-            DBGMSG(1, "HHCTN006E %4.4X:TCPNJE - select() error : %s\n", devnum, strerror(HSO_errno));
+            DBGMSG(1, "HHC19006E %4.4X:TCPNJE - select() error : %s\n", devnum, strerror(HSO_errno));
             break;
         }
         eintrcount = 0;
@@ -1845,7 +1845,7 @@ static void *tcpnje_thread(void *vtn)
         /* Select timed out */
         if (selectcount == 0)
         {
-            DBGMSG(512, "HHCTN127D %4.4X:TCPNJE - select() timeout after %ld seconds %ld microseconds\n",
+            DBGMSG(512, "HHC19127D %4.4X:TCPNJE - select() timeout after %ld seconds %ld microseconds\n",
                         devnum, tvcopy.tv_sec, (long int)tvcopy.tv_usec);
 
             /* Reset Call issued flag */
@@ -1867,7 +1867,7 @@ static void *tcpnje_thread(void *vtn)
             rc = read_pipe(tn->pipe[0], &pipecom, 1);
             if (rc == 0)
             {
-                DBGMSG(512, "HHCTN128D %4.4X:TCPNJE - IPC Pipe closed\n", devnum);
+                DBGMSG(512, "HHC19128D %4.4X:TCPNJE - IPC Pipe closed\n", devnum);
 
                 /* Pipe closed : terminate thread & release TCPNJE lock */
                 tn_shutdown = 1;
@@ -1875,7 +1875,7 @@ static void *tcpnje_thread(void *vtn)
                 break;
             }
 
-            DBGMSG(512, "HHCTN129D %4.4X:TCPNJE - IPC Pipe Data ; code = %d\n", devnum, pipecom);
+            DBGMSG(512, "HHC19129D %4.4X:TCPNJE - IPC Pipe Data ; code = %d\n", devnum, pipecom);
 
             switch(pipecom)
             {
@@ -1886,7 +1886,7 @@ static void *tcpnje_thread(void *vtn)
                     tn->callissued = 0;
                     if (tn->curpending == TCPNJE_PEND_DIAL)
                     {
-                        DBGMSG(128, "HHCTN130D %4.4X:TCPNJE - Closing socket due to halt\n",
+                        DBGMSG(128, "HHC19130D %4.4X:TCPNJE - Closing socket due to halt\n",
                                 devnum);
                         close_socket(tn->sfd);
                         tn->sfd = -1;
@@ -1910,7 +1910,7 @@ static void *tcpnje_thread(void *vtn)
                     break;
 
                 case 2: /* TCPNJE OPEN for this device received by listener on another device */
-                    DBGMSG(256, "HHCTN059I %4.4X:TCPNJE - TCPNJE OPEN redirected from another device. Connection state: %s\n",
+                    DBGMSG(256, "HHC19059I %4.4X:TCPNJE - TCPNJE OPEN redirected from another device. Connection state: %s\n",
                               devnum, tcpnje_state_text[tn->state]);
                     break;
                 default:
@@ -1922,7 +1922,7 @@ static void *tcpnje_thread(void *vtn)
         {
             if (writecont)
             {
-                DBGMSG(128, "HHCTN131D %4.4X:TCPNJE - Write buffer space available.  Retrying last write.\n",
+                DBGMSG(128, "HHC19131D %4.4X:TCPNJE - Write buffer space available.  Retrying last write.\n",
                         devnum);
 
                 /* One of the causes of select() returning accounted for */
@@ -1944,7 +1944,7 @@ static void *tcpnje_thread(void *vtn)
 #endif /* defined(_MSVC_) */
                                                                      ))
         {
-            DBGMSG(256, "HHCTN132D %4.4X:TCPNJE - connection event\n", devnum);
+            DBGMSG(256, "HHC19132D %4.4X:TCPNJE - connection event\n", devnum);
 
             /* One of the causes of select() returning accounted for */
             selectcount--;
@@ -1966,7 +1966,7 @@ static void *tcpnje_thread(void *vtn)
                     if (tn->state == TCPCONSNT)
                     {
                         tn->state = TCPCONACT;
-                        DBGMSG(128, "HHCTN133D %4.4X:TCPNJE - outgoing call connected for link %s - %s\n",
+                        DBGMSG(128, "HHC19133D %4.4X:TCPNJE - outgoing call connected for link %s - %s\n",
                                 devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                                         guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
 
@@ -1978,7 +1978,7 @@ static void *tcpnje_thread(void *vtn)
                     }
                     else
                     {
-                        DBGMSG(1, "HHCTN060W %4.4X:TCPNJE - unexpected state %s after outgoing call connected\n",
+                        DBGMSG(1, "HHC19060W %4.4X:TCPNJE - unexpected state %s after outgoing call connected\n",
                                 devnum, tcpnje_state_text[tn->state]);
                     }
                 }
@@ -1990,7 +1990,7 @@ static void *tcpnje_thread(void *vtn)
 #endif /* defined(_MSVC_) */
                 {
                     intmp.s_addr = tn->rhost;
-                    DBGMSG(32, "HHCTN061W %4.4X:TCPNJE - outgoing call to %s:%d for link %s - %s failed: %s\n",
+                    DBGMSG(32, "HHC19061W %4.4X:TCPNJE - outgoing call to %s:%d for link %s - %s failed: %s\n",
                         devnum, inet_ntoa(intmp), tn->rport,
                         guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                         guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode), strerror(soerror));
@@ -2019,7 +2019,7 @@ static void *tcpnje_thread(void *vtn)
         /* Are we expecting real data rather than TCPNJE connection overhead? */
         if (selectcount && (tn->state >= NJEACKSNT) && (tn->sfd >= 0) && FD_ISSET(tn->sfd, &rfd))
         {
-            DBGMSG(128, "HHCTN134D %4.4X:TCPNJE - inbound data. Connection state: %s\n",
+            DBGMSG(128, "HHC19134D %4.4X:TCPNJE - inbound data. Connection state: %s\n",
                     devnum, tcpnje_state_text[tn->state]);
 
             /* One of the causes of select() returning accounted for */
@@ -2034,7 +2034,7 @@ static void *tcpnje_thread(void *vtn)
                    Get the size of the whole block from it.           */
                 TTBlength = ntohs(tn->tcpinbuf.base.ttb->length);
 
-                DBGMSG(2048, "HHCTN135D %4.4X:TCPNJE incoming TTB, length %d. Connection state %s\n",
+                DBGMSG(2048, "HHC19135D %4.4X:TCPNJE incoming TTB, length %d. Connection state %s\n",
                             devnum, TTBlength, tcpnje_state_text[tn->state]);
             }
 
@@ -2044,7 +2044,7 @@ static void *tcpnje_thread(void *vtn)
                    Now ensure the block is completely read in */
                 rc = tcpnje_read(tn->sfd, &tn->tcpinbuf, TTBlength, tn);
 
-                DBGMSG(2048, "HHCTN136D %4.4X:TCPNJE - bytes required %d - read so far %ld. Connection state %s\n",
+                DBGMSG(2048, "HHC19136D %4.4X:TCPNJE - bytes required %d - read so far %ld. Connection state %s\n",
                         devnum, TTBlength, tn->tcpinbuf.inptr.address - tn->tcpinbuf.base.address, tcpnje_state_text[tn->state]);
 
                 if (rc == 0)
@@ -2056,7 +2056,7 @@ static void *tcpnje_thread(void *vtn)
                     tn->curpending = TCPNJE_PEND_IDLE;
                     signal_condition(&tn->ipc);
 
-                    DBGMSG(2048, "HHCTN137D %4.4X:TCPNJE - TTB read complete. Connection state %s\n",
+                    DBGMSG(2048, "HHC19137D %4.4X:TCPNJE - TTB read complete. Connection state %s\n",
                             devnum, tcpnje_state_text[tn->state]);
 
                     /* Prepare to receive next incoming TTB */
@@ -2068,7 +2068,7 @@ static void *tcpnje_thread(void *vtn)
         /* Any incoming TCPNJE requests? */
         if (selectcount && (tn->pfd >= 0) && FD_ISSET(tn->pfd, &rfd))
         {
-            DBGMSG(256, "HHCTN138D %4.4X:TCPNJE - passive open TCPNJE protocol traffic. Connection state: %s\n",
+            DBGMSG(256, "HHC19138D %4.4X:TCPNJE - passive open TCPNJE protocol traffic. Connection state: %s\n",
                 devnum, tcpnje_state_text[tn->state]);
 
             /* One of the causes of select() returning accounted for */
@@ -2090,12 +2090,12 @@ static void *tcpnje_thread(void *vtn)
             {
                 if (errorcount100 < TCPNJE_MAX_ERRORCOUNT)
                 {
-                    DBGMSG(2, "HHCTN100E %4.4X:TCPNJE - Excess connection traffic. Connection state: %s\n",
+                    DBGMSG(2, "HHC19100E %4.4X:TCPNJE - Excess connection traffic. Connection state: %s\n",
                         devnum, tcpnje_state_text[tn->state]);
                 }
                 else if (errorcount100 == TCPNJE_MAX_ERRORCOUNT)
                 {
-                    DBGMSG(1, "HHCTN099W %4.4X:TCPNJE - repeating messages suppressed.\n",
+                    DBGMSG(1, "HHC19099W %4.4X:TCPNJE - repeating messages suppressed.\n",
                                 devnum);
                 }
 
@@ -2106,7 +2106,7 @@ static void *tcpnje_thread(void *vtn)
         /* Any incoming TCPNJE replies */
         if (selectcount && (tn->afd >=0) && FD_ISSET(tn->afd, &rfd))
         {
-            DBGMSG(256, "HHCTN139D %4.4X:TCPNJE - active open TCPNJE protocol traffic. Connection state: %s\n",
+            DBGMSG(256, "HHC19139D %4.4X:TCPNJE - active open TCPNJE protocol traffic. Connection state: %s\n",
                 devnum, tcpnje_state_text[tn->state]);
 
             /* One of the causes of select() returning accounted for */
@@ -2138,7 +2138,7 @@ static void *tcpnje_thread(void *vtn)
             tempfd = accept(tn->lfd, (struct sockaddr *)&remaddr, &remlength);
             if (tempfd < 0)
             {
-                DBGMSG(4, "HHCTN062E %4.4X:TCPNJE - incoming connection - accept failed: %s\n",
+                DBGMSG(4, "HHC19062E %4.4X:TCPNJE - incoming connection - accept failed: %s\n",
                         devnum, strerror(HSO_errno));
                 break;
             }
@@ -2146,12 +2146,12 @@ static void *tcpnje_thread(void *vtn)
             /* Try to find out where the call is coming from */
             if (remlength == sizeof(remaddr))
             {
-                DBGMSG(128, "HHCTN008I %4.4X:TCPNJE - incoming connection from %s:%d\n",
+                DBGMSG(128, "HHC19008I %4.4X:TCPNJE - incoming connection from %s:%d\n",
                         devnum, inet_ntoa(remaddr.sin_addr), ntohs(remaddr.sin_port));
             }
             else
             {
-                DBGMSG(128, "HHCTN063I %4.4X:TCPNJE - incoming connection\n",
+                DBGMSG(128, "HHC19063I %4.4X:TCPNJE - incoming connection\n",
                         devnum);
             }
             /* Check the line type & current operation */
@@ -2163,7 +2163,7 @@ static void *tcpnje_thread(void *vtn)
                 if (tn->pfd >= 0)
                 {
                     /* Let's deal with the existing one first - shouldn't take long anyway. */
-                    DBGMSG(512, "HHCTN064W %4.4X:TCPNJE - rejecting incoming connection due to connection already in progress\n",
+                    DBGMSG(512, "HHC19064W %4.4X:TCPNJE - rejecting incoming connection due to connection already in progress\n",
                             devnum);
                     close_socket(tempfd);
                     break;
@@ -2174,7 +2174,7 @@ static void *tcpnje_thread(void *vtn)
                 rc = socket_set_blocking_mode(tempfd, 0);
                 if (rc < 0)
                 {
-                   DBGMSG(4, "HHCTN065E %4.4X:TCPNJE - error setting socket for incoming call to non-blocking : %s\n",
+                   DBGMSG(4, "HHC19065E %4.4X:TCPNJE - error setting socket for incoming call to non-blocking : %s\n",
                                     tn->dev->devnum, strerror(HSO_errno));
                    close_socket(tempfd);
                    break;
@@ -2197,7 +2197,7 @@ static void *tcpnje_thread(void *vtn)
                 }
             }
             /* All other cases : just reject the call */
-            DBGMSG(512, "HHCTN066W %4.4X:TCPNJE - rejecting unexpected incoming call\n",
+            DBGMSG(512, "HHC19066W %4.4X:TCPNJE - rejecting unexpected incoming call\n",
                     devnum);
             close_socket(tempfd);
 
@@ -2211,29 +2211,29 @@ static void *tcpnje_thread(void *vtn)
             {
                 /* Something unexpected has gone wrong, as opposed to something expected */
 
-                DBGMSG(1, "HHCTN067E %4.4X:TCPNJE - possible logic error.  Outstanding count from select(): %d\n",
+                DBGMSG(1, "HHC19067E %4.4X:TCPNJE - possible logic error.  Outstanding count from select(): %d\n",
                             devnum, selectcount);
 
                 /* Lets try to diagnose some possible causes of this anomaly */
 
                 if ((tn->sfd >= 0) && FD_ISSET(tn->sfd, &wfd))
-                    DBGMSG(1, "HHCTN068W %4.4X:TCPNJE - unexpected return from select() due to write event on data connection\n",
+                    DBGMSG(1, "HHC19068W %4.4X:TCPNJE - unexpected return from select() due to write event on data connection\n",
                             devnum);
 
                 if ((tn->pfd >= 0) && FD_ISSET(tn->pfd, &rfd))
-                    DBGMSG(1, "HHCTN069W %4.4X:TCPNJE - unexpected connection traffic received on incoming connection\n",
+                    DBGMSG(1, "HHC19069W %4.4X:TCPNJE - unexpected connection traffic received on incoming connection\n",
                             devnum);
 
                 if ((tn->afd >=0) && FD_ISSET(tn->afd, &rfd))
-                    DBGMSG(1, "HHCTN070W %4.4X:TCPNJE - unexpected connection traffic received on outgoing connection\n",
+                    DBGMSG(1, "HHC19070W %4.4X:TCPNJE - unexpected connection traffic received on outgoing connection\n",
                             devnum);
 
                 if ((tn->sfd >= 0) && FD_ISSET(tn->sfd, &rfd))
-                    DBGMSG(1, "HHCTN071W %4.4X:TCPNJE - traffic received on data connection when not in connected state\n",
+                    DBGMSG(1, "HHC19071W %4.4X:TCPNJE - traffic received on data connection when not in connected state\n",
                             devnum);
 
                 if ((tn->lfd >= 0) && FD_ISSET(tn->lfd, &rfd))
-                    DBGMSG(1, "HHCTN072W %4.4X:TCPNJE - traffic received on listener port when not listening\n",
+                    DBGMSG(1, "HHC19072W %4.4X:TCPNJE - traffic received on listener port when not listening\n",
                             devnum);
 
                 /* If it wasn't one of the above, it was probably a socket file descriptor
@@ -2241,7 +2241,7 @@ static void *tcpnje_thread(void *vtn)
             }
             else if (errorcount067 == TCPNJE_MAX_ERRORCOUNT)
             {
-                DBGMSG(1, "HHCTN099W %4.4X:TCPNJE - repeating messages suppressed.\n",
+                DBGMSG(1, "HHC19099W %4.4X:TCPNJE - repeating messages suppressed.\n",
                             devnum);
             }
 
@@ -2268,7 +2268,7 @@ static void *tcpnje_thread(void *vtn)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    logmsg("HHCTN009I %4.4X:TCPNJE - networking thread terminated\n",
+    logmsg("HHC19009I %4.4X:TCPNJE - networking thread terminated\n",
             devnum);
     tn->have_thread = 0;
     release_lock(&tn->lock);
@@ -2335,31 +2335,31 @@ static void    tcpnje_halt(DEVBLK *dev)
 /* that is issued on multiple situations              */
 static void msg013e(struct TCPNJE *tn, char *kw, char *kv)
 {
-        DBGMSG(2, "HHCTN013E %4.4X:TCPNJE - incorrect %s specification %s\n",
+        DBGMSG(2, "HHC19013E %4.4X:TCPNJE - incorrect %s specification %s\n",
                 tn->dev->devnum, kw, kv);
 }
 #if 0
 static void msg015e(struct TCPNJE *tn, char *dialt, char *kw)
 {
-        DBGMSG(2, "HHCTN015E %4.4X:TCPNJE - missing parameter : DIAL=%s and %s not specified\n",
+        DBGMSG(2, "HHC19015E %4.4X:TCPNJE - missing parameter : DIAL=%s and %s not specified\n",
                 tn->dev->devnum, dialt, kw);
 }
 static void msg016w017i(struct TCPNJE *tn, char *dialt, char *kw, char *kv)
 {
-        DBGMSG(2, "HHCTN016W %4.4X:TCPNJE - conflicting parameter : DIAL=%s and %s=%s specified\n",
+        DBGMSG(2, "HHC19016W %4.4X:TCPNJE - conflicting parameter : DIAL=%s and %s=%s specified\n",
                 tn->dev->devnum, dialt, kw, kv);
-        DBGMSG(2, "HHCTN017I %4.4X:TCPNJE - %s parameter ignored\n",
+        DBGMSG(2, "HHC19017I %4.4X:TCPNJE - %s parameter ignored\n",
                 tn->dev->devnum, kw);
 }
 #endif
 static void msg073w(struct TCPNJE *tn, char *kv)
 {
-        DBGMSG(2, "HHCTN073W %4.4X:TCPNJE - DIAL/SWITCHED=%s is not currently supported by TCPNJE\n",
+        DBGMSG(2, "HHC19073W %4.4X:TCPNJE - DIAL/SWITCHED=%s is not currently supported by TCPNJE\n",
                 tn->dev->devnum, kv);
 }
 static void msg074e(struct TCPNJE *tn, char *kw)
 {
-        DBGMSG(2, "HHCTN074E %4.4X:TCPNJE - %s has not been specified\n",
+        DBGMSG(2, "HHC19074E %4.4X:TCPNJE - %s has not been specified\n",
                 tn->dev->devnum, kw);
 }
 /*-------------------------------------------------------------------*/
@@ -2389,7 +2389,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         dev->devtype = 0x2703;
         if (dev->ccwtrace)
         {
-                logmsg("HHCTN140D %4.4X:TCPNJE - initialisation starting\n",
+                logmsg("HHC19140D %4.4X:TCPNJE - initialisation starting\n",
                         dev->devnum);
         }
 
@@ -2402,13 +2402,13 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         rc = tcpnje_alloc_device(dev);
         if (rc < 0)
         {
-                logmsg("HHCTN010E %4.4X:TCPNJE - initialisation not performed\n",
+                logmsg("HHC19010E %4.4X:TCPNJE - initialisation not performed\n",
                         dev->devnum);
             return(-1);
         }
         tn = (struct TCPNJE *) dev->commadpt;
 
-        DBGMSG(512, "HHCTN141D %4.4X:TCPNJE - Initialisation: Control block allocated\n",
+        DBGMSG(512, "HHC19141D %4.4X:TCPNJE - Initialisation: Control block allocated\n",
                         dev->devnum);
 
         errcnt = 0;
@@ -2454,13 +2454,13 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         else if (!strcmp(argv[0], "3088") || !strcasecmp(argv[0], "CTC") || !strcasecmp(argv[0], "CTCA"))
         {
             dev->devtype = 0x3088;
-            DBGMSG(2, "HHCTN075E %4.4X:TCPNJE - device type %s is not yet supported\n",
+            DBGMSG(2, "HHC19075E %4.4X:TCPNJE - device type %s is not yet supported\n",
                         dev->devnum, argv[0]);
             errcnt++;
         }
         else
         {
-            DBGMSG(2, "HHCTN076E %4.4X:TCPNJE - device type %s is not valid\n",
+            DBGMSG(2, "HHC19076E %4.4X:TCPNJE - device type %s is not valid\n",
                         dev->devnum, argv[0]);
             errcnt++;
         }
@@ -2470,14 +2470,14 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
             pc = parser(ptab, argv[i], &res);
             if (pc < 0)
             {
-                DBGMSG(2, "HHCTN011E %4.4X:TCPNJE - error parsing %s\n",
+                DBGMSG(2, "HHC19011E %4.4X:TCPNJE - error parsing %s\n",
                         dev->devnum, argv[i]);
                 errcnt++;
                 continue;
             }
             if (pc == 0)
             {
-                DBGMSG(2, "HHCTN012E %4.4X:TCPNJE - unrecognized parameter %s\n",
+                DBGMSG(2, "HHC19012E %4.4X:TCPNJE - unrecognized parameter %s\n",
                         dev->devnum, argv[i]);
                 errcnt++;
                 continue;
@@ -2571,7 +2571,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                         tn->dialout = 1;
                         break;
                     }
-                    DBGMSG(2, "HHCTN014E %4.4X:TCPNJE - incorrect switched/dial specification %s; defaulting to DIAL=NO\n",
+                    DBGMSG(2, "HHC19014E %4.4X:TCPNJE - incorrect switched/dial specification %s; defaulting to DIAL=NO\n",
                             dev->devnum, res.text);
                     tn->dialin = 0;
                     tn->dialout = 0;
@@ -2750,7 +2750,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         }
         if (errcnt > 0)
         {
-            DBGMSG(2, "HHCTN021I %4.4X:TCPNJE - initialisation failed due to previous errors\n",
+            DBGMSG(2, "HHC19021I %4.4X:TCPNJE - initialisation failed due to previous errors\n",
                     dev->devnum);
             return -1;
         }
@@ -2761,7 +2761,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         tn->ttcpasbuf.base.address = malloc(tn->ttcpasbuf.size);
         if (tn->ttcpasbuf.base.address == NULL)
         {
-            logmsg("HHCTN024E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTC passive open buffer\n",
+            logmsg("HHC19024E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTC passive open buffer\n",
                     dev->devnum);
             return -1;
         }
@@ -2770,7 +2770,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         tn->ttcactbuf.base.address = malloc(tn->ttcactbuf.size);
         if (tn->ttcactbuf.base.address == NULL)
         {
-            logmsg("HHCTN025E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTC active open buffer\n",
+            logmsg("HHC19025E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTC active open buffer\n",
                     dev->devnum);
             return -1;
         }
@@ -2779,7 +2779,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         tn->tcpinbuf.base.address = malloc(tn->tcpinbuf.size);
         if (tn->tcpinbuf.base.address == NULL)
         {
-            logmsg("HHCTN026E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTB/TTR input buffer\n",
+            logmsg("HHC19026E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTB/TTR input buffer\n",
                     dev->devnum);
             return -1;
         }
@@ -2788,7 +2788,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         tn->tcpoutbuf.base.address = malloc(tn->tcpoutbuf.size);
         if (tn->tcpoutbuf.base.address == NULL)
         {
-            logmsg("HHCTN027E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTB/TTR output buffer\n",
+            logmsg("HHC19027E %4.4X:TCPNJE - memory allocation failure for TCPNJE TTB/TTR output buffer\n",
                     dev->devnum);
             return -1;
         }
@@ -2855,14 +2855,14 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         rc = create_thread(&tn->thread, DETACHED, tcpnje_thread, tn, thread_name);
         if (rc)
         {
-            logmsg("HHCTN022E TCPNJE - error creating communication thread: %s\n", strerror(rc));
+            logmsg("HHC19022E TCPNJE - error creating communication thread: %s\n", strerror(rc));
             release_lock(&tn->lock);
             return -1;
         }
         tcpnje_wait(dev);
         if (tn->curpending != TCPNJE_PEND_IDLE)
         {
-            DBGMSG(1, "HHCTN019E %4.4X:TCPNJE communication thread did not initialise\n",
+            DBGMSG(1, "HHC19019E %4.4X:TCPNJE communication thread did not initialise\n",
                     dev->devnum);
             /* Release the TCPNJE lock */
             release_lock(&tn->lock);
@@ -2927,7 +2927,7 @@ static int tcpnje_close_device(DEVBLK *dev)
 
     if (dev->ccwtrace)
     {
-        DBGMSG(1, "HHCTN142D %4.4X:TCPNJE - closing down\n", dev->devnum);
+        DBGMSG(1, "HHC19142D %4.4X:TCPNJE - closing down\n", dev->devnum);
     }
 
     /* Attempt to gracefully close connection to remote link partner */
@@ -2961,7 +2961,7 @@ static int tcpnje_close_device(DEVBLK *dev)
 
     if (dev->ccwtrace)
     {
-        logmsg("HHCTN143D %4.4X:TCPNJE - closed down\n",
+        logmsg("HHC19143D %4.4X:TCPNJE - closed down\n",
                 dev->devnum);
     }
     return 0;
@@ -3069,7 +3069,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
      * Obtain the TCPNJE lock
      */
 
-    DBGMSG(1024, "HHCTN144D %4.4X:TCPNJE CCW Execute opcode %2.2X\n",
+    DBGMSG(1024, "HHC19144D %4.4X:TCPNJE CCW Execute opcode %2.2X\n",
             dev->devnum, code);
 
     obtain_lock(&tn->lock);
@@ -3078,7 +3078,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* CONTROL NO-OP                                                 */
         /*---------------------------------------------------------------*/
         case 0x03:
-                DBGMSG(1024, "HHCTN145D %4.4X:TCPNJE CCW CONTROL NO-OP\n",
+                DBGMSG(1024, "HHC19145D %4.4X:TCPNJE CCW CONTROL NO-OP\n",
                         dev->devnum);
 
                 *residual = 0;
@@ -3089,7 +3089,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* BASIC SENSE                                                   */
         /*---------------------------------------------------------------*/
         case 0x04:
-                DBGMSG(1024, "HHCTN146D %4.4X:TCPNJE CCW SENSE\n",
+                DBGMSG(1024, "HHC19146D %4.4X:TCPNJE CCW SENSE\n",
                         dev->devnum);
 
                 num = count < dev->numsense ? count : dev->numsense;
@@ -3108,7 +3108,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* SENSE ID                                                      */
         /*---------------------------------------------------------------*/
         case 0xE4:
-                DBGMSG(1024, "HHCTN147D %4.4X:TCPNJE CCW SENSE ID\n",
+                DBGMSG(1024, "HHC19147D %4.4X:TCPNJE CCW SENSE ID\n",
                         dev->devnum);
 
                 /* Calculate residual byte count */
@@ -3127,7 +3127,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* ENABLE                                                        */
         /*---------------------------------------------------------------*/
         case 0x27:
-                DBGMSG(1024, "HHCTN148D %4.4X:TCPNJE CCW ENABLE\n",
+                DBGMSG(1024, "HHC19148D %4.4X:TCPNJE CCW ENABLE\n",
                         dev->devnum);
 
                 if (tn->dialin + tn->dialout * 2 == 2)
@@ -3156,7 +3156,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* DISABLE                                                       */
         /*---------------------------------------------------------------*/
         case 0x2F:
-                DBGMSG(1024, "HHCTN149D %4.4X:TCPNJE CCW DISABLE\n",
+                DBGMSG(1024, "HHC19149D %4.4X:TCPNJE CCW DISABLE\n",
                         dev->devnum);
 
                 if (tn->state == CLOSED)
@@ -3184,7 +3184,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* SET MODE                                                      */
         /*---------------------------------------------------------------*/
         case 0x23:
-                DBGMSG(1024, "HHCTN150D %4.4X:TCPNJE CCW SET MODE %s\n",
+                DBGMSG(1024, "HHC19150D %4.4X:TCPNJE CCW SET MODE %s\n",
                         dev->devnum, iobuf[0] & 0x40 ? "EIB" : "NO EIB");
 
                 num = 1;
@@ -3215,7 +3215,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /*        expressed in making use of it.                         */
         /*---------------------------------------------------------------*/
         case 0x29:
-                DBGMSG(1024, "HHCTN151D %4.4X:TCPNJE - CCW DIAL\n",
+                DBGMSG(1024, "HHC19151D %4.4X:TCPNJE - CCW DIAL\n",
                         dev->devnum);
 
                 /* The line must have dial-out capability */
@@ -3235,7 +3235,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     break;
                 }
 
-                DBGMSG(1, "HHCTN077W %4.4X:TCPNJE - DIAL operation is not currently supported by TCPNJE\n",
+                DBGMSG(1, "HHC19077W %4.4X:TCPNJE - DIAL operation is not currently supported by TCPNJE\n",
                         dev->devnum);
 
                 num = count > sizeof(tn->dialdata) ? sizeof(tn->dialdata) : count;
@@ -3277,7 +3277,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* READ                                                          */
         /*---------------------------------------------------------------*/
         case 0x02:
-                DBGMSG(1024, "HHCTN152D %4.4X:TCPNJE CCW READ count %d\n",
+                DBGMSG(1024, "HHC19152D %4.4X:TCPNJE CCW READ count %d\n",
                         dev->devnum, count);
 
                 /*  Read strategy is complicated in order to avoid       */
@@ -3331,7 +3331,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         tpb->fcs[1] = 0x80;
                     }
 
-                    DBGMSG(2048, "HHCTN078I %4.4X:TCPNJE READ - inserting signoff BCB: %2.2X FCS: %2.2X%2.2X\n",
+                    DBGMSG(2048, "HHC19078I %4.4X:TCPNJE READ - inserting signoff BCB: %2.2X FCS: %2.2X%2.2X\n",
                             dev->devnum, tpb->bcb, tpb->fcs[0], tpb->fcs[1]);
 
                     if (count < sizeof(signoff))
@@ -3363,7 +3363,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         tpb->fcs[1] = 0x80;
                     }
 
-                    DBGMSG(2048, "HHCTN153D %4.4X:TCPNJE READ - inserting incoming null buffer BCB: %2.2X FCS: %2.2X%2.2X because incoming data is currently held\n",
+                    DBGMSG(2048, "HHC19153D %4.4X:TCPNJE READ - inserting incoming null buffer BCB: %2.2X FCS: %2.2X%2.2X because incoming data is currently held\n",
                             dev->devnum, tpb->bcb, tpb->fcs[0], tpb->fcs[1]);
 
                     if (count < sizeof(nullbuffer))
@@ -3440,7 +3440,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                             tpb->fcs[1] = 0x80;
                         }
 
-                        DBGMSG(2048, "HHCTN154D %4.4X:TCPNJE READ - inserting incoming null buffer BCB: %2.2X FCS: %2.2X%2.2X in lieu of ACK\n",
+                        DBGMSG(2048, "HHC19154D %4.4X:TCPNJE READ - inserting incoming null buffer BCB: %2.2X FCS: %2.2X%2.2X in lieu of ACK\n",
                                 dev->devnum, tpb->bcb, tpb->fcs[0], tpb->fcs[1]);
 
                         if (count < sizeof(nullbuffer))
@@ -3512,7 +3512,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                             tpb->fcs[1] = 0x80;
                         }
 
-                        DBGMSG(2048, "HHCTN155D %4.4X:TCPNJE READ - inserting incoming null buffer BCB: %2.2X FCS: %2.2X%2.2X in lieu of timeout\n",
+                        DBGMSG(2048, "HHC19155D %4.4X:TCPNJE READ - inserting incoming null buffer BCB: %2.2X FCS: %2.2X%2.2X in lieu of timeout\n",
                                     dev->devnum, tpb->bcb, tpb->fcs[0], tpb->fcs[1]);
 
                         if (count < sizeof(nullbuffer))
@@ -3584,7 +3584,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         /* SRCB == I Initial signon record received */
                         if (TTRlength > (5 + 0x0b))
                         {
-                            DBGMSG(64, "HHCTN079I %4.4X:TCPNJE - received initial signon request for RSCS link %s - connection state %s\n",
+                            DBGMSG(64, "HHC19079I %4.4X:TCPNJE - received initial signon request for RSCS link %s - connection state %s\n",
                                 dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring),
                                 tn->tcpinbuf.outptr.block->record.tpb.nccinode), tcpnje_state_text[tn->state]);
                         }
@@ -3595,7 +3595,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                             /* The following contortion is due to improper alignment in I/J signon records */
                             tpbufsize = (tn->tcpinbuf.outptr.block->record.tpb.nccibfsz[0] << 8)
                                        + tn->tcpinbuf.outptr.block->record.tpb.nccibfsz[1];
-                            DBGMSG(64, "HHCTN080I %4.4X:TCPNJE - received TPbuffer size requested by RSCS link %s: %d\n",
+                            DBGMSG(64, "HHC19080I %4.4X:TCPNJE - received TPbuffer size requested by RSCS link %s: %d\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring),
                                     tn->tcpinbuf.outptr.block->record.tpb.nccinode), tpbufsize);
                         }
@@ -3603,7 +3603,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         if ((TTRlength > (5 + 0x25)) && (tn->tcpinbuf.outptr.block->record.tpb.nccifeat[0] & 0x80))
                         {
                             tn->tcpinbuf.outptr.block->record.tpb.nccifeat[0] &= 0x7f;
-                            DBGMSG(64, "HHCTN081I %4.4X:TCPNJE - resetting request by RSCS link %s for unsupported PREPARE protocol\n",
+                            DBGMSG(64, "HHC19081I %4.4X:TCPNJE - resetting request by RSCS link %s for unsupported PREPARE protocol\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring),
                                     tn->tcpinbuf.outptr.block->record.tpb.nccinode));
                         }
@@ -3619,7 +3619,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         tn->state = NJECONPRI;
                         if (TTRlength > (5 + 0x0b))
                         {
-                            DBGMSG(64, "HHCTN082I %4.4X:TCPNJE - received response signon for RSCS link %s - connection state %s\n",
+                            DBGMSG(64, "HHC19082I %4.4X:TCPNJE - received response signon for RSCS link %s - connection state %s\n",
                                 dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring),
                                 tn->tcpinbuf.outptr.block->record.tpb.nccinode), tcpnje_state_text[tn->state]);
                         }
@@ -3628,14 +3628,14 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                             /* The following contortion is due to improper alignment in I/J signon records */
                             tn->tpbufsize = (tn->tcpinbuf.outptr.block->record.tpb.nccibfsz[0] << 8)
                                                     + tn->tcpinbuf.outptr.block->record.tpb.nccibfsz[1];
-                            DBGMSG(64, "HHCTN083I %4.4X:TCPNJE - received TPbuffer size negotiated by RSCS link %s: %d\n",
+                            DBGMSG(64, "HHC19083I %4.4X:TCPNJE - received TPbuffer size negotiated by RSCS link %s: %d\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring),
                                     tn->tcpinbuf.outptr.block->record.tpb.nccinode), tn->tpbufsize);
                         }
                         /* If the other end set the prepare flag, it's going against our request */
                         if ((TTRlength > (5 + 0x25)) && (tn->tcpinbuf.outptr.block->record.tpb.nccifeat[0] & 0x80))
                         {
-                            DBGMSG(16, "HHCTN084E %4.4X:TCPNJE - attempt by RSCS link %s to force use of unsupported PREPARE protocol\n",
+                            DBGMSG(16, "HHC19084E %4.4X:TCPNJE - attempt by RSCS link %s to force use of unsupported PREPARE protocol\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring),
                                     tn->tcpinbuf.outptr.block->record.tpb.nccinode));
                             tn->tcpinbuf.outptr.block->record.tpb.nccifeat[0] &= 0x7f;
@@ -3663,7 +3663,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* Also check for FASTOPEN flag set and if so, note which stream it has been applied to */
                     if ((tn->tcpinbuf.outptr.block->record.ttr.flags&0x80) && (num >= 7))
                     {
-                        DBGMSG(16, "HHCTN085W %4.4X:TCPNJE READ - Link partner issued FASTOPEN request for stream %2.2X.  Implementation at this end is incomplete.\n",
+                        DBGMSG(16, "HHC19085W %4.4X:TCPNJE READ - Link partner issued FASTOPEN request for stream %2.2X.  Implementation at this end is incomplete.\n",
                                 dev->devnum, tpb->srcb);
                         tn->fastopen = tpb->srcb;
                     }
@@ -3684,7 +3684,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 /* If the buffer started with DLE STX, fake DLE ETB after it. */
                 if (!memcmp(tpb->start, DLE STX, 2) && ((num + 2) <= count))
                 {
-                    DBGMSG(4096, "HHCTN170D %4.4X:TCPNJE READ - adding DLE ETB to end of buffer\n", dev->devnum);
+                    DBGMSG(4096, "HHC19170D %4.4X:TCPNJE READ - adding DLE ETB to end of buffer\n", dev->devnum);
 
                     iobuf[num++] = *DLE;
                     iobuf[num++] = *ETB;
@@ -3706,7 +3706,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 {
                     tn->synnakreceived = 1;
 
-                    DBGMSG(4096, "HHCTN169D %4.4X:TCPNJE READ - incoming SYN NAK - Connection state: %s\n",
+                    DBGMSG(4096, "HHC19169D %4.4X:TCPNJE READ - incoming SYN NAK - Connection state: %s\n",
                            dev->devnum, tcpnje_state_text[tn->state]);
 
                     break;
@@ -3724,7 +3724,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* WRITE                                                         */
         /*---------------------------------------------------------------*/
         case 0x01:
-                DBGMSG(1024, "HHCTN156D %4.4X:TCPNJE CCW WRITE count %d\n",
+                DBGMSG(1024, "HHC19156D %4.4X:TCPNJE CCW WRITE count %d\n",
                         dev->devnum, count);
 
                 /* Write strategy is as follows:                         */
@@ -3758,7 +3758,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                    a chained write to, despite being told not to by dev->cdwmerge = 0.       */
                 if  ((count > 4) && !memcmp(iobuf, SYN SYN SYN SYN, 4))
                 {
-                    DBGMSG(4096, "HHCTN157D %4.4X:TCPNJE WRITE - kludge dropping outgoing SYN SYN SYN SYN. Connection state: %s\n",
+                    DBGMSG(4096, "HHC19157D %4.4X:TCPNJE WRITE - kludge dropping outgoing SYN SYN SYN SYN. Connection state: %s\n",
                             dev->devnum, tcpnje_state_text[tn->state]);
 
                     tpb = (struct TPB *)&iobuf[4];
@@ -3775,7 +3775,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     {
                         if (tn->holdincoming)
                         {
-                            DBGMSG(2048, "HHCTN158D %4.4X:TCPNJE WRITE - Resuming incoming data due to outgoing FCS %2.2X%2.2X\n",
+                            DBGMSG(2048, "HHC19158D %4.4X:TCPNJE WRITE - Resuming incoming data due to outgoing FCS %2.2X%2.2X\n",
                                     dev->devnum, tpb->fcs[0], tpb->fcs[1]);
                         }
                         tn->holdincoming = 0;
@@ -3784,7 +3784,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     {
                         if (!tn->holdincoming)
                         {
-                            DBGMSG(2048, "HHCTN159D %4.4X:TCPNJE WRITE - Holding incoming data due to outgoing FCS %2.2X%2.2X\n",
+                            DBGMSG(2048, "HHC19159D %4.4X:TCPNJE WRITE - Holding incoming data due to outgoing FCS %2.2X%2.2X\n",
                                     dev->devnum, tpb->fcs[0], tpb->fcs[1]);
                         }
                         tn->holdincoming = 1;
@@ -3794,7 +3794,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     {
                         tn->waitabit = 1;
 
-                        DBGMSG(2048, "HHCTN160D %4.4X:TCPNJE WRITE - RSCS sent FCS %2.2X%2.2X with wait-a-bit bit set\n",
+                        DBGMSG(2048, "HHC19160D %4.4X:TCPNJE WRITE - RSCS sent FCS %2.2X%2.2X with wait-a-bit bit set\n",
                                 dev->devnum, tpb->fcs[0], tpb->fcs[1]);
 
 #if 0
@@ -3814,7 +3814,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* If this is a null buffer, no need to send it to the other end */
                     if (count == 6)
                     {
-                        DBGMSG(2048, "HHCTN161D %4.4X:TCPNJE WRITE - Dropping outgoing null buffer BCB: %2.2X FCS: %2.2X%2.2X\n",
+                        DBGMSG(2048, "HHC19161D %4.4X:TCPNJE WRITE - Dropping outgoing null buffer BCB: %2.2X FCS: %2.2X%2.2X\n",
                                 dev->devnum, tpb->bcb, tpb->fcs[0], tpb->fcs[1]);
 
                         *residual = 0;
@@ -3843,7 +3843,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         {
                             if (tpb->bcb & 0x20)
                             {
-                                DBGMSG(16, "HHCTN086W %4.4X:TCPNJE WRITE - Received BCB with reset bit set from RSCS: %2.2X\n",
+                                DBGMSG(16, "HHC19086W %4.4X:TCPNJE WRITE - Received BCB with reset bit set from RSCS: %2.2X\n",
                                         dev->devnum, tpb->bcb);
                             }
                         }
@@ -3851,7 +3851,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                         {
                             tpb->bcb = (tpb->bcb & 0xf0) | 0x20 | ((tpb->bcb + 1) & 0x0f);
 
-                            DBGMSG(2048, "HHCTN162D %4.4X:TCPNJE WRITE - Resetting outgoing BCB to %2.2X\n",
+                            DBGMSG(2048, "HHC19162D %4.4X:TCPNJE WRITE - Resetting outgoing BCB to %2.2X\n",
                                     dev->devnum, tpb->bcb);
                         }
                         tn->resetoutbcb = 0;
@@ -3863,7 +3863,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* doing nothing at all.                               */
                     if ((count >= 7) && (tpb->rcb == 0xa0) && (tn->fastopen == tpb->srcb))
                     {
-                        DBGMSG(2048, "HHCTN087I %4.4X:TCPNJE WRITE - Permission to open stream %2.2X suppressed due to preceding FASTOPEN\n",
+                        DBGMSG(2048, "HHC19087I %4.4X:TCPNJE WRITE - Permission to open stream %2.2X suppressed due to preceding FASTOPEN\n",
                                 dev->devnum, tn->fastopen);
                         tn->fastopen = 0;
                         tn->resetoutbcb = 1;
@@ -3884,7 +3884,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
 
                         if (count >= (5 + 0x0b))
                         {
-                            DBGMSG(64, "HHCTN088I %4.4X:TCPNJE - sending initial signon for local RSCS name %s.  Connection state %s\n",
+                            DBGMSG(64, "HHC19088I %4.4X:TCPNJE - sending initial signon for local RSCS name %s.  Connection state %s\n",
                                 dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode),
                                 tcpnje_state_text[tn->state]);
                         }
@@ -3896,13 +3896,13 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                             /* The following contortion is required because */
                             /* of incorrect alignment in I/J signon records */
                             tpbufsize = (tpb->nccibfsz[0] << 8) + tpb->nccibfsz[1];
-                            DBGMSG(64, "HHCTN089I %4.4X:TCPNJE - sending TPbuffer size requested by local RSCS name %s: %d\n",
+                            DBGMSG(64, "HHC19089I %4.4X:TCPNJE - sending TPbuffer size requested by local RSCS name %s: %d\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode), tpbufsize);
                         }
 
                         if ((count >= (5 + 0x25)) && (tpb->nccifeat[0] & 0x80))
                         {
-                            DBGMSG(64, "HHCTN090I %4.4X:TCPNJE - resetting unsupported PREPARE feature requested by local RSCS name %s\n",
+                            DBGMSG(64, "HHC19090I %4.4X:TCPNJE - resetting unsupported PREPARE feature requested by local RSCS name %s\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode));
                             tpb->nccifeat[0] &= 0x7f;
                         }
@@ -3919,7 +3919,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
 
                         if (count >= (5 + 0x0b))
                         {
-                            DBGMSG(64, "HHCTN091I %4.4X:TCPNJE - sending response signon for local RSCS name %s.  Connection state %s\n",
+                            DBGMSG(64, "HHC19091I %4.4X:TCPNJE - sending response signon for local RSCS name %s.  Connection state %s\n",
                                 dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode),
                                 tcpnje_state_text[tn->state]);
                         }
@@ -3929,13 +3929,13 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                             /* The following contortion is required because */
                             /* of incorrect alignment in I/J signon records */
                             tn->tpbufsize = (tpb->nccibfsz[0] << 8) + tpb->nccibfsz[1];
-                            DBGMSG(64, "HHCTN092I %4.4X:TCPNJE - sending TPbuffer size negotiated by local RSCS name %s: %d\n",
+                            DBGMSG(64, "HHC19092I %4.4X:TCPNJE - sending TPbuffer size negotiated by local RSCS name %s: %d\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode),
                                     tn->tpbufsize);
                         }
                         if ((count >= (5 + 0x25)) && (tpb->nccifeat[0] & 0x80))
                         {
-                            DBGMSG(16, "HHCTN093W %4.4X:TCPNJE - resetting forced use of unsupported PREPARE protocol by local RSCS name %s\n",
+                            DBGMSG(16, "HHC19093W %4.4X:TCPNJE - resetting forced use of unsupported PREPARE protocol by local RSCS name %s\n",
                                     dev->devnum, guest_to_host_string(nodestring, sizeof(nodestring), tpb->nccinode));
                             tpb->nccifeat[0] &= 0x7f;
                         }
@@ -3947,7 +3947,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* Is this an attempt to get connected? */
                     if ((count != 2) || (memcmp(tpb->start, SOH ENQ, 2) && memcmp(tpb->start, SYN NAK, 2)))
                     {
-                        DBGMSG(64, "HHCTN094W %4.4X:TCPNJE WRITE - Attempting to send other than SOH ENQ or SYN NAK when not connected. Connection state: %s\n",
+                        DBGMSG(64, "HHC19094W %4.4X:TCPNJE WRITE - Attempting to send other than SOH ENQ or SYN NAK when not connected. Connection state: %s\n",
                                 dev->devnum, tcpnje_state_text[tn->state]);
                         /* RSCS must be confused.  Send it a signoff at next read.  */
                         tn->signoff = 1;
@@ -3982,7 +3982,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 /* Is this SYN SYN SYN SYN? */
                 if  ((count == 4) && !memcmp(iobuf, SYN SYN SYN SYN, 4))
                 {
-                    DBGMSG(4096, "HHCTN157D %4.4X:TCPNJE WRITE - dropping outgoing SYN SYN SYN SYN. Connection state: %s\n",
+                    DBGMSG(4096, "HHC19157D %4.4X:TCPNJE WRITE - dropping outgoing SYN SYN SYN SYN. Connection state: %s\n",
                             dev->devnum, tcpnje_state_text[tn->state]);
 
                     /* Yes. Drop it on the floor.  It would get eaten at the far end anyway. */
@@ -3997,7 +3997,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 /* real(ish) 2703 (if we still have it).                  */
                 if ((count == 2) && !memcmp(tpb->start, DLE ETB, 2))
                 {
-                    DBGMSG(4096, "HHCTN163D %4.4X:TCPNJE WRITE - dropping outgoing DLE ETB - connection state %s\n",
+                    DBGMSG(4096, "HHC19163D %4.4X:TCPNJE WRITE - dropping outgoing DLE ETB - connection state %s\n",
                             dev->devnum, tcpnje_state_text[tn->state]);
 
                     /* If we are connected and signed on, count this as an        */
@@ -4019,7 +4019,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* the other end will fake it for us.                         */
                     if ((count == 2) && !memcmp(tpb->start, DLE ACK0, 2))
                     {
-                        DBGMSG(4096, "HHCTN164D %4.4X:TCPNJE WRITE - Dropping outgoing DLE ACK0 - Connection state %s\n",
+                        DBGMSG(4096, "HHC19164D %4.4X:TCPNJE WRITE - Dropping outgoing DLE ACK0 - Connection state %s\n",
                                 dev->devnum, tcpnje_state_text[tn->state]);
 
                         *residual = 0;
@@ -4043,7 +4043,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 {
                     /* Other end is going to be primary.  Drop data and pretend write succeeded. */
 
-                    DBGMSG(4096, "HHCTN165D %4.4X:TCPNJE WRITE - dropping outgoing SOH ENQ - Connection state: %s\n",
+                    DBGMSG(4096, "HHC19165D %4.4X:TCPNJE WRITE - dropping outgoing SOH ENQ - Connection state: %s\n",
                            dev->devnum, tcpnje_state_text[tn->state]);
 
                     *residual = 0;
@@ -4056,7 +4056,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 {
                     tn->synnaksent = 1;
 
-                    DBGMSG(4096, "HHCTN171D %4.4X:TCPNJE WRITE - outgoing SYN NAK - Connection state: %s\n",
+                    DBGMSG(4096, "HHC19171D %4.4X:TCPNJE WRITE - outgoing SYN NAK - Connection state: %s\n",
                            dev->devnum, tcpnje_state_text[tn->state]);
                 }
 
@@ -4088,7 +4088,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* it appears that RSCS will cope and retry the same write again */
                     /* and all will still be well, at least for some RSCS versions.  */
                     /* I'm not looking forward to trying this with a CTC though.     */
-                    DBGMSG(16, "HHCTN095E %4.4X:TCPNJE WRITE - outgoing record size %d will not fit in output buffer\n",
+                    DBGMSG(16, "HHC19095E %4.4X:TCPNJE WRITE - outgoing record size %d will not fit in output buffer\n",
                             dev->devnum, count);
 
                     *residual = count;
@@ -4139,14 +4139,14 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     else if (tn->tcpoutbuf.inptr.address - tn->tcpoutbuf.base.address +
                         2 * SIZEOF_TTR + tn->tpbufsize > tn->tcpoutbuf.size)
                     {
-                        DBGMSG(2048, "HHCTN166D %4.4X:TCPNJE WRITE - Sending outgoing buffer as it is nearly full\n",
+                        DBGMSG(2048, "HHC19166D %4.4X:TCPNJE WRITE - Sending outgoing buffer as it is nearly full\n",
                                dev->devnum);
                         tcpnje_flush(tn);
                     }
                 }
                 else
                 {
-                    DBGMSG(16, "HHCTN096W %4.4X:TCPNJE WRITE - outgoing record cannot be buffered as buffer is busy\n",
+                    DBGMSG(16, "HHC19096W %4.4X:TCPNJE WRITE - outgoing record cannot be buffered as buffer is busy\n",
                             dev->devnum);
                     *residual = count;
                     *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4172,7 +4172,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /*        know how it works and I have no way to test it.        */
         /*---------------------------------------------------------------*/
         case 0x06:
-                DBGMSG(1024, "HHCTN167D %4.4X:TCPNJE CCW PREPARE\n",
+                DBGMSG(1024, "HHC19167D %4.4X:TCPNJE CCW PREPARE\n",
                         dev->devnum);
 
                 *residual = count;
@@ -4185,7 +4185,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     break;
                 }
 
-                DBGMSG(1, "HHCTN097W %4.4X:TCPNJE - PREPARE operation is not supported by TCPNJE\n",
+                DBGMSG(1, "HHC19097W %4.4X:TCPNJE - PREPARE operation is not supported by TCPNJE\n",
                         dev->devnum);
 
                 /* If data is present, prepare ends immediately */
@@ -4233,7 +4233,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* POLL Command                                                  */
         /*---------------------------------------------------------------*/
         case 0x09:
-                DBGMSG(1024, "HHCTN168D %4.4X:TCPNJE CCW POLL\n",
+                DBGMSG(1024, "HHC19168D %4.4X:TCPNJE CCW POLL\n",
                         dev->devnum);
 
                 /* Changing ring buffers to linear buffers for TCPNJE    */
@@ -4243,7 +4243,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 /* it better to take it out than expend a lot of effort  */
                 /* making a half baked attempt to support something I    */
                 /* I don't understand at all and can't test.             */
-                DBGMSG(1, "HHCTN098E %4.4X:TCPNJE - POLL operation is not supported by TCPNJE\n",
+                DBGMSG(1, "HHC19098E %4.4X:TCPNJE - POLL operation is not supported by TCPNJE\n",
                         dev->devnum);
                 /* FALLTHRU */
 
@@ -4252,7 +4252,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
         /* INVALID OPERATION                                             */
         /*---------------------------------------------------------------*/
 
-            DBGMSG(1024, "HHCTN098E %4.4X:TCPNJE - Invalid CCW opcode %2.2X\n",
+            DBGMSG(1024, "HHC19098E %4.4X:TCPNJE - Invalid CCW opcode %2.2X\n",
                     dev->devnum, code);
 
             /* Set command reject sense byte, and unit check status */
