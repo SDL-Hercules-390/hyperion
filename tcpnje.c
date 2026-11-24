@@ -701,7 +701,7 @@ static void tcpnje_wakeup(struct TCPNJE *tn, BYTE code)
     if (write_pipe( tn->pipe[1], &code, 1 ) < 0)
     {
         // "Error in function %s: %s"
-        WRMSG( HHC04000, "W", "write_pipe", strerror( errno ));
+        WRMSG( HHC19000, "W", "write_pipe", strerror( errno ));
     }
 }
 /*-------------------------------------------------------------------*/
@@ -2822,7 +2822,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         if (create_pipe( tn->pipe ) < 0)
         {
             // "Error in function %s: %s"
-            WRMSG( HHC04000, "W", "create_pipe", strerror( errno ));
+            WRMSG( HHC19000, "W", "create_pipe", strerror( errno ));
         }
 
 #if !defined(HYPERION_DEVHND_FORMAT)

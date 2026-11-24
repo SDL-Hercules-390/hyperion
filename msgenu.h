@@ -2554,9 +2554,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03998 "%1d:%04X %s: %s \"%s\" inconsistent with %s \"%s\""
 //efine HHC03999 (available)
 
-// reserve 040xx for tcpnje related messages
-#define HHC04000 "Error in function %s: %s"
-//efine HHC040xx - HHC04099 (available)
+// range 04000 - 04099 available
 
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -2768,7 +2766,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 
 // range 18000 - 18999 available
 
-// range 19000 - 19199 reserved for tcpnje.c, which primarily uses logmsg and DBGMSG.
+// reserve 19000 - 19199 for tcpnje related messages.
+// tcpnje.c, primarily uses logmsg and DBGMSG to output messages.
+#define HHC19000 "Error in function %s: %s"
 
 // range 19200 - 18999 available
 
