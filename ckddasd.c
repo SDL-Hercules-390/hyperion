@@ -472,18 +472,8 @@ bool            blkdev = false;         /* true if host block device */
                 close( dev->fd );
                 dev->fd = -1;
 
-                if (is_dh_devid_typ( devhdr.dh_devid, CKD_P064_TYP ))
-                {
-                    cckd = false;
-
-                    if (dev->dasdsfn || dev->dasdsfx)
-                    {
-                        // "%1d:%04X %s file %s: shadow files not supported for %s dasd"
-                        WRMSG( HHC00469, "E", LCSS_DEVNUM, CKDTYP( cckd, dev->cckd64 ),
-                            filename, CKDTYP( cckd, dev->cckd64 ) );
-                        return -1;
-                    }
-                }
+                /* An uncompressed CKD64 base image may have shadow files:
+                   the CCKD64 code handles them (see cckddasd64.c) */
                 return ckd64_dasd_init_handler( dev, argc, argv );
             }
 

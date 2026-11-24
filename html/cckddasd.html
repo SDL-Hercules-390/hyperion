@@ -86,7 +86,25 @@ Compressed DASD images are created via the
 
 <p>
 
-Shadow files are only supported for compressed dasd images.
+Shadow files are supported for compressed dasd images, and for uncompressed
+64-bit CKD64 images (see below).
+<p>
+
+<b>Shadow files over an uncompressed CKD64 base image</b>
+<p>
+An uncompressed CKD64 image (<code>CKD_P064</code>, created by <code>dasdinit64</code> without
+compression or converted with <code>dasdcopy64 -o CKD64</code>) can also be the base of shadow files.
+The base image is then <u>never</u> written, even if it is read-write: all updates go to the
+shadow files, which are regular compressed shadow files (<code>CKD_S064</code>). A first shadow file
+is created automatically when the device is attached if none exists yet.
+<p>
+Because the base is never written, <code>sf-xxxx merge</code> of the first shadow file is refused
+(other shadow files can be merged into the one below them), and <code>sf-xxxx nomerge</code> of the
+first shadow file discards its updates and replaces it with an empty one. To make the updates
+permanent, merge offline with <code>dasdcopy64 base sf=shadow new</code>.
+<p>
+Uncompressed 32-bit CKD images (<code>CKD_P370</code>) do not support shadow files: convert them with
+<code>dasdcopy64 -o CKD64</code> first.
 
 <p>
 

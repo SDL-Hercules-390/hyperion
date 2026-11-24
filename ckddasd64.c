@@ -601,7 +601,9 @@ bool            blkdev = false;         /* true if host block device */
     /* default for device cache is on */
     dev->devcache = TRUE;
 
-    if (!cckd) return 0;
+    /* An uncompressed base image with shadow files is handled by the
+       CCKD64 code: the base is never written, updates go to a shadow */
+    if (!cckd && dev->dasdsfn == NULL) return 0;
     else return cckd64_dasd_init_handler(dev, argc, argv);
 
 } /* end function ckd64_dasd_init_handler */
