@@ -10,15 +10,6 @@
 #ifndef _ESA390IO_H
 #define _ESA390IO_H
 
-#undef ATTRIBUTE_PACKED
-#if defined(_MSVC_)
- #pragma pack(push)
- #pragma pack(1)
- #define ATTRIBUTE_PACKED
-#else
- #define ATTRIBUTE_PACKED __attribute__((packed))
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Sense-ID Command Information WORD (CIW)                           */
 /*-------------------------------------------------------------------*/
@@ -46,14 +37,14 @@
 /* Self-Describing Component (SDC), common to both NDs and NEDs      */
 /*-------------------------------------------------------------------*/
 
-struct SDC {
+PACKED(struct _SDC {
     BYTE    type[6];                    /* Component type            */
     BYTE    model[3];                   /* Component model           */
     BYTE    mfr[3];                     /* Component manufacturer    */
     BYTE    plant[2];                   /* Plant of manufacturer     */
     BYTE    serial[12];                 /* Sequence/serial number    */
-}
-ATTRIBUTE_PACKED; typedef struct SDC SDC;
+});
+typedef struct _SDC SDC;
 
 #define  _SDC_TYP(_1,_2,_3,_4,_5,_6)                        { _1,_2,_3,_4,_5,_6 }
 #define  _SDC_MOD(_1,_2,_3)                                 { _1,_2,_3 }
@@ -120,15 +111,15 @@ ATTRIBUTE_PACKED; typedef struct SDC SDC;
 /* Node Descriptor (ND) structure                                    */
 /*-------------------------------------------------------------------*/
 
-struct ND {
+PACKED(struct _ND {
 /*000*/ BYTE    flags;                  /* Node validity/type flags  */
 /*001*/ BYTE    rsrvd;                  /* Reserved                  */
 /*002*/ BYTE    cls;                    /* Node class                */
 /*003*/ BYTE    ua;                     /* Link addr, CHPID or zero  */
 /*004*/ SDC     info;                   /* SDC information           */
 /*01E*/ BYTE    tag[2];                 /* Node tag  (physical id)   */
-}
-ATTRIBUTE_PACKED; typedef struct ND ND;
+});
+typedef struct _ND ND;
 
 #define MAKE_ND(_typ,_cls,_by3,_sdc,_tag) \
     { (ND_VAL_VALID << 5) | (_typ << 4), 0, _cls, _by3, _sdc, _tag }
@@ -155,12 +146,12 @@ ATTRIBUTE_PACKED; typedef struct ND ND;
 /* Node Qualifier (NQ) structure                                     */
 /*-------------------------------------------------------------------*/
 
-struct NQ {
+PACKED(struct _NQ {
 /*000*/ BYTE    flags;                  /* Node contents flag        */
 /*001*/ BYTE    rsrvd[7];               /* Reserved                  */
 /*008*/ BYTE    info[24];               /* Model dependent info      */
-}
-ATTRIBUTE_PACKED; typedef struct NQ NQ;
+});
+typedef struct _NQ NQ;
 
 #define MAKE_NQ( _typ, _info24 ) \
     { _typ << 5, {0,0,0,0,0,0,0}, _info24 }
@@ -238,15 +229,15 @@ ATTRIBUTE_PACKED; typedef struct NQ NQ;
 /* Node-Element Descriptor (NED) structure                           */
 /*-------------------------------------------------------------------*/
 
-struct NED {
+PACKED(struct _NED {
 /*000*/ BYTE    flags;                  /* Field identifier/flags    */
 /*001*/ BYTE    type;                   /* Node type                 */
 /*002*/ BYTE    cls;                    /* Node class                */
 /*003*/ BYTE    lvl;                    /* Node level flag           */
 /*004*/ SDC     info;                   /* SDC information           */
 /*01E*/ BYTE    tag[2];                 /* Node tag (for uniqueness) */
-}
-ATTRIBUTE_PACKED; typedef struct NED NED;
+});
+typedef struct _NED NED;
 
 #define _NED_FLAGS(_fib,_tkn,_sni,_emu)  \
     (_fib << 6) | (_tkn << 5) | (_sni << 3) | (_emu << 1)
@@ -282,15 +273,15 @@ ATTRIBUTE_PACKED; typedef struct NED NED;
 /* Node-Element Qualifier (NEQ) structure                            */
 /*-------------------------------------------------------------------*/
 
-struct NEQ {
+PACKED(struct _NEQ {
 /*000*/ BYTE    flags;                  /* Node contents flag        */
 /*001*/ BYTE    rsrvd;                  /* Reserved                  */
 /*002*/ HWORD   iid;                    /* Interface-ID       (GENEQ)*/
 /*004*/ BYTE    ddto;                   /* Device Timeout     (GENEQ)*/
 /*005*/ BYTE    rsrvd2[3];              /* Reserved                  */
 /*008*/ BYTE    info[24];               /* Extended information      */
-}
-ATTRIBUTE_PACKED; typedef struct NEQ NEQ;
+});
+typedef struct _NEQ NEQ;
 
 #define MAKE_NEQ( _typ, _dto, _info24 ) \
     { _typ << 6, 0, { 0,0 }, _dto, {0,0,0}, _info24 }
@@ -326,9 +317,5 @@ ATTRIBUTE_PACKED; typedef struct NEQ NEQ;
 #define  NULL_MODEP_NQ  MAKE_NQ( NQ_TYP_MODEP, NULL_INFO_24 )
 #define  NULL_NEQ       MAKE_NEQ( FIELD_IS_NEQ,   0, NULL_INFO_24 )
 #define  NULL_GENEQ     MAKE_NEQ( FIELD_IS_GENEQ, 0, NULL_INFO_24 )
-
-#if defined(_MSVC_)
- #pragma pack(pop)
-#endif
 
 #endif /* _ESA390IO_H */

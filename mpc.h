@@ -19,18 +19,6 @@
 /*********************************************************************/
 
 /*-------------------------------------------------------------------*/
-/* Pack all structures to byte boundary...                           */
-/*-------------------------------------------------------------------*/
-#undef ATTRIBUTE_PACKED
-#if defined(_MSVC_)
- #pragma pack(push)
- #pragma pack(1)
- #define ATTRIBUTE_PACKED
-#else
- #define ATTRIBUTE_PACKED __attribute__((packed))
-#endif
-
-/*-------------------------------------------------------------------*/
 /* Constants                                                         */
 /*-------------------------------------------------------------------*/
 #define MPC_TOKEN_X5       0x05
@@ -53,13 +41,12 @@
 /*-------------------------------------------------------------------*/
 /* Transport Header (See Note 1)                                     */
 /*-------------------------------------------------------------------*/
-struct _MPC_TH                     /* Transport Header               */
+PACKED(struct _MPC_TH              /* Transport Header               */
 {                                  /*                                */
 /*000*/  FWORD  first4;            /* The organisation of the first  */
                                    /* 4-bytes isn't clear. The only  */
                                    /* contents that have been seen   */
                                    /* are 0x00E00000.                */
-#define MPC_TH_FIRST4  0x00E00000  /*                                */
 /*004*/  FWORD  seqnum;            /* Sequence number.               */
 /*008*/  FWORD  offrrh;            /* Offset from the start of the   */
                                    /* MPC_TH to the first (or only)  */
@@ -77,23 +64,21 @@ struct _MPC_TH                     /* Transport Header               */
 /*014*/                            /* End of the MPC_TH.             */
                                    /* (Or, if you prefer, the start  */
                                    /* of the following MPC_RRH.)     */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define SIZE_TH  0x0014            /* Size of MPC_TH.                */
+#define MPC_TH_FIRST4  0x00E00000  /*                                */
 typedef struct _MPC_TH MPC_TH, *PMPC_TH;
 
 /*-------------------------------------------------------------------*/
 /* Request/Response Header (See Note 1)                              */
 /*-------------------------------------------------------------------*/
-struct _MPC_RRH                    /* Request/Response Header        */
+PACKED(struct _MPC_RRH             /* Request/Response Header        */
 {                                  /*                                */
 /*000*/  FWORD  offrrh;            /* Offset from the start of the   */
                                    /* MPC_TH to the next MPC_RRH.    */
                                    /* Contains zero for the last     */
                                    /* (or only) MPC_RRH.             */
 /*004*/  BYTE   type;              /* Type (See Note 3)              */
-#define RRH_TYPE_CM     0x81       /*                                */
-#define RRH_TYPE_ULP    0x41       /*                                */
-#define RRH_TYPE_IPA    0xC1       /*                                */
 /*005*/  BYTE   proto;             /* Protocol (See Note 3)          */
 /*006*/  HWORD  numph;             /* The number of MPC_PHs          */
                                    /* following the MPC_RRH.         */
@@ -121,21 +106,22 @@ struct _MPC_RRH                    /* Request/Response Header        */
 /*024*/                            /* End of the MPC_RRH.            */
                                    /* (Or, if you prefer, the start  */
                                    /* of the following MPC_PH.)      */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define SIZE_RRH 0x0024            /* Size of MPC_RRH.               */
 #define SIZE_RRH_1 0x001C          /* Size of short MPC_RRH.         */
+#define RRH_TYPE_CM     0x81       /*                                */
+#define RRH_TYPE_ULP    0x41       /*                                */
+#define RRH_TYPE_IPA    0xC1       /*                                */
 typedef struct _MPC_RRH MPC_RRH, *PMPC_RRH;
 
 /*-------------------------------------------------------------------*/
 /* Protocol Data Unit Header                                         */
 /*-------------------------------------------------------------------*/
-struct _MPC_PH                     /* Protocol Data Unit Header      */
+PACKED(struct _MPC_PH              /* Protocol Data Unit Header      */
 {                                  /*                                */
 /*000*/  BYTE   locdata;           /* The location of the data       */
                                    /* referenced by this MPC_PH.     */
                                    /* (See Note 2)                   */
-#define PH_LOC_1  1                /*                                */
-#define PH_LOC_2  2                /*                                */
 /*001*/  BYTE   lendata[3];        /* Length of the data             */
                                    /* referenced by this MPC_PH.     */
                                    /* Note: a 3-byte length field.   */
@@ -146,8 +132,10 @@ struct _MPC_PH                     /* Protocol Data Unit Header      */
                                    /* (Or, if you prefer, the start  */
                                    /* of the following MPC_PH, or    */
                                    /* data, or whatever.)            */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define SIZE_PH  0x0008            /* Size of MPC_PH.                */
+#define PH_LOC_1  1                /*                                */
+#define PH_LOC_2  2                /*                                */
 typedef struct _MPC_PH MPC_PH, *PMPC_PH;
 
 
@@ -169,14 +157,21 @@ typedef struct _MPC_PH MPC_PH, *PMPC_PH;
 /*-------------------------------------------------------------------*/
 /* PDU Unknown                                                       */
 /*-------------------------------------------------------------------*/
-struct _MPC_PUK                    /*                                */
+PACKED(struct _MPC_PUK             /*                                */
 {                                  /*                                */
 /*000*/  HWORD  length;            /* Length of the MPC_PUK.         */
 /*002*/  BYTE   what;              /* What (See Note 4)              */
+/*003*/  BYTE   type;              /* Type (See Note 4)              */
+/*004*/  HWORD  lenpus;            /* Total length of the MPC_PUSs   */
+                                   /* following the MPC_PUK.         */
+/*006*/  BYTE   unknown06;         /* ???, only ever seen null.      */
+/*007*/  BYTE   unknown07[5];      /* ???, only ever seen nulls.     */
+/*00C*/                            /* End of the MPC_PUK.            */
+});                                /*                                */
+#define SIZE_PUK  0x000C           /* Size of MPC_PUK                */
 #define PUK_WHAT_41  0x41          /*                                */
 #define PUK_WHAT_43  0x43          /*                                */
 #define PUK_WHAT_45  0x45          /*                                */
-/*003*/  BYTE   type;              /* Type (See Note 4)              */
 #define PUK_TYPE_01        0x01    /*                                */
 #define PUK_TYPE_ENABLE    0x02    /*                                */
 #define PUK_TYPE_DISABLE   0x03    /*                                */
@@ -184,36 +179,16 @@ struct _MPC_PUK                    /*                                */
 #define PUK_TYPE_TAKEDOWN  0x05    /*                                */
 #define PUK_TYPE_CONFIRM   0x06    /*                                */
 #define PUK_TYPE_ACTIVE    0x60    /*                                */
-/*004*/  HWORD  lenpus;            /* Total length of the MPC_PUSs   */
-                                   /* following the MPC_PUK.         */
-/*006*/  BYTE   unknown06;         /* ???, only ever seen null.      */
-/*007*/  BYTE   unknown07[5];      /* ???, only ever seen nulls.     */
-/*00C*/                            /* End of the MPC_PUK.            */
-} ATTRIBUTE_PACKED;                /*                                */
-#define SIZE_PUK  0x000C           /* Size of MPC_PUK                */
 typedef struct _MPC_PUK MPC_PUK, *PMPC_PUK;
 
 /*-------------------------------------------------------------------*/
 /* PDU Unknown structured fields                                     */
 /*-------------------------------------------------------------------*/
-struct _MPC_PUS                    /*                                */
+PACKED(struct _MPC_PUS             /*                                */
 {                                  /*                                */
 /*000*/  HWORD  length;            /* Length of the MPC_PUS.         */
 /*002*/  BYTE   what;              /* What (See Note 5)              */
-#define PUS_WHAT_04  0x04          /*                                */
 /*003*/  BYTE   type;              /* Type (See Note 5)              */
-#define PUS_TYPE_01  0x01          /*                                */
-#define PUS_TYPE_02  0x02          /*                                */
-#define PUS_TYPE_03  0x03          /*                                */
-#define PUS_TYPE_04  0x04          /*                                */
-#define PUS_TYPE_05  0x05          /*                                */
-#define PUS_TYPE_06  0x06          /*                                */
-#define PUS_TYPE_07  0x07          /*                                */
-#define PUS_TYPE_08  0x08          /*                                */
-#define PUS_TYPE_09  0x09          /*                                */
-#define PUS_TYPE_0A  0x0A          /*                                */
-#define PUS_TYPE_0B  0x0B          /*                                */
-#define PUS_TYPE_0C  0x0C          /*                                */
 /*004*/  union _vc                 /* Variable contents start        */
     {
 
@@ -224,13 +199,11 @@ struct _MPC_PUS                    /*                                */
 /*006*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*007*/    BYTE   token[4];        /* Filter token                   */
          } pus_01;                 /*                                */
-#define SIZE_PUS_01  0x000B        /* Size of MPC_PUS_01             */
 
          union  _pus_02 {          /* PUS_02 contents start          */
            struct _a {             /* PUS_02_A contents              */
 /*004*/      BYTE   clock[8];      /* STCK value                     */
            } a;                    /*                                */
-#define SIZE_PUS_02_A  0x000C      /* Size of MPC_PUS_02_A           */
            struct _b {             /* PUS_02_B contents              */
 /*004*/      BYTE   unknown04;     /* ???, only seen 0x02.           */
 /*005*/      BYTE   flags;         /* Flags                          */
@@ -249,54 +222,45 @@ struct _MPC_PUS                    /*                                */
                                    /* bytes contain nulls.)          */
 /*01C*/      BYTE   unknown1C[16]; /* ???, only seen nulls.          */
            } b;                    /*                                */
-#define SIZE_PUS_02_B  0x002C      /* Size of MPC_PUS_02_B           */
            struct _c {             /* PUS_02_C contents              */
 /*004*/      BYTE   nulls[8];      /* Nulls                          */
            } c;                    /*                                */
-#define SIZE_PUS_02_C  0x000C      /* Size of MPC_PUS_02_C           */
          } pus_02;                 /* PUS_02 contents end            */
 
          struct _pus_03 {          /* PUS_03 contents                */
 /*004*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*005*/    BYTE   token[4];        /* Filter token                   */
          } pus_03;                 /*                                */
-#define SIZE_PUS_03  0x0009        /* Size of MPC_PUS_03             */
 
          struct _pus_04 {          /* PUS_04 contents                */
 /*004*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*005*/    BYTE   token[4];        /* Connection token               */
          } pus_04;                 /*                                */
-#define SIZE_PUS_04  0x0009        /* Size of MPC_PUS_04             */
 
          struct _pus_05 {          /* PUS_05 contents                */
 /*004*/    BYTE   tokenx5;         /* Token length or type or ...    */
 /*005*/    BYTE   token[4];        /* Filter token                   */
          } pus_05;                 /*                                */
-#define SIZE_PUS_05  0x0009        /* Size of MPC_PUS_05             */
 
          struct _pus_06 {          /* PUS_06 contents                */
 /*004*/    BYTE   unknown04[2];    /* ???, only seen 0x4000          */
                                    /*             or 0xC800          */
          } pus_06;                 /*                                */
-#define SIZE_PUS_06  0x0006        /* Size of MPC_PUS_06             */
 
          struct _pus_07 {          /* PUS_07 contents                */
 /*004*/    BYTE   unknown04[4];    /* ???, only seen 0x40000000      */
                                    /*             or 0xC8000000      */
          } pus_07;                 /*                                */
-#define SIZE_PUS_07  0x0008        /* Size of MPC_PUS_07             */
 
          struct _pus_08 {          /* PUS_08 contents                */
 /*004*/      BYTE   tokenx5;       /* Token length or type or ...    */
 /*005*/      BYTE   token[4];      /* Connection token               */
          } pus_08;                 /*                                */
-#define SIZE_PUS_08  0x0009        /* Size of MPC_PUS_08             */
 
          struct _pus_09 {          /* PUS_09 contents                */
 /*004*/      FWORD  SeqNum[4];     /* Sequence number                */
 /*008*/      FWORD  AckSeqNum[4];  /* Ack Sequence number            */
          } pus_09;                 /*                                */
-#define SIZE_PUS_09  0x000C        /* Size of MPC_PUS_09             */
 
          struct _pus_0A {          /* PUS_0A contents                */
 /*004*/      BYTE   unknown04[4];  /* ???                            */
@@ -305,6 +269,52 @@ struct _MPC_PUS                    /*                                */
 /*00B*/      BYTE   lenportname;   /* Length of the port name        */
 /*00C*/      BYTE   portname[8];   /* Port name                      */
 /*014*/      BYTE   linktype;      /* Link type                      */
+/*015*/      BYTE   unknown15[3];  /* ???                            */
+         } pus_0A;                 /*                                */
+
+         struct _pus_0B {          /* PUS_0B contents                */
+                                   /* The contents match those in    */
+                                   /* one of the 4-byte structures   */
+                                   /* at the end of the MPC_IEA/IEAR */
+/*004*/      BYTE   ddev[2];       /* Data Device Number             */
+/*006*/      BYTE   ddcua;         /* Data Device Control Unit Addr  */
+/*007*/      BYTE   ddua;          /* Data Device Unit Address       */
+         } pus_0B;                 /*                                */
+
+         struct _pus_0C {          /* PUS_0C contents                */
+/*004*/      BYTE   unknown04[9];  /* ???, only seen                 */
+                                   /*      0x000900060401030408      */
+                                   /*      Is the 0x0009 a length?   */
+                                   /*      If so, does this mean     */
+                                   /*      there could be other      */
+                                   /*      structures?               */
+         } pus_0C;                 /*                                */
+    } vc;                          /* Variable contents end          */
+});                                /*                                */
+#define PUS_WHAT_04  0x04          /*                                */
+#define PUS_TYPE_01  0x01          /*                                */
+#define PUS_TYPE_02  0x02          /*                                */
+#define PUS_TYPE_03  0x03          /*                                */
+#define PUS_TYPE_04  0x04          /*                                */
+#define PUS_TYPE_05  0x05          /*                                */
+#define PUS_TYPE_06  0x06          /*                                */
+#define PUS_TYPE_07  0x07          /*                                */
+#define PUS_TYPE_08  0x08          /*                                */
+#define PUS_TYPE_09  0x09          /*                                */
+#define PUS_TYPE_0A  0x0A          /*                                */
+#define PUS_TYPE_0B  0x0B          /*                                */
+#define PUS_TYPE_0C  0x0C          /*                                */
+#define SIZE_PUS_01  0x000B        /* Size of MPC_PUS_01             */
+#define SIZE_PUS_02_A  0x000C      /* Size of MPC_PUS_02_A           */
+#define SIZE_PUS_02_B  0x002C      /* Size of MPC_PUS_02_B           */
+#define SIZE_PUS_02_C  0x000C      /* Size of MPC_PUS_02_C           */
+#define SIZE_PUS_03  0x0009        /* Size of MPC_PUS_03             */
+#define SIZE_PUS_04  0x0009        /* Size of MPC_PUS_04             */
+#define SIZE_PUS_05  0x0009        /* Size of MPC_PUS_05             */
+#define SIZE_PUS_06  0x0006        /* Size of MPC_PUS_06             */
+#define SIZE_PUS_07  0x0008        /* Size of MPC_PUS_07             */
+#define SIZE_PUS_08  0x0009        /* Size of MPC_PUS_08             */
+#define SIZE_PUS_09  0x000C        /* Size of MPC_PUS_09             */
 #define QETH_LINK_TYPE_FAST_ETH       0x01   /*                      */
 // fine QETH_LINK_TYPE_HSTR           0x02   /*                      */
 #define QETH_LINK_TYPE_GBIT_ETH       0x03   /*                      */
@@ -315,33 +325,10 @@ struct _MPC_PUS                    /*                                */
 // fine QETH_LINK_TYPE_LANE_ETH1000   0x83   /*                      */
 // fine QETH_LINK_TYPE_LANE           0x88   /*                      */
 // fine QETH_LINK_TYPE_ATM_NATIVE     0x90   /*                      */
-/*015*/      BYTE   unknown15[3];  /* ???                            */
-         } pus_0A;                 /*                                */
 #define SIZE_PUS_0A_A  0x0014      /* Size of MPC_PUS_0A             */
 #define SIZE_PUS_0A_B  0x0018      /* Size of MPC_PUS_0A             */
-
-         struct _pus_0B {          /* PUS_0B contents                */
-                                   /* The contents match those in    */
-                                   /* one of the 4-byte structures   */
-                                   /* at the end of the MPC_IEA/IEAR */
-/*004*/      BYTE   ddev[2];       /* Data Device Number             */
-/*006*/      BYTE   ddcua;         /* Data Device Control Unit Addr  */
-/*007*/      BYTE   ddua;          /* Data Device Unit Address       */
-         } pus_0B;                 /*                                */
 #define SIZE_PUS_0B  0x0008        /* Size of MPC_PUS_0B             */
-
-         struct _pus_0C {          /* PUS_0C contents                */
-/*004*/      BYTE   unknown04[9];  /* ???, only seen                 */
-                                   /*      0x000900060401030408      */
-                                   /*      Is the 0x0009 a length?   */
-                                   /*      If so, does this mean     */
-                                   /*      there could be other      */
-                                   /*      structures?               */
-         } pus_0C;                 /*                                */
 #define SIZE_PUS_0C  0x000D        /* Size of MPC_PUS_0C             */
-
-    } vc;                          /* Variable contents end          */
-} ATTRIBUTE_PACKED;                /*                                */
 typedef struct _MPC_PUS MPC_PUS, *PMPC_PUS;
 
 //      PUS_TYPE 01 02 03 04 05 06 07 08 09 0A 0B 0C
@@ -822,21 +809,12 @@ typedef struct _MPC_IPA_SIP {
 /*-------------------------------------------------------------------*/
 /* PDU IP information exchange                                       */
 /*-------------------------------------------------------------------*/
-struct _MPC_PIX                    /*                                */
+PACKED(struct _MPC_PIX             /*                                */
 {                                  /*                                */
 /*000*/  BYTE   action;            /* Action                         */
-#define PIX_START    0x01          /*                                */
-#define PIX_STOP     0x02          /*                                */
-#define PIX_ADDRESS  0x11          /*                                */
 /*001*/  BYTE   askans;            /* Ask/Answer                     */
-#define PIX_ASK      0x80          /*                                */
-#define PIX_ANSWER   0x01          /*                                */
 /*002*/  BYTE   numaddr;           /* The number of IP addresses?    */
-#define PIX_ONEADDR  0x01          /* (Always contains 1, but there  */
-                                   /* has only ever been 1 address.) */
 /*003*/  BYTE   iptype;            /* IP address type                */
-#define PIX_IPV4     0x04          /*                                */
-#define PIX_IPV6     0x06          /*                                */
 /*004*/  HWORD  idnum;             /* An identification number.      */
 /*006*/  HWORD  rcode;             /* Return code.                   */
                                    /*    0  Successful               */
@@ -846,8 +824,17 @@ struct _MPC_PIX                    /*                                */
                                    /* first four bytes, remaining    */
                                    /* bytes contain nulls.)          */
 /*018*/                            /* End of the MPC_PIX.            */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define SIZE_PIX  0x0018           /* Size of MPC_PIX.               */
+#define PIX_START    0x01          /*                                */
+#define PIX_STOP     0x02          /*                                */
+#define PIX_ADDRESS  0x11          /*                                */
+#define PIX_ASK      0x80          /*                                */
+#define PIX_ANSWER   0x01          /*                                */
+#define PIX_ONEADDR  0x01          /* (Always contains 1, but there  */
+                                   /* has only ever been 1 address.) */
+#define PIX_IPV4     0x04          /*                                */
+#define PIX_IPV6     0x06          /*                                */
 typedef struct _MPC_PIX MPC_PIX, *PMPC_PIX;
 
 /* ----------------------------------------------------------------- */
@@ -869,24 +856,24 @@ typedef struct _PTPHX0 PTPHX0, *PPTPHX0;
 typedef struct _PTPHX2 PTPHX2, *PPTPHX2;
 typedef struct _PTPHSV PTPHSV, *PPTPHSV;
 
-struct _PTPHX0                     /* PTP Handshake                  */
+PACKED(struct _PTPHX0              /* PTP Handshake                  */
 {                                  /*                                */
 /*000*/  BYTE   TH_seg;            /* Only seen 0x00                 */
 /*001*/  BYTE   TH_ch_flag;        /* Only seen 0x00 or 0x01         */
+/*002*/  BYTE   TH_blk_flag;       /* Only seen 0x80 or 0xC0         */
+/*003*/  BYTE   TH_is_xid;         /* Only seen 0x01                 */
+/*004*/  BYTE   TH_SeqNum[4];      /* Only seen 0x00050010           */
+});                                /*                                */
+#define SIZE_HX0  0x0008           /* Size of PTPHX0                 */
 #define TH_CH_0x00  0x00           /*                                */
 #define TH_CH_0x01  0x01           /*                                */
 #define TH_IS_XID   0x01           /*                                */
-/*002*/  BYTE   TH_blk_flag;       /* Only seen 0x80 or 0xC0         */
 #define TH_DATA_IS_XID  0x80       /*                                */
 #define TH_RETRY  0x40             /*                                */
 #define TH_DISCONTACT 0xC0         /*                                */
-/*003*/  BYTE   TH_is_xid;         /* Only seen 0x01                 */
 #define TH_IS_0x01  0x01           /*                                */
-/*004*/  BYTE   TH_SeqNum[4];      /* Only seen 0x00050010           */
-} ATTRIBUTE_PACKED;                /*                                */
-#define SIZE_HX0  0x0008           /* Size of PTPHX0                 */
 
-struct _PTPHX2                     /* PTP Handshake XID2             */
+PACKED(struct _PTPHX2              /* PTP Handshake XID2             */
 {                                  /*                                */
                                    /* Note: The first 31-bytes       */
                                    /* of the PTPHX2 are an XID2,     */
@@ -894,7 +881,6 @@ struct _PTPHX2                     /* PTP Handshake XID2             */
                                    /*                                */
 /*000*/  BYTE   Ft;                /* Format of XID (4-bits),        */
                                    /* Type XID-sending node (4-bits) */
-#define XID2_FORMAT_MASK  0xF0     /* Mask out Format from Ft        */
 /*001*/  BYTE   Length;            /* Length of the XID2             */
 /*002*/  BYTE   NodeID[4];         /* Node identification:           */
                                    /* Block number (12 bits),        */
@@ -924,8 +910,6 @@ struct _PTPHX2                     /* PTP Handshake XID2             */
 /*01C*/  BYTE   ESAsupp;           /* Extended Subarea Address supp. */
 /*01D*/  BYTE   Reserved1D;        /* Reserved                       */
 /*01E*/  BYTE   DLCtype;           /* DLC type                       */
-#define DLCTYPE_WRITE 0x04         /*   Write path from sender       */
-#define DLCTYPE_READ  0x05         /*   Read path from sender        */
                                    /*                                */
                                    /* Note: SNA Formats defines the  */
                                    /* first 31-bytes of an XID2, any */
@@ -946,16 +930,18 @@ struct _PTPHX2                     /* PTP Handshake XID2             */
 /*025*/  BYTE   TokenX5;           /* Token length or type or ...    */
 /*026*/  BYTE   Token[4];          /* Token                          */
 /*02A*/  BYTE   Unknown2A[7];      /* ?, only seen nulls             */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define SIZE_HX2  0x0031           /* Size of PTPHX2                 */
+#define XID2_FORMAT_MASK  0xF0     /* Mask out Format from Ft        */
+#define DLCTYPE_WRITE 0x04         /*   Write path from sender       */
+#define DLCTYPE_READ  0x05         /*   Read path from sender        */
 
 // Call Security Verification (x'56') Control Vector
-struct _PTPHSV                     /* PTP Handshake CSVcv            */
+PACKED(struct _PTPHSV              /* PTP Handshake CSVcv            */
 {                                  /*                                */
 /*000*/  BYTE   Length;            /* Vector length                  */
                                    /* (including this length field)  */
 /*001*/  BYTE   Key;               /* Vector key                     */
-#define CSV_KEY 0x56               /* CSVcv key                      */
 /*002*/  BYTE   reserved02;        /* Reserved                       */
 /*003*/  BYTE   LenSIDs;           /* Length of Security IDs         */
                                    /* (including this length field)  */
@@ -966,9 +952,9 @@ struct _PTPHSV                     /* PTP Handshake CSVcv            */
                                    /* (random data or                */
                                    /* enciphered random data or      */
                                    /* space characters)              */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define SIZE_HSV  0x0014           /* Size of PTPHSV                 */
-
+#define CSV_KEY 0x56               /* CSVcv key                      */
 
 /*********************************************************************/
 /* Functions (in mpc.c)                                              */
@@ -1082,11 +1068,5 @@ MPC_DLL_IMPORT void  mpc_display_ptp_th_etc( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, B
 /* common to multiple device, e.g. 0x02 is used by PTP and QETH, some   */
 /* types are unique to a single device, e.g. 0x0C is used by PTP, 0x0A  */
 /* is used by QETH. There are presumably other types not yet seen.      */
-
-
-#if defined(_MSVC_)
- #pragma pack(pop)
-#endif
-
 
 #endif /*!defined(_MPC_H)*/

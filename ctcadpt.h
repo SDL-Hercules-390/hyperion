@@ -15,19 +15,6 @@
 #include "netsupp.h"            // (Networking Support Functions)
 
 // --------------------------------------------------------------------
-// Pack all structures to byte boundary...
-// --------------------------------------------------------------------
-
-#undef ATTRIBUTE_PACKED
-#if defined(_MSVC_)
- #pragma pack(push)
- #pragma pack(1)
- #define ATTRIBUTE_PACKED
-#else
- #define ATTRIBUTE_PACKED __attribute__((packed))
-#endif
-
-// --------------------------------------------------------------------
 // Definitions for 3088 model numbers
 // --------------------------------------------------------------------
 
@@ -165,13 +152,13 @@ extern void     packet_trace( BYTE *addr, int len, BYTE dir );
 // Ethernet Frame Header                (network byte order)
 // --------------------------------------------------------------------
 
-struct _ETHFRM
+PACKED(struct _ETHFRM
 {
     MAC         bDestMAC;                //  +0
     MAC         bSrcMAC;                 //  +6
     HWORD       hwEthernetType;          //  +C  (see below #defines)
     BYTE        bData[FLEXIBLE_ARRAY];   //  +E
-} ATTRIBUTE_PACKED;
+});
 
 
 typedef struct _ETHFRM ETHFRM, *PETHFRM;
@@ -199,7 +186,7 @@ typedef struct _ETHFRM ETHFRM, *PETHFRM;
 // IP Version 4 Frame Header (Type 0x0800)  (network byte order)
 // --------------------------------------------------------------------
 
-struct  _IP4FRM
+PACKED(struct  _IP4FRM
 {
     BYTE        bVersIHL;                //  +0  Vers:4, IHL:4
     BYTE        bTOS;                    //  +1
@@ -212,7 +199,7 @@ struct  _IP4FRM
     U32         lSrcIP;                  //  +C
     U32         lDstIP;                  // +10
     BYTE        bData[FLEXIBLE_ARRAY];   // +14
-} ATTRIBUTE_PACKED;
+});
 
 
 typedef struct _IP4FRM IP4FRM, *PIP4FRM;
@@ -223,7 +210,7 @@ typedef struct _IP4FRM IP4FRM, *PIP4FRM;
 // Reverse Address Resolution Protocol Frame (Type 0x8035) (network bo)
 // --------------------------------------------------------------------
 
-struct  _ARPFRM
+PACKED(struct  _ARPFRM
 {
     HWORD       hwHardwareType;          //  +0
     HWORD       hwProtocolType;          //  +2
@@ -234,7 +221,7 @@ struct  _ARPFRM
     U32         lSendIPAddr;             // +12
     MAC         bTargEthAddr;            // +16
     U32         lTargIPAddr;             // +1C
-} ATTRIBUTE_PACKED;
+});
 
 
 typedef struct _ARPFRM ARPFRM, *PARPFRM;
@@ -250,7 +237,7 @@ typedef struct _ARPFRM ARPFRM, *PARPFRM;
 // IP Version 6 Frame Header (Type 0x86DD)  (network byte order)
 // --------------------------------------------------------------------
 
-struct  _IP6FRM
+PACKED(struct  _IP6FRM
 {
     BYTE      bVersTCFlow[4];            //  +0  Vers:4, TC:8 FlowID:20
     BYTE      bPayloadLength[2];         //  +4
@@ -259,7 +246,7 @@ struct  _IP6FRM
     BYTE      bSrcAddr[16];              //  +8
     BYTE      bDstAddr[16];              // +18
     BYTE      bPayload[FLEXIBLE_ARRAY];  // +28  The payload
-} ATTRIBUTE_PACKED;
+});
 
 typedef struct _IP6FRM IP6FRM, *PIP6FRM;
 
@@ -360,6 +347,12 @@ struct  _CTCBLK
     int         internal;                 // Did Hercules create this device?
 };
 
+/* Validate __pragma(pack(push)) & __pragma(pack(pop)) */
+#if 0
+CASSERT( offsetof( CTCBLK, Lock )  % sizeof(void*) == 0, ctcadpt_h );
+CASSERT( offsetof( CTCBLK, EventLock ) % sizeof(void*) == 0, ctcadpt_h );
+CASSERT( __alignof( LOCK ) == sizeof(void*), ctcadpt_h );
+#endif
 
 
 /**********************************************************************\
@@ -375,25 +368,25 @@ struct  _CTCBLK
 // CTCI Block Header                    (host byte order)
 // --------------------------------------------------------------------
 
-struct _CTCIHDR                         // CTCI Block Header
+PACKED(struct _CTCIHDR                  // CTCI Block Header
 {
     HWORD   hwOffset;                   // Offset of next block
     BYTE    bData[FLEXIBLE_ARRAY];      // start of data (CTCISEG)
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
 // CTCI Segment Header                  (host byte order)
 // --------------------------------------------------------------------
 
-struct _CTCISEG                         // CTCI Segment Header
+PACKED(struct _CTCISEG                  // CTCI Segment Header
 {
     HWORD   hwLength;                   // Segment length including
                                         //   this header
     HWORD   hwType;                     // Ethernet packet type
     HWORD   _reserved;                  // Unused, set to zeroes
     BYTE    bData[FLEXIBLE_ARRAY];      // Start of data (IP packet)
-} ATTRIBUTE_PACKED;
+});
 
 
 
@@ -409,19 +402,10 @@ struct _CTCISEG                         // CTCI Segment Header
 // LCS SNA Outbound Control                     (network byte order)
 // Goes from the guest (i.e. VTAM) to the XCA (i.e. LCS)
 // --------------------------------------------------------------------
-
-struct _LCSOCTL                           // LCS SNA Outbound Control
+PACKED(struct _LCSOCTL                    // LCS SNA Outbound Control
 {
     U16         XCNOBUFC;
     BYTE        XCNOSTAT;
-#define  XCNOXIDF  0x80
-#define  XCNOERRF  0x40
-#define  XCNORSVD  0x20
-#define  XCNOSEGF  0x08
-#define  XCNOSGST  0x0C
-#define  XCNOSEGL  0x04
-#define  XCNOSLOW  0x02
-#define  XCNOMAXW  0x01
     BYTE        XCNOFMT;
     union _onp
     {
@@ -433,23 +417,25 @@ struct _LCSOCTL                           // LCS SNA Outbound Control
         U16     XCNONUMR;
         U16     XCNOHDSZ;
     } nh;
-} ATTRIBUTE_PACKED;
+});
 
+#define  XCNOXIDF  0x80
+#define  XCNOERRF  0x40
+#define  XCNORSVD  0x20
+#define  XCNOSEGF  0x08
+#define  XCNOSGST  0x0C
+#define  XCNOSEGL  0x04
+#define  XCNOSLOW  0x02
+#define  XCNOMAXW  0x01
 
 // --------------------------------------------------------------------
 // LCS SNA Inbound Control                      (network byte order)
 // Goes from the XCA (i.e. LCS) to the guest (i.e. VTAM)
 // --------------------------------------------------------------------
-
-struct _LCSICTL                           // LCS SNA Inbound Control
+PACKED(struct _LCSICTL                    // LCS SNA Inbound Control
 {
     U16         XCNIBUFC;
     BYTE        XCNISTAT;
-#define  XCNIXIDF  0x80
-#define  XCNIERRF  0x40
-#define  XCNIRSVD  0x08
-#define  XCNISLOW  0x02
-#define  XCNIMAXW  0x01
     BYTE        XCNIFMT;
     union _inp
     {
@@ -457,8 +443,13 @@ struct _LCSICTL                           // LCS SNA Inbound Control
         U16     XCNIPGCT;
     } np;
     U16         XCNINUMR;
-} ATTRIBUTE_PACKED;
+});
 
+#define  XCNIXIDF  0x80
+#define  XCNIERRF  0x40
+#define  XCNIRSVD  0x08
+#define  XCNISLOW  0x02
+#define  XCNIMAXW  0x01
 
 // The first 8-bytes of the reply are copied to XCNCB + 2F8
 //  SNA Data Areas Volume 1, Cross-Channel Node Control Block (XCNCB)
@@ -580,7 +571,7 @@ struct _LCSICTL                           // LCS SNA Inbound Control
 // LCS SNA baffle 1                             (network byte order)
 // --------------------------------------------------------------------
 
-struct _LCSBAF1                        // LCS SNA baffle 1
+PACKED(struct _LCSBAF1                 // LCS SNA baffle 1
 {
     HWORD       hwLenBaf1;             //  0  Length of baffle 1
     HWORD       hwTypeBaf;             //  2  Type of baffle
@@ -596,14 +587,14 @@ struct _LCSBAF1                        // LCS SNA baffle 1
     BYTE        bTokenC[4];            // 18
     BYTE        bByte28[4];            // 1C
     BYTE        bByte32[2];            // 20
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
 // LCS SNA baffle 2                             (network byte order)
 // --------------------------------------------------------------------
 
-struct _LCSBAF2                        // LCS SNA baffle 2
+PACKED(struct _LCSBAF2                 // LCS SNA baffle 2
 {
     BYTE        bByte00;               //  0  Always seems to contain 0x01.
     HWORD       hwSeqNum;              //  1  Sequence number
@@ -623,20 +614,20 @@ struct _LCSBAF2                        // LCS SNA baffle 2
     BYTE        bByte25;               // 19
     BYTE        bByte26;               // 1A
     BYTE        bByte27;               // 1B
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
 // LCS SNA Inbound Buffer Header
 // --------------------------------------------------------------------
 
-struct _LCSIBH                         // LCS SNA Inbound Buffer Header
+PACKED(struct _LCSIBH                  // LCS SNA Inbound Buffer Header
 {
     PLCSIBH   pNextLCSIBH;             // Pointer to next LCSIBH
     int       iAreaLen;                // Data area length
     int       iDataLen;                // Data length
     BYTE      bData[FLEXIBLE_ARRAY];   //
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
@@ -886,13 +877,12 @@ struct  _LCSBLK
 // --------------------------------------------------------------------
 // LCS Frame Header                             (network byte order)
 // --------------------------------------------------------------------
-
-struct _LCSHDR      // *ALL* LCS Frames start with the following header
+PACKED(struct _LCSHDR  // *ALL* LCS Frames start with the following header
 {
     HWORD       hwOffset;               //  +0  Offset to next frame or 0
     BYTE        bType;                  //  +2  (see below #defines)
     BYTE        bSlot;                  //  +3  (i.e. port)
-} ATTRIBUTE_PACKED;
+});
 
 
 #define  LCS_FRMTYP_CMD     0x00        // LCS command mode
@@ -907,7 +897,7 @@ struct _LCSHDR      // *ALL* LCS Frames start with the following header
 // LCS Command Frame Header                     (network byte order)
 // --------------------------------------------------------------------
 
-struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
+PACKED(struct _LCSCMDHDR  // All LCS *COMMAND* Frames start with this header
 {
     LCSHDR      bLCSHdr;                //  +0  LCS Frame header
 
@@ -918,7 +908,7 @@ struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
 
     BYTE        bLanType;               //  +A  usually LCS_FRMTYP_ENET
     BYTE        bRelAdapterNo;          //  +B  (i.e. port)
-} ATTRIBUTE_PACKED;
+});
 
 
 #define  LCS_CMD_TIMING         0x00        // Timing request
@@ -947,7 +937,7 @@ struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
 // LCS Standard Command Frame                   (network byte order)
 // --------------------------------------------------------------------
 
-struct _LCSSTDFRM
+PACKED(struct _LCSSTDFRM
 {
     LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
 
@@ -955,14 +945,14 @@ struct _LCSSTDFRM
     BYTE        bOperatorFlags[3];      //  +E
     BYTE        _reserved[3];           // +11
     BYTE        bData[FLEXIBLE_ARRAY];  // +14
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
 // LCS Startup & Start LAN Command Frames       (network byte order)
 // --------------------------------------------------------------------
 
-struct _LCSSTRTFRM
+PACKED(struct _LCSSTRTFRM
 {
     LCSCMDHDR   bLCSCmdHdr;             //  +0  LCS Command Frame header
 
@@ -974,14 +964,14 @@ struct _LCSSTRTFRM
                                         //      for >= 0x0200, or == 0x02FF).
     BYTE        _unused[6];             //  +E
     FWORD       fwReadLength;           // +14  Length for Read CCW (0x0800 to 0xFFFF).
-} ATTRIBUTE_PACKED;                     // +18
+});                                     // +18
 
 
 // --------------------------------------------------------------------
 // LCS Query IP Assists Command Frame           (network byte order)
 // --------------------------------------------------------------------
 
-struct  _LCSQIPFRM
+PACKED(struct  _LCSQIPFRM
 {
     LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
 
@@ -989,14 +979,14 @@ struct  _LCSQIPFRM
     HWORD       hwIPAssistsSupported;   // (See "LCS Assists" above)
     HWORD       hwIPAssistsEnabled;     // (See "LCS Assists" above)
     HWORD       hwIPVersion;
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
 // LCS LAN Statistics Command Frames            (network byte order)
 // --------------------------------------------------------------------
 
-struct  _LCSLSTFRM                      // LAN Statistics for IP
+PACKED(struct  _LCSLSTFRM               // LAN Statistics for IP
 {
     LCSCMDHDR   bLCSCmdHdr;             //  +0  LCS Command Frame header
 
@@ -1011,9 +1001,9 @@ struct  _LCSLSTFRM                      // LAN Statistics for IP
     FWORD       fwRX_Errors;            // +34
     FWORD       fwRX_DiscardedNoBuffs;  // +38
     U32         fwRX_DiscardedTooLarge; // +3C
-} ATTRIBUTE_PACKED;                     // +40
+});                                     // +40
 
-struct  _LCSLSSFRM                      // LAN Statistics for SNA
+PACKED(struct  _LCSLSSFRM               // LAN Statistics for SNA
 {
     LCSCMDHDR   bLCSCmdHdr;             //  +0  LCS Command Frame header
 
@@ -1028,23 +1018,23 @@ struct  _LCSLSSFRM                      // LAN Statistics for SNA
     BYTE        bMACsize;               // +12  Length of MAC Address.
     MAC         MAC_Address;            // +13  MAC Address.
     BYTE        _unused2[1];            // +19
-} ATTRIBUTE_PACKED;                     // +1A
+});                                     // +1A
 
 
 // --------------------------------------------------------------------
 // LCS Set IP Multicast Command Frame           (network byte order)
 // --------------------------------------------------------------------
 
-struct  _LCSIPMPAIR
+PACKED(struct  _LCSIPMPAIR
 {
     U32         IP_Addr;
     MAC         MAC_Address;            // MAC Address of Adapter
     BYTE        _reserved[2];
-} ATTRIBUTE_PACKED;
+});
 
 #define MAX_IP_MAC_PAIRS      32
 
-struct  _LCSIPMFRM
+PACKED(struct  _LCSIPMFRM
 {
     LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
 
@@ -1054,18 +1044,18 @@ struct  _LCSIPMFRM
     U16         hwIPVersion;
     LCSIPMPAIR  IP_MAC_Pair[MAX_IP_MAC_PAIRS];
     U32         fwResponseData;
-} ATTRIBUTE_PACKED;
+});
 
 
 // --------------------------------------------------------------------
 // LCS Ethernet Passthru Frame                  (network byte order)
 // --------------------------------------------------------------------
 
-struct  _LCSETHFRM
+PACKED(struct  _LCSETHFRM
 {
     LCSHDR      bLCSHdr;                // LCS Frame header
     BYTE        bData[FLEXIBLE_ARRAY];  // Ethernet Frame
-} ATTRIBUTE_PACKED;
+});
 
 
 
@@ -1222,7 +1212,7 @@ typedef struct _TGDcv  TGDcv,  *PTGDcv;
 //  typedef struct _CSVcv  CSVcv,  *PCSVcv;
 typedef struct _HPRcv  HPRcv,  *PHPRcv;
 
-struct _XID3                       /* XID3                           */
+PACKED(struct _XID3                /* XID3                           */
 {                                  /*                                */
                                    /* Note: The first 31-bytes       */
                                    /* of the XID3 are an XID3,       */
@@ -1246,10 +1236,10 @@ struct _XID3                       /* XID3                           */
 /*012*/  BYTE   DepSectionLength;  /* Dependant Section Length       */
                                    /* (including this length field)  */
 /*013*/  BYTE   DepSection[FLEXIBLE_ARRAY];  /* Dependant Section    */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 
 /* Control Vector header                                             */
-union _CVhdr                       /*                                */
+PACKED(union _CVhdr                /*                                */
 {                                  /*                                */
     /* KL: The Key field precedes the Length field and the length    */
     /*     is the number of bytes, in binary, of the substructure's  */
@@ -1270,38 +1260,38 @@ union _CVhdr                       /*                                */
     /*000*/  BYTE   Length;        /* Vector length                  */
     /*001*/  BYTE   Key;           /* Vector key                     */
     } LT;                          /*                                */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 
 /* Network Name Control Vector                                       */
-struct _NNcv                       /* NNcv                           */
+PACKED(struct _NNcv                /* NNcv                           */
 {                                  /*                                */
 /*000*/  CVhdr  Header;            /* Vector header                  */
 /*002*/  BYTE   Type;              /* Name type                      */
 /*003*/  BYTE   Value[FLEXIBLE_ARRAY];  /*                           */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define KEY_NNcv 0x0E              /* NNcv key                       */
 #define TYPE_PU_NAME 0xF1          /* PU Name                        */
 #define TYPE_CP_NAME 0xF4          /* CP Name                        */
 #define TYPE_LS_NAME 0xF7          /* Link Station Name              */
 
 /* Product Set ID Control Vector                                     */
-struct _PSIDcv                     /* PSIDcv                         */
+PACKED(struct _PSIDcv              /* PSIDcv                         */
 {                                  /*                                */
 /*000*/  CVhdr  Header;            /* Vector header                  */
 /*002*/  BYTE   Data[FLEXIBLE_ARRAY];  /*                            */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define KEY_PSIDcv 0x10            /* PSIDcv key                     */
 
 /* TG Description Control Vector                                     */
-struct _TGDcv                      /* TGDcv                          */
+PACKED(struct _TGDcv               /* TGDcv                          */
 {                                  /*                                */
 /*000*/  CVhdr  Header;            /* Vector header                  */
 /*002*/  BYTE   Data[FLEXIBLE_ARRAY];  /*                            */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define KEY_TGDcv 0x46             /* TGDcv key                      */
 
 //  /* Call Security Verification Control Vector                         */
-//  struct _CSVcv                      /* CSVcv                          */
+//  PACKED(struct _CSVcv               /* CSVcv                          */
 //  {                                  /*                                */
 //  /*000*/  CVhdr  Header;            /* Vector header                  */
 //  /*002*/  BYTE   Reserved;          /* Reserved                       */
@@ -1314,15 +1304,15 @@ struct _TGDcv                      /* TGDcv                          */
 //                                     /* (random data or                */
 //                                     /* enciphered random data or      */
 //                                     /* space characters)              */
-//  } ATTRIBUTE_PACKED;                /*                                */
+//  });                                /*                                */
 //  #define KEY_CSVcv 0x56             /* CSVcv key                      */
 
 /* HPR Capabilities Control Vector                                   */
-struct _HPRcv                      /* HPRcv                          */
+PACKED(struct _HPRcv               /* HPRcv                          */
 {                                  /*                                */
 /*000*/  CVhdr  Header;            /* Vector header                  */
 /*002*/  BYTE   Data[FLEXIBLE_ARRAY];  /*                            */
-} ATTRIBUTE_PACKED;                /*                                */
+});                                /*                                */
 #define KEY_HPRcv 0x61             /* HPRcv key                      */
 
 
@@ -1389,9 +1379,5 @@ static inline void SetCIWInfo( DEVBLK* pDEVBLK,
 
 
 // --------------------------------------------------------------------
-
-#if defined(_MSVC_)
- #pragma pack(pop)
-#endif
 
 #endif // __CTCADPT_H_
