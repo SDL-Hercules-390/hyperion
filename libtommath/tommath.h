@@ -4,7 +4,11 @@
 #ifndef BN_H_
 #define BN_H_
 
+/* Hercules: older Visual Studio versions (before VS2013) have no usable  */
+/* <stdint.h>; Hercules' htypes.h already provides the fixed size types.   */
+#if !defined(_MSC_VER) || defined(HAVE_STDINT_H)
 #include <stdint.h>
+#endif
 #include <stddef.h>
 #include <limits.h>
 

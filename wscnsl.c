@@ -592,13 +592,13 @@ static int parse_one_frame( TELNET* tn )
         case WS_OP_PING:
         {
             /* Echo back as PONG with same (unmasked) payload */
-            BYTE small[125];
+            BYTE pongbuf[125];   /* (not "small": that is a macro in Windows rpcndr.h) */
             BYTE* tmp = NULL;
             BYTE* payload = NULL;
             int   rc;
 
-            if (payload_len <= sizeof( small ))
-                payload = small;
+            if (payload_len <= sizeof( pongbuf ))
+                payload = pongbuf;
             else
             {
                 tmp = (BYTE*) malloc( (size_t) payload_len );
